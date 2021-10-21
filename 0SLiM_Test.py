@@ -40,9 +40,10 @@ Lref=a.Lref     #minor radius
 rho_s=a.rhoref  #gyroradius
 cs=a.cs         #speed of sound 
 
+cs_to_kHZ=cs/Lref/(2.*np.pi*1000.)
+
 m_list=[]
 nu_list=[]
-cs_
 zeff_list=[]
 eta_list=[]
 shat_list=[]
@@ -57,6 +58,8 @@ for n in n_list:
     x_surface_near_peak, m_surface_near_peak=a.Rational_surface_peak_surface(n0):
     nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar=\
         parameter_for_dispersion(x_surface_near_peak)
+    index=np.argmin(abs(a.x-x_surface))
+    omega_e_kHz=a.ome[index]
     m_list.append(m_surface_near_peak)
     x_list.append(x_surface_near_peak)
     nu_list.append(nu)
@@ -69,7 +72,14 @@ for n in n_list:
     mu_list.append(mu)
     xstar_list.append(xstar)
 
-d = {'n':n,'m':m,'rho_tor':x,}
+d = {'n':n,'m':m,'rho_tor':x,\
+    'omega_n_kHz':omega_n,\
+    'cs_to_kHZ':[cs_to_kHZ]*len(n_list),\
+    'omega_e_kHz':
+
+    'nu':nu,'zeff':[zeff]*len(n_list),'eta':eta,\
+    'shat':shat,'beta':beta,'ky':ky,\
+    'ModIndex':ModIndex,'mu':mu,'xstar':xstar}
 df=pd.DataFrame(d, columns=['x','y'])   #construct the panda dataframe
 df.to_csv(outputpath+'parameter_list.csv',index=False)
     
