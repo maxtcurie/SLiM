@@ -4,11 +4,11 @@ import pandas as pd
 import math
 import csv
 import imageio
-import sys as sys
-sys.path.insert(1, './Tools')
+
 
 from interp import interp
 from finite_differences import fd_d1_o4
+
 from max_pedestal_finder import find_pedestal_from_data
 from max_pedestal_finder import find_pedestal
 from read_profiles import read_profile_file
@@ -16,7 +16,7 @@ from read_profiles import read_geom_file
 from read_EFIT_file import get_geom_pars
 from max_stat_tool import Poly_fit
 from max_stat_tool import coeff_to_Poly
-from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
+
 #Created by Max T. Curie  09/17/2021
 #Last edited by Max Curie 09/17/2021
 #Supported by scripts in IFS
@@ -26,8 +26,8 @@ class mode_finder:
     profile_type=('pfile','ITERDB')
     geomfile_type=('gfile','GENE_tracor')
     def __init__(self,profile_type,profile_name,geomfile_type,geomfile_name,\
-            outputpath,path,x0_min,x0_max,show_plot=False,zeff_manual=False,suffix='.dat',\
-            mref=2.,Impurity_charge=6.):
+            outputpath,path,suffix='.dat',mref=2.,Impurity_charge=6.,\
+            zeff_manual=False, show_plot=False):
         n0=1.
         Z=float(Impurity_charge)
         print("suffix"+str(suffix))
@@ -35,8 +35,9 @@ class mode_finder:
         self.geomfile_name=geomfile_name
         self.outputpath=outputpath
         self.path=path
-        self.x0_min=x0_min
-        self.x0_max=x0_max
+        self.q_uncertainty=q_uncertainty
+        self.profile_uncertainty=profile_uncertainty
+        self.doppler_uncertainty=doppler_uncertainty
 
         if profile_type not in mode_finder.profile_type:
             raise ValueError(f'{profile_type} is not a valid profile type, need to be pfile or ITERDB')
@@ -168,7 +169,7 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
-        self.cs=cref
+
         self.rho_s=rhoref
         self.Lref=Lref
         self.x=uni_rhot
@@ -199,46 +200,6 @@ class mode_finder:
     def q_back_to_nominal(self):
         self.q=self.q_nominal
         return self.q
-
-    def gaussian_fit_auto(self,x,data):
-        x,data=self.x, self.ome
-
-        judge=0
-        try:
-            popt, pcov = optimize.curve_fit(gaussian_max, x,data)  
-            print(gaussian_max)
-            print(popt)
-            print(pcov)
-    
-            max_index=np.argmax(data)
-            if 0==1:
-                plt.clf()
-                plt.plot(x,data, label="data")
-                plt.plot(x, gaussian_max(x, *popt), label="fit")
-                plt.axvline(x[max_index],color='red',alpha=0.5)
-                plt.axvline(x[max_index]+popt[2],color='red',alpha=0.5)
-                plt.axvline(x[max_index]-popt[2],color='red',alpha=0.5)
-                plt.legend()
-                plt.show()
-    
-            error_temp=np.sum(abs(data-gaussian_max(x, *popt)))/abs(np.sum(data))
-            print('norm_error='+str(error_temp))
-            if error_temp<0.2:
-                amplitude=popt[0]
-                mean     =popt[1]
-                stddev   =popt[2] 
-            else:
-                print("Curve fit failed, need to restrict the range")
-                amplitude=0
-                mean     =0
-                stddev   =0
-        except RuntimeError:
-            print("Curve fit failed, need to restrict the range")
-            amplitude=0
-            mean     =0
-            stddev   =0
-    
-        return amplitude,mean,stddev
 
     def ome_peak_range(self,peak_percent=0.01):
         y1=self.ome
@@ -283,37 +244,143 @@ class mode_finder:
     
         return x_list, m_list
 
-    def Rational_surface_peak_surface(self,n0):
-        x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
 
-        x_list, m_list=self.Rational_surface(n0)
-        index=np.argmin(abs(x_list-x_peak))
-        x_surface_near_peak=[x_list[index]]
-        m_surface_near_peak=[m_list[index]]
+
+    def ome_q_surface_demo_plot(self,peak_percent,n_min,n_max,f_min,f_max):
+        n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
+        x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
+        fig, host = plt.subplots()
+        fig.subplots_adjust(right=0.75)
         
-        return x_surface_near_peak, m_surface_near_peak
+        par1 = host.twinx()
+        p1, = par1.plot(self.x, self.q, "b-", label='Safety Factor')
+        p2, = par1.plot([x_min]*1000,np.arange(0,20,(20./1000)), color="orange", label='Top '+str(int(peak_percent*100.))+r'$\%$ of drive')
+        par1.axvline(x_max, color="orange")
+        p3, = host.plot(np.arange(0,1.2,(1.2/1000)),[f_min]*1000, alpha=0.4,color="purple", label='Frequency boundary')
+        host.axhline(f_max, color="purple",alpha=0.4)
+        x_fill=[x_min,x_min,x_max,x_max]
+        y_fill=[f_min,f_max,f_max,f_min]
+        #matplotlib.patches.Rectangle((0,total_trans-trans_error),10,2.*trans_error,alpha=0.4)
+        host.fill(x_fill,y_fill,color='orange',alpha=0.3)
+        
 
-    def parameter_for_dispersion(self,x0):
-        index=np.argmin(abs(x0-self.x))
-        nu=self.nu[index]
-        zeff=self.zeff
-        eta=self.eta[index]
-        shat=self.shat[index]
-        beta=self.beta[index]
-        ky=self.ky[index]
-        nu=self.nu[index]
-        zeff=self.zeff
+        for n in n_list:
+            x_list, m_list =self.Rational_surface(n)
+            Unstabel_surface_counter=0
+
+            for j in range(len(m_list)):
+                x0=x_list[j]
+                m=m_list[j]
+                    
+                if x_min<x0 and x0<x_max:
+                    par1.axvline(x0,color='red')
+                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    Unstabel_surface_counter=Unstabel_surface_counter+1
+                else:
+                    par1.axvline(x0,color='green',alpha=0.3)
+    
+                    
+            if Unstabel_surface_counter>0:
+                p4, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+            else:
+                p5, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "g-", label=r'Stable $\omega_{*e}$')
+
+        
+
+        host.set_xlim(np.min(self.x),np.max(self.x))
+        host.set_ylim(0, f_max*1.2)
+        par1.set_ylim(np.min(self.q)*0.8,np.max(self.q)*1.2)
+        
+        host.set_xlabel(r"$\rho_{tor}$")
+        host.set_ylabel(r"$\omega_{*e}$(kHz)")
+        par1.set_ylabel("Safety factor")
+
+        
+        host.yaxis.label.set_color('black')
+        par1.yaxis.label.set_color('black')
+        
+        
+        tkw = dict(size=4, width=1.5)
+        host.tick_params(axis='y', colors='black', **tkw)
+        par1.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
+        host.tick_params(axis='x', **tkw)
+        
+        lines = [p1, p2, p3, p4, p5]
+        
+        host.legend(lines, [l.get_label() for l in lines])
+        plt.show()
+
+
+    #this attribute only plot the nearest rational surface for the given toroidal mode number
+    def ome_q_surface_demo_plot_clean(self,peak_percent,n_min,n_max,f_min,f_max):
+        n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
         x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
-        try:
-            xstar=self.xstar
-        except:
-            xstar=0.
-        mu=abs(x_peak-x0)*self.Lref/(self.rhoref)
-        return nu,zeff,eta,shat,beta,ky,mu,xstar
+        x_peak_plot,x_min_plot,x_max_plot=self.ome_peak_range(peak_percent*10.)
+        fig, host = plt.subplots()
+        fig.subplots_adjust(right=0.75)
+        
+        #par1 = host.twinx()
+        #p1, = par1.plot(self.x, self.q, "b-", label='Safety Factor')
+        
+        x_fill=[x_min,x_min,x_max,x_max]
+        y_fill=[f_min,f_max,f_max,f_min]
+        #matplotlib.patches.Rectangle((0,total_trans-trans_error),10,2.*trans_error,alpha=0.4)
+        p1, = host.fill(x_fill,y_fill,color='blue',alpha=0.3,label='Unstable area')
+        
+        
+        for n in n_list:
+            x_list, m_list =self.Rational_surface(n)
+            Unstabel_surface_counter=0
 
-    def Dispersion(self,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
-        w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
-        return w0
+            index=np.argmin(abs(x_list-x_peak))
+            x_list=[x_list[index]]
+            m_list=[m_list[index]]
+            for j in range(len(m_list)):
+                x0=x_list[j]
+                m=m_list[j]
+                if x_min_plot<x0 and x0<x_max_plot:
+                    if x_min<x0 and x0<x_max:
+                        host.axvline(x0,color='orange',alpha=1)
+                        host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                        Unstabel_surface_counter=Unstabel_surface_counter+1
+                    else:
+                        host.axvline(x0,color='orange',alpha=0.3)
+                        host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+            
+                    
+            if Unstabel_surface_counter>0:
+                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+            else:
+                p3, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
+
+        
+
+        host.set_xlim(np.min(self.x),np.max(self.x))
+        host.set_ylim(0, np.max(f_max)*1.2)
+        #par1.set_ylim(np.min(self.q)*0.8,np.max(self.q)*1.2)
+        
+        host.set_xlabel(r"$\rho_{tor}$")
+        host.set_ylabel(r"$\omega_{*e}$(kHz)")
+        #par1.set_ylabel("Safety factor")
+
+        
+        host.yaxis.label.set_color('black')
+        #par1.yaxis.label.set_color('black')
+        
+        
+        tkw = dict(size=4, width=1.5)
+        host.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
+        host.tick_params(axis='x', **tkw)
+        
+        lines = [p1,p2,p3]
+        
+        #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
+        host.legend(lines, [l.get_label() for l in lines])
+        plt.show()
+
     
     def ome_q_surface_demo_plot_frequency_band(self,peak_percent,n_min,n_max,f_min_list,f_max_list):
         n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
@@ -382,201 +449,6 @@ class mode_finder:
         
         lines = [p1, p2, p4, p5]
         
-        host.legend(lines, [l.get_label() for l in lines])
-        plt.show()
-
-
-    def Plot_q_scale_rational_surfaces_colored(self,peak_percent,\
-            q_scale,q_shift,q_uncertainty,n_list,unstable_list,color_list):
-        marker_size=5
-        x_peak,x_stability_boundary_min,x_stability_boundary_max=self.ome_peak_range(peak_percent)
-
-        x_min_index=np.argmin(abs(self.x-x_stability_boundary_min))
-        x_max_index=np.argmin(abs(self.x-x_stability_boundary_max))
-        
-        q_range=self.q[x_min_index:x_max_index]
-
-        x_list=[]
-        y_list=[]
-        x_list_error=[]
-        y_list_error=[]
-        fig, ax = plt.subplots()
-        ax.fill_between(self.x, self.q*(1.-q_uncertainty), self.q*(1.+q_uncertainty), color='blue', alpha=.0)
-        ax.axvline(x_stability_boundary_min,color='orange',alpha=0.6)
-        ax.axvline(x_stability_boundary_max,color='orange',alpha=0.6)
-        ax.plot(self.x,self.q,label=r'Safety factor $q_0$')
-        
-        
-        for i in range(len(n_list)):
-            n=n_list[i]
-            x1=[]
-            y1=[]
-            x1_error=[]
-            y1_error=[]
-
-            qmin = np.min(self.q*(1.-q_uncertainty))
-            qmax = np.max(self.q*(1.+q_uncertainty))
-        
-            m_min = math.ceil(qmin*n)
-            m_max = math.floor(qmax*n)
-            m_list=np.arange(m_min,m_max+1)
-
-            for m in m_list:
-                surface=float(m)/float(n)
-                if np.min(q_range)*(1.-q_uncertainty)<surface and surface<np.max(q_range)*(1.+q_uncertainty):
-                    x1.append(0.5*(x_stability_boundary_max+x_stability_boundary_min))
-                    y1.append(surface)
-                    x1_error.append(0.5*(x_stability_boundary_max-x_stability_boundary_min))
-                    y1_error.append(0)
-            if color_list==-1:
-                ax.errorbar(x1,y1,xerr=x1_error,yerr=y1_error,marker='s',linestyle='none',ms=marker_size,label='n='+str(n))
-            else:
-                ax.errorbar(x1,y1,xerr=x1_error,yerr=y1_error,marker='s',color=color_list[i],linestyle='none',ms=marker_size,label='n='+str(n))
-            
-            x_list.append(x1)
-            y_list.append(y1)
-            x_list_error.append(x1_error)
-            y_list_error.append(y1_error)
-
-        ax.plot(self.x,self.q*q_scale+q_shift,color='orange',label=r'Modified $q=$'+str(q_scale)+r'$*q_0$')
-
-        ax.set_xlim(self.x0_min,self.x0_max)
-        ax.set_xlabel(r'$\rho_{tor}$')
-        ax.set_ylabel('Safety factor')
-        plt.legend(loc='upper left')
-        plt.show()
-
-
-    def Plot_q_scale_rational_surfaces_red_and_green(self,peak_percent,\
-            q_scale,q_shift,q_uncertainty,n_list,unstable_list):
-        marker_size=5
-        #calculate the radial stability boundary
-        x_peak,x_stability_boundary_min,x_stability_boundary_max=self.ome_peak_range(peak_percent)
-
-        x_min_index=np.argmin(abs(self.x-x_stability_boundary_min))
-        x_max_index=np.argmin(abs(self.x-x_stability_boundary_max))
-
-        q_range=self.q[x_min_index:x_max_index]
-
-        x_list=[]
-        y_list=[]
-        x_list_error=[]
-        y_list_error=[]
-        fig, ax = plt.subplots()
-        ax.fill_between(self.x, self.q*(1.-q_uncertainty), self.q*(1.+q_uncertainty), color='blue', alpha=.2)
-        ax.axvline(x_stability_boundary_min,color='orange',alpha=0.6)
-        ax.axvline(x_stability_boundary_max,color='orange',alpha=0.6)
-        ax.plot(self.x,self.q,color='blue',label=r'Safety factor $q_0$')
-        
-        stable_counter=0
-        unstable_counter=0
-        for i in range(len(n_list)):
-            n=n_list[i]
-
-            x1=[]
-            y1=[]
-            x1_error=[]
-            y1_error=[]
-
-            qmin = np.min(self.q*(1.-q_uncertainty))
-            qmax = np.max(self.q*(1.+q_uncertainty))
-        
-            m_min = math.ceil(qmin*n)
-            m_max = math.floor(qmax*n)
-            m_list=np.arange(m_min,m_max+1)
-
-            for m in m_list:
-                surface=float(m)/float(n)
-                if np.min(q_range)*(1.-q_uncertainty)<surface and surface<np.max(q_range)*(1.+q_uncertainty):
-                    x1.append(0.5*(x_stability_boundary_max+x_stability_boundary_min))
-                    y1.append(surface)
-                    x1_error.append(0.5*(x_stability_boundary_max-x_stability_boundary_min))
-                    y1_error.append(0)
-
-            if unstable_list[i]==1:#for unstable case
-                if unstable_counter==0:
-                    ax.errorbar(x1,y1,xerr=x1_error,yerr=y1_error,marker='s',linestyle='none',color='red',ms=marker_size,label='Unstable')
-                else:
-                    ax.errorbar(x1,y1,xerr=x1_error,yerr=y1_error,marker='s',linestyle='none',color='red',ms=marker_size)
-                unstable_counter=unstable_counter+1
-            elif unstable_list[i]==0:#for stable case
-                if stable_counter==0:
-                    ax.errorbar(x1,y1,xerr=x1_error,yerr=y1_error,marker='s',linestyle='none',color='green',ms=marker_size,label='Stable')
-                else:
-                    ax.errorbar(x1,y1,xerr=x1_error,yerr=y1_error,marker='s',linestyle='none',color='green',ms=marker_size)
-                stable_counter=stable_counter+1
-            x_list.append(x1)
-            y_list.append(y1)
-            x_list_error.append(x1_error)
-            y_list_error.append(y1_error)
-
-        ax.plot(self.x,self.q*q_scale+q_shift,color='orange',label=r'Modified $q=$'+str(q_scale)+r'$*q_0$')
-        ax.set_xlim(self.x0_min,self.x0_max)
-        ax.set_xlabel(r'$\rho_{tor}$')
-        ax.set_ylabel('Safety factor')
-        plt.legend(loc='upper left')
-        plt.show()
-
-    #this attribute only plot the nearest rational surface for the given toroidal mode number
-    def Plot_ome_q_surface_demo(self,peak_percent,n_min,n_max,f_min,f_max):
-        n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
-        x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
-        x_peak_plot,x_min_plot,x_max_plot=self.ome_peak_range(peak_percent*10.)
-        fig, host = plt.subplots()
-        fig.subplots_adjust(right=0.75)
-        
-        #par1 = host.twinx()
-        #p1, = par1.plot(self.x, self.q, "b-", label='Safety Factor')
-        
-        x_fill=[x_min,x_min,x_max,x_max]
-        y_fill=[f_min,f_max,f_max,f_min]
-        #matplotlib.patches.Rectangle((0,total_trans-trans_error),10,2.*trans_error,alpha=0.4)
-        p1, = host.fill(x_fill,y_fill,color='blue',alpha=0.3,label='Unstable area')
-        
-        
-        for n in n_list:
-            Unstabel_surface_counter=0
-            x0,m=Rational_surface_peak_surface(n)
-
-            if x_min_plot<x0 and x0<x_max_plot:
-                if x_min<x0 and x0<x_max:
-                    host.axvline(x0,color='orange',alpha=1)
-                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
-                    Unstabel_surface_counter=Unstabel_surface_counter+1
-                else:
-                    host.axvline(x0,color='orange',alpha=0.3)
-                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
-            
-                    
-            if Unstabel_surface_counter>0:
-                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
-            else:
-                p3, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
-
-        
-
-        host.set_xlim(np.min(self.x),np.max(self.x))
-        host.set_ylim(0, np.max(f_max)*1.2)
-        #par1.set_ylim(np.min(self.q)*0.8,np.max(self.q)*1.2)
-        
-        host.set_xlabel(r"$\rho_{tor}$")
-        host.set_ylabel(r"$\omega_{*e}$(kHz)")
-        #par1.set_ylabel("Safety factor")
-
-        
-        host.yaxis.label.set_color('black')
-        #par1.yaxis.label.set_color('black')
-        
-        
-        tkw = dict(size=4, width=1.5)
-        host.tick_params(axis='y', colors='black', **tkw)
-        #par1.tick_params(axis='y', colors='black', **tkw)
-        #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
-        host.tick_params(axis='x', **tkw)
-        
-        lines = [p1,p2,p3]
-        
-        #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
         host.legend(lines, [l.get_label() for l in lines])
         plt.show()
 
