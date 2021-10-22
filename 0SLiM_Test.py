@@ -51,6 +51,7 @@ beta_list=[]
 ky_list=[]
 ModIndex_list=[]
 mu_list=[]
+omega_e_list=[]
 xstar_list=[]
 
 n_list=np.arange(n_min,n_max+1,1)
@@ -71,11 +72,12 @@ for n in n_list:
     ModIndex_list.append(ModIndex)
     mu_list.append(mu)
     xstar_list.append(xstar)
+    omega_e_list.append(omega_e_kHz)
 
 d = {'n':n,'m':m,'rho_tor':x,\
     'omega_n_kHz':omega_n,\
     'cs_to_kHZ':[cs_to_kHZ]*len(n_list),\
-    'omega_e_kHz':
+    'omega_e_kHz':omega_e_list,\
 
     'nu':nu,'zeff':[zeff]*len(n_list),'eta':eta,\
     'shat':shat,'beta':beta,'ky':ky,\
