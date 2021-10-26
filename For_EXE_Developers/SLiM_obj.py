@@ -7,7 +7,6 @@ import math
 import csv
 import imageio
 import sys as sys
-sys.path.insert(1, './Tools')
 
 from interp import interp
 from finite_differences import fd_d1_o4
