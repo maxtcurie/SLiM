@@ -14,7 +14,7 @@ sys.path.insert(1, './Tools')
 from DispersionRelationDeterminantFullConductivityZeff import Dispersion
 
 #**********Start of user block***************
-Input_csv='./Test_files/Dispersion_scan_list.csv'   
+Input_csv='./Output/parameter_list.csv'   
 Output_csv='./Output/0MTM_scan.csv'
 #**********end of user block****************
         

@@ -342,6 +342,7 @@ def Load_data(profile_name,geomfile_name,Run_mode):
             manual_zeff,suffix,\
             mref,Impurity_charge\
             )
+    mode_finder_obj.q_back_to_nominal()
     mode_finder_obj.q_modify(q_scale,q_shift)
     mode_finder_obj.ome_peak_range(omega_percent)
 
@@ -405,13 +406,14 @@ def Load_data(profile_name,geomfile_name,Run_mode):
         x_surface_near_peak, m_surface_near_peak=mode_finder_obj.Rational_surface_peak_surface(n)
         if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
             nu,zeff,eta,shat,beta,ky,mu,xstar=\
-                mode_finder_obj.parameter_for_dispersion(x_surface_near_peak)
+                mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
         
             index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
-            omega_n_kHz=mode_finder_obj.omn[index]
-            omega_n_cs_a=mode_finder_obj.omn[index]/cs_to_kHz
-            omega_e_plasma_kHz=mode_finder_obj.ome[index]
-            omega_e_lab_kHz=mode_finder_obj.ome[index]+mode_finder_obj.Doppler[index]
+            omega_n_kHz=float(n)*mode_finder_obj.omn[index]
+            omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
+            omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
+            omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]\
+                        +float(n)*mode_finder_obj.Doppler[index]
         
             n_list.append(n)
             m_list.append(m_surface_near_peak)

@@ -10,7 +10,7 @@ from read_EFIT import read_EFIT
 #Last edited by Max Curie 11/02/2020
 #Supported by scripts in IFS
 
-def read_pfile(p_file_name,Z,add_impurity=False):
+def read_pfile(p_file_name):
 
     f=open(p_file_name,'r')
     data = f.read()
@@ -186,26 +186,23 @@ def read_pfile(p_file_name,Z,add_impurity=False):
     der_out = interp(psiper,der,psi0)
     dvtor_out= interp(psipvtor,dvtor,psi0)
 
-    '''
-    if add_impurity:
+    
+    if np.sum(nz_out)<=0.01:
+        Z=6.
         impurity_charge = float(Z)
         nz_out = np.empty(len(ne_out))
         for i in range(len(ne_out)):
             nz_out[i] = (ne_out[i]-ni_out[i])/impurity_charge
     else:
-        nz_out = np.zeros(len(ne_out))
-
-    '''
-    # output quantities are psi_pol, ne, te, ni, ti
-    # grid: even psi_pol_norm
-    # resolution: 1000
+        pass
+    
+    
     return psi0, ne_out, te_out, ni_out, ti_out, nz_out, er_out, vtor_out
 
 
     
 def p_to_iterdb_format(p_file_name,geomfile_name):
-    impurityCharge=float(input("Impurity Charge:"))
-    psi0, ne0, te0, ni0, ti0, nz0, er0, vtor_out = read_pfile(p_file_name,impurityCharge,add_impurity=True)
+    psi0, ne0, te0, ni0, ti0, nz0, er0, vtor_out = read_pfile(p_file_name)
     case=0
     if sum(er0)==0:
         print('Er is empty, using vtor to calculate Shear')
@@ -219,8 +216,6 @@ def p_to_iterdb_format(p_file_name,geomfile_name):
     elif sum(er0)==0 and sum(er0)==0:
         print('Both Er and vtor are empty, cannot calculate Shear')
         case=4
-
-    zeff = (ni0 + nz0 * impurityCharge**2.) / ne0 
 
     EFITdict = read_EFIT(geomfile_name)
     print(str(list(EFITdict.keys())))
@@ -325,124 +320,3 @@ def p_to_iterdb_format(p_file_name,geomfile_name):
 
 
 
-def p_to_iterdb_format(p_file_name,geomfile_name):#backup 01/26/2021
-    #impurityCharge=float(input("Impurity Charge:"))
-    impurityCharge=6.
-    psi0, ne0, te0, ni0, ti0, nz0, er0, vtor_out = read_pfile(p_file_name,impurityCharge,add_impurity=True)
-    case=0
-    if sum(er0)==0:
-        print('Er is empty, using vtor to calculate Shear')
-        case=1
-    elif sum(vtor_out)==0:
-        print('vtor is empty, using Er to calculate Shear')
-        case=2
-    elif sum(er0)!=0 and sum(er0)!=0:
-        print('Neither Er nor vtor is empty, using both to calculate')
-        case=3
-    elif sum(er0)==0 and sum(er0)==0:
-        print('Both Er and vtor are empty, cannot calculate Shear')
-        case=4
-
-    zeff = (ni0 + nz0 * impurityCharge**2.) / ne0 
-
-    EFITdict = read_EFIT(geomfile_name)
-    print(str(list(EFITdict.keys())))
-
-    sepInd = np.argmin(abs(EFITdict['psipn'] - 1.))
-    print('index at psipn = 1 is '+str(sepInd) )
-    Rsep = EFITdict['R'][sepInd]
-    print('major R(m) at psipn = 1 is '+str(Rsep))
-    print('major R(m) at index = 1 is '+str(EFITdict['R'][0]))
-    
-    # construct R grid with uniform spacing 
-    # uniform spacing because first_derivative requires so
-    # find pressure, temperature, density values on uniform R grid
-
-    uni_R = np.linspace(EFITdict['R'][0],Rsep,EFITdict['nw']*10)
-    psip_uniR = interp(EFITdict['R'], EFITdict['psipn'], uni_R)
-    rhot_uniR = interp(EFITdict['R'], EFITdict['rhotn'], uni_R)
-
-    rhot0 = interp(EFITdict['psipn'], EFITdict['rhotn'], psi0)
-    pi0 = ni0 * ti0
-    pi_uniR = interp(rhot0,pi0,rhot_uniR)
-    ni_uniR = interp(rhot0,ni0,rhot_uniR)
-    ti_uniR = interp(rhot0,ti0,rhot_uniR)
-    pe0 = ne0 * te0
-    pe_uniR = interp(rhot0,pe0,rhot_uniR)
-    ne_uniR = interp(rhot0,ne0,rhot_uniR)
-    te_uniR = interp(rhot0,te0,rhot_uniR)
-    
-    # compute grad P_i / n_i / e, grad P_e / n_e / e 
-    gradPioverNe = first_derivative(pi_uniR,uni_R)/ni_uniR 
-    gradPeoverNe = first_derivative(pe_uniR,uni_R)/ne_uniR 
-
-
-    uni_rhot = np.linspace(min(rhot0),max(rhot0),len(rhot0)*10)
-    ti_u = interp(rhot0,ti0,uni_rhot)
-    te_u = interp(rhot0,te0,uni_rhot)
-    ne_u = interp(rhot0,ne0,uni_rhot)
-    ni_u = interp(rhot0,ni0,uni_rhot)
-    nz_u = interp(rhot0,nz0,uni_rhot)
-    p_u = (ni_u + nz_u) * ti_u + ne_u * te_u
-
-
-    tprime_i = -first_derivative(ti_u,uni_rhot)/ti_u
-    tprime_e = -first_derivative(te_u,uni_rhot)/te_u
-    nprime_e = -first_derivative(ne_u,uni_rhot)/ne_u
-    nprime_i = -first_derivative(ni_u,uni_rhot)/ni_u
-    nprime_z = -first_derivative(nz_u,uni_rhot)/nz_u
-    eta_i = tprime_i / nprime_i
-    eta_e = tprime_e / nprime_e
-    eta_z = tprime_i / nprime_z
-
-
-    # convert from kV/m to V/m
-    Er_Vm = interp(rhot0,er0,uni_rhot)*1E3
-
-
-    R_u = interp(EFITdict['rhotn'],EFITdict['R'],uni_rhot)
-    Bpol_u = interp(EFITdict['rhotn'],EFITdict['Bpol'],uni_rhot)
-    vtor_out_u = interp(psi0,vtor_out,uni_rhot)
-    
-    # add minus sign for consistency
-    omega_tor_Er = - Er_Vm / (R_u * Bpol_u)
-    #print(R_u[0])
-    omega_tor_Vor = vtor_out_u*1000. / (R_u)
-
-    if case==1:
-        omega_tor=omega_tor_Vor
-    if case==2:
-        omega_tor=omega_tor_Er
-    if case==3:
-        if sum(abs((omega_tor_Er-omega_tor_Vor)/omega_tor_Vor))>0.05*float(len(omega_tor_Vor)):
-            print("Too much difference between omega_tor calculated from Er and vtor")
-            '''
-            plt.clf()
-            plt.plot(uni_rhot,omega_tor_Er,label='omega_tor_Er')
-            plt.plot(uni_rhot,omega_tor_Vor,label='omega_tor_Vor')
-            plt.xlabel('rhot')
-            plt.legend()
-            plt.show()
-            '''
-
-            #decide=int(input("omega_tor_Er or omega_tor_Vor, 1. omega_tor_Er, 2. omega_tor_Vor:      "))
-            decide=1
-
-            if decide==1:
-                omega_tor=omega_tor_Er
-            elif decide==2:
-                omega_tor=omega_tor_Vor
-            else:
-                print("please input 1 or 2")
-        else:
-            omega_tor=omega_tor_Vor
-    if case==4:
-        print('Both Er and vtor are empty, cannot calculate Shear')
-        omega_tor=omega_tor_Er
-    # densities are multiplied by 10 here 
-    # because output_iterdb() expects density in 10^19 m^-3
-    
-    psi_u = interp(rhot0,psi0,uni_rhot)
-    rhop_u = np.sqrt(np.array(psi_u))
-
-    return uni_rhot, rhop_u, 1000.0*te_u, 1000.0*ti_u, 1.0e19*ne_u*10., 1.0e19*ni_u*10., 1.0e19*nz_u*10., omega_tor

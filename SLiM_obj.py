@@ -30,7 +30,7 @@ class mode_finder:
     profile_type=('pfile','ITERDB')
     geomfile_type=('gfile','GENE_tracor')
     def __init__(self,profile_type,profile_name,geomfile_type,geomfile_name,\
-            outputpath,path,x0_min,x0_max,zeff_manual=-1,suffix='.dat',\
+            outputpath,inputpath,x0_min,x0_max,zeff_manual=-1,suffix='.dat',\
             mref=2.,Impurity_charge=6.):
         n0=1.
         Z=float(Impurity_charge)
@@ -38,7 +38,7 @@ class mode_finder:
         self.profile_name=profile_name
         self.geomfile_name=geomfile_name
         self.outputpath=outputpath
-        self.path=path
+        self.inputpath=inputpath
         self.x0_min=x0_min
         self.x0_max=x0_max
 
@@ -150,7 +150,8 @@ class mode_finder:
         mtmFreq = omMTM*gyroFreq/(2.*np.pi*1000.)
         omegaDoppler = abs(vrot_u*n0/(2.*np.pi*1000.))
         omega=mtmFreq + omegaDoppler
-    
+        
+
         if zeff_manual==-1:
             zeff = (  ( ni+nz*(float(Z)**2.) )/ne  )[center_index]
         else:
@@ -173,6 +174,7 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
+        self.R_ref=R_ref
         self.cs_to_kHz=gyroFreq/(2.*np.pi*1000.)
         self.omn=omega_n    #omega_n in kHz
         self.omn_nominal=omega_n
@@ -321,16 +323,23 @@ class mode_finder:
         
         return x_surface_near_peak, m_surface_near_peak
 
-    def parameter_for_dispersion(self,x0):
+    def parameter_for_dispersion(self,x0,n):
         index=np.argmin(abs(x0-self.x))
-        nu=self.nu[index]
+
+        factor_temp=np.sqrt(\
+                (float(n)*self.q[index]/self.Lref)**2.\
+                +(float(n)/self.R_ref)**2.)\
+                *self.Lref/self.q[index]
+
+        self.factor=factor_temp
+
+        nu=self.nu[index]/factor_temp
         zeff=self.zeff
         eta=self.eta[index]
         shat=self.shat[index]
         beta=self.beta[index]
-        ky=self.ky[index]
-        nu=self.nu[index]
-        zeff=self.zeff
+        ky=self.ky[index]*factor_temp
+
         try:
             x_peak=self.x_peak
         except:
@@ -340,7 +349,7 @@ class mode_finder:
             xstar=self.xstar
         except:
             xstar=0.
-        mu=(x_peak-x0)*self.Lref/(self.rho_s)
+        mu=(x0-x_peak)*self.Lref/(self.rho_s)
         return nu,zeff,eta,shat,beta,ky,mu,xstar
 
     def Dispersion(self,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar):

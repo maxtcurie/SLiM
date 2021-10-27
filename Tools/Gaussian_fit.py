@@ -281,10 +281,16 @@ def gaussian_fit_auto(x,data):
             stddev   =0
     except RuntimeError:
         print("Curve fit failed, need to restrict the range")
-        amplitude=0
-        mean     =0
-        stddev   =0
+        max_index=np.argmax(data)
 
+        amplitude=data[max_index]
+        mean=x[max_index]
+
+        data_left=data[:max_index]
+        x_left=x[:max_index]
+        x_std_index=np.argmin(abs( data_left-amplitude*np.exp(-1.) ))
+        stddev=abs(mean-x_left[x_std_index])
+        
     return amplitude,mean,stddev
 
 def gaussian_fit_manual(x,data):

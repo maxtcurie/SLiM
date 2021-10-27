@@ -8,20 +8,30 @@ from SLiM_obj import mode_finder
 
 #**********************************************
 #**********Start of User block*****************
-n_min=1                                #minmum mode number (include) that finder will cover
-n_max=5                              #maximum mode number (include) that finder will cover
+
+#for signal q
+q_scale_list=[1.]  
+q_shift_list=[0.]
+
+
+#for q scan
+#q_scale_list=np.arange(1.0,1.08,0.0005)
+#q_shift_list=[0.]*len(q_scale_list)
+
+
+n_min=6                                #minmum mode number (include) that finder will cover
+n_max=6                              #maximum mode number (include) that finder will cover
+
 
 Run_mode=2      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
 
-q_scale=0.98         #the scaling of the q profile
-q_shift=0.
-
 profile_type= "pfile"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
 Output_Path='./Output/'
-Input_Path='./Test_files/'
+Output_suffix='_3'
+InputPath='./Test_files/'
 profile_name=InputPath+'p174819.03560'
 geomfile_name=InputPath+'g174819.03560'
 
@@ -32,7 +42,7 @@ zeff_manual=-1     #set to -1 automatically calculate the zeff
 suffix='.dat'       #for the 'GENE_tracor' geomfile
 x0_min=0.93         # beginning of the range in rho_tor
 x0_max=0.99         # ending of the range in rho_tor
-peak_percent=0.03
+peak_percent=0.08
 mref=2.             #mess of ion in unit of proton, for deuterium is 2
 Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=True
@@ -41,12 +51,9 @@ show_plot=True
 
 mode_finder_obj=mode_finder(profile_type,profile_name,\
             geomfile_type,geomfile_name,\
-            outputpath,path,x0_min,x0_max,\
+            Output_Path,InputPath,x0_min,x0_max,\
             zeff_manual,suffix,\
             mref,Impurity_charge)
-mode_finder_obj.q_modify(q_scale,q_shift)
-mode_finder_obj.ome_peak_range(peak_percent)
-
 x_list=[]
 n_list=[]
 m_list=[]
@@ -63,81 +70,93 @@ omega_e_lab_list=[]
 omega_n_kHz_list=[]
 omega_n_cs_a_list=[]
 xstar_list=[]
+q_scale_list0=[]
+q_shift_list0=[]
 
-if Run_mode==1:#simple rational surface alignment
-    ModIndex=-1
-    filename='rational_surface_alignment.csv'
-if Run_mode==2:#global dispersion
-    ModIndex=1
-    filename='global_dispersion.csv'
-elif Run_mode==3:#local dispersion
-    ModIndex=0
-    filename='local_dispersion.csv'
-
-
-peak_index=np.argmin(abs(mode_finder_obj.x-mode_finder_obj.x_peak))
-omega_e_peak_kHz=mode_finder_obj.ome[peak_index]
-
-cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
-print('Finding the rational surfaces')
-n0_list=np.arange(n_min,n_max+1,1)
-for n in tqdm(n0_list):
-    x_surface_near_peak, m_surface_near_peak=mode_finder_obj.Rational_surface_peak_surface(n)
-    if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
-        nu,zeff,eta,shat,beta,ky,mu,xstar=\
-            mode_finder_obj.parameter_for_dispersion(x_surface_near_peak)
+for i in range(len(q_scale_list)):
+    q_scale=q_scale_list[i]
+    q_shift=q_shift_list[i]
+    mode_finder_obj.q_back_to_nominal()
+    mode_finder_obj.q_modify(q_scale,q_shift)
+    mode_finder_obj.ome_peak_range(peak_percent)
+    mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=manual_fit)
+    mode_finder_obj.set_xstar(xstar)
     
-        index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
-        omega_n_kHz=float(n)*mode_finder_obj.omn[index]
-        omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
-        omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
-        omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]+float(n)*mode_finder_obj.Doppler[index]
+    if Run_mode==1:#simple rational surface alignment
+        ModIndex=-1
+        filename='rational_surface_alignment'+Output_suffix+'.csv'
+    if Run_mode==2:#global dispersion
+        ModIndex=1
+        filename='global_dispersion'+Output_suffix+'.csv'
+    elif Run_mode==3:#local dispersion
+        ModIndex=0
+        filename='local_dispersion'+Output_suffix+'.csv'
     
-        n_list.append(n)
-        m_list.append(m_surface_near_peak)
-        x_list.append(x_surface_near_peak)
-        nu_list.append(nu)
-        zeff_list.append(zeff)
-        eta_list.append(eta)
-        shat_list.append(shat)
-        beta_list.append(beta)
-        ky_list.append(ky)
-        ModIndex_list.append(ModIndex)
-        mu_list.append(mu)
-        xstar_list.append(xstar)
-        omega_e_plasma_list.append(omega_e_plasma_kHz)
-        omega_e_lab_list.append(omega_e_lab_kHz)
-        omega_n_kHz_list.append(omega_n_kHz)
-        omega_n_cs_a_list.append(omega_n_cs_a)
-
-
-d = {'n':n_list,'m':m_list,'rho_tor':x_list,\
+    
+    peak_index=np.argmin(abs(mode_finder_obj.x-mode_finder_obj.x_peak))
+    omega_e_peak_kHz=mode_finder_obj.ome[peak_index]
+    
+    cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
+    print('Finding the rational surfaces')
+    n0_list=np.arange(n_min,n_max+1,1)
+    for n in tqdm(n0_list):
+        x_surface_near_peak, m_surface_near_peak=mode_finder_obj.Rational_surface_peak_surface(n)
+        if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
+            nu,zeff,eta,shat,beta,ky,mu,xstar=\
+                mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
+            factor=mode_finder_obj.factor
+            index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
+            omega_n_kHz=float(n)*mode_finder_obj.omn[index]
+            omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
+            omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
+            omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]+float(n)*mode_finder_obj.Doppler[index]
+        
+            n_list.append(n)
+            m_list.append(m_surface_near_peak)
+            x_list.append(x_surface_near_peak)
+            nu_list.append(nu)
+            zeff_list.append(zeff)
+            eta_list.append(eta)
+            shat_list.append(shat)
+            beta_list.append(beta)
+            ky_list.append(ky)
+            ModIndex_list.append(ModIndex)
+            mu_list.append(mu)
+            xstar_list.append(xstar)
+            omega_e_plasma_list.append(omega_e_plasma_kHz)
+            omega_e_lab_list.append(omega_e_lab_kHz)
+            omega_n_kHz_list.append(omega_n_kHz)
+            omega_n_cs_a_list.append(omega_n_cs_a)
+            q_scale_list0.append(q_scale)
+            q_shift_list0.append(q_shift)
+    
+    
+d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\
+    'n':n_list,'m':m_list,'rho_tor':x_list,\
     'omega_kHz':[0]*len(n_list),\
     'gamma_cs_a':[0]*len(n_list),\
     'omega_n_kHz':omega_n_kHz_list,\
     'omega_n_cs_a':omega_n_cs_a_list,\
     'omega_e_plasma_kHz':omega_e_plasma_list,\
     'omega_e_lab_kHz':omega_e_lab_list,\
-    'peak_percentage':omega_e_plasma_list/omega_e_peak_kHz,\
+    'peak_percentage':omega_e_plasma_list/\
+            (omega_e_peak_kHz*np.array(n_list,dtype=float)),\
     'nu':nu_list,'zeff':[zeff]*len(n_list),'eta':eta_list,\
     'shat':shat_list,'beta':beta_list,'ky':ky_list,\
     'ModIndex':ModIndex_list,'mu':mu_list,'xstar':xstar_list}
-df=pd.DataFrame(d, columns=['n','m','rho_tor',\
+df=pd.DataFrame(d, columns=['q_scale','q_shift','n','m','rho_tor',\
     'omega_kHz','gamma_cs_a','omega_n_kHz',\
     'omega_n_cs_a','omega_e_plasma_kHz','omega_e_lab_kHz',\
     'peak_percentage','nu','zeff','eta','shat','beta','ky',\
     'ModIndex','mu','xstar'])   #construct the panda dataframe
-df.to_csv(Output_Path+'parameter_list.csv',index=False)
+df.to_csv(Output_Path+'parameter_list'+Output_suffix+'.csv',index=False)
     
 if Run_mode==1:
     pass
-else:
-    mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=manual_fit)
-    mode_finder_obj.set_xstar(xstar)
-    
+else:    
     with open(Output_Path+filename, 'w', newline='') as csvfile:     #clear all and then write a row
         data = csv.writer(csvfile, delimiter=',')
-        data.writerow(['n','m','rho_tor',\
+        data.writerow(['q_scale','q_shift','n','m','rho_tor',\
             'omega_kHz','gamma_cs_a','omega_n_kHz',\
             'omega_n_cs_a','omega_e_plasma_kHz',\
             'omega_e_lab_kHz','peak_percentage',\
@@ -158,7 +177,9 @@ else:
         gamma_cs_a=gamma*omega_n_cs_a_list[i]
         with open(Output_Path+filename, 'a+', newline='') as csvfile: #adding a row
             data = csv.writer(csvfile, delimiter=',')
-            data.writerow([ df['n'][i],df['m'][i],df['rho_tor'][i],\
+            data.writerow([ q_scale_list0[i],\
+                q_shift_list0[i],\
+                df['n'][i],df['m'][i],df['rho_tor'][i],\
                 omega_kHz,gamma_cs_a,\
                 df['omega_n_kHz'][i],df['omega_n_cs_a'][i],\
                 df['omega_e_plasma_kHz'][i],df['omega_e_lab_kHz'][i],
