@@ -13,7 +13,7 @@ __pycache__/
 *.csv
 
 #files in output
-./Output/*
+Output/
 
 # C extensions
 *.so
