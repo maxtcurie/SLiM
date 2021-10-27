@@ -10,7 +10,8 @@ __pycache__/
 1*
 
 #log for dispersion calculation
-W_auto_log.csv
+*.csv
+
 #files in output
 ./Output/*
 
