@@ -13,7 +13,7 @@ __pycache__/
 W_auto_log.csv
 
 #files in output
-./Output/*
+Output/
 
 # C extensions
 *.so
