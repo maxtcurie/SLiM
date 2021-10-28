@@ -174,6 +174,7 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
+        self.r_sigma=(1./shat)*( (me_SI/m_SI)**0.5 )
         self.R_ref=R_ref
         self.cs_to_kHz=gyroFreq/(2.*np.pi*1000.)
         self.omn=omega_n    #omega_n in kHz
@@ -196,9 +197,26 @@ class mode_finder:
         self.ome_nominal=mtmFreq
         self.Doppler=omegaDoppler
 
+    def __str__(self):
+        try:
+            self.x_peak
+        except:
+            self.ome_peak_range(0.1)
+        index=np.argmin(abs(self.x-self.x_peak))
+        
+        return f'Parameter at peak:\n\
+        shat={self.shat[index]},\n\
+        eta={self.eta[index]},\n\
+        ky={self.ky[index]},\n\
+        nu={self.nu[index]},\n\
+        zeff={self.zeff},\n\
+        beta={self.beta[index]},\n\
+        r_sigma={self.r_sigma[index]},\n\
+        xstar={self.xstar}'
 
     def set_xstar(self,xstar):
         self.xstar=xstar
+        #setter for xstar
         
 
     def q_fit(self,order=5,show=False):
@@ -616,3 +634,84 @@ class mode_finder:
         #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
         host.legend(lines, [l.get_label() for l in lines])
         plt.show()
+
+
+    def Plot_ome_q_stability_boundary(self,peak_percent):
+        fig, host = plt.subplots()
+        fig.subplots_adjust(right=0.75)
+
+        x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
+        par1 = host.twinx()
+        x=self.x
+        y1=self.ome
+        y3=self.ome+self.Doppler
+        print(self.Doppler)
+        y2=self.q
+        p1, = host.plot(x, y1, "b-", label=r'$\omega_{*e}$')
+        p2, = host.plot(x, y3, "g-", label=r'$\omega_{*e}$ in lab frame')
+        p3, = par1.plot(x, y2, "r-", label=r'safety factor')
+        p4, = par1.plot([x_min]*1000,np.arange(0,100,(100./1000.)),color='orange',alpha=0.6, label='Unstable range')
+        par1.axvline(x_max,color='orange',alpha=0.6)
+        
+        host.set_xlim(self.x0_min, self.x0_max)
+        host.set_ylim(0., np.max(self.ome+self.Doppler)*1.2)
+        par1.set_ylim(np.min(self.q)*0.7, np.max(self.q)*1.2)
+        
+        host.set_xlabel(r"$\rho_{tor}$")
+        host.set_ylabel(r"$\omega_{*e}$(kHz)")
+        par1.set_ylabel("Safety factor")
+        
+        
+        host.yaxis.label.set_color(p1.get_color())
+        par1.yaxis.label.set_color(p3.get_color())
+        
+        
+        tkw = dict(size=4, width=1.5)
+        host.tick_params(axis='y', colors=p1.get_color(), **tkw)
+        par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
+        #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
+        host.tick_params(axis='x', **tkw)
+        
+        lines = [p1, p2, p3, p4]
+        
+        host.legend(lines, [l.get_label() for l in lines], loc='upper left')
+        plt.show()
+    
+
+    def Plot_highlight_top_percent_ome(self,peak_percent,n_min,n_max,f_min,f_max):
+        n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
+        x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
+        fig, host = plt.subplots()
+        fig.subplots_adjust(right=0.75)
+        fig.set_size_inches(8, 6)
+            
+        x_min=x_min
+        x_max=x_max
+        y_min=0
+        y_max=10000
+        x_fill=[x_min,x_min,x_max,x_max]
+        y_fill=[y_min,y_max,y_max,y_min]
+        
+
+        p1,=host.plot(self.x,(self.ome+self.Doppler)*float(1), "b-",alpha=0.5, label=r'$\omega_{*e}$')
+        p2,=host.fill(x_fill,y_fill,color='purple',alpha=0.1,label=r'$\mu/x_{*} \leq 0.3$')
+        
+        host.set_xlim(np.min(self.x),np.max(self.x))
+        host.set_ylim(0, np.max(self.ome+self.Doppler)*1.2)
+        
+        host.set_xlabel(r"$\rho_{tor}$")
+        host.set_ylabel(r"$\omega_{*e}$(kHz)")
+        
+        
+        host.yaxis.label.set_color('black')
+        
+        tkw = dict(size=4, width=1.5)
+        host.tick_params(axis='y', colors='black', **tkw)
+        host.tick_params(axis='x', **tkw)
+        
+        lines = [ p1,p2]
+        
+        host.legend(lines, [l.get_label() for l in lines])
+        plt.savefig('./define_mu.png')
+        plt.show()
+
