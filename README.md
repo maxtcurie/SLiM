@@ -1,6 +1,8 @@
 # SLiM
 The Slab Like Microtearing mode model
 
+This software provides a rapid assessment of the slab-like microtearing mode using a global linear dispersion model, which takes minutes to calculate the growth rate and frequency of a given mode.  
+
 SLiM EXE can be found from this link: https://drive.google.com/drive/folders/12e1t6liY5JztwOBOLehPoV8GbfORn_j8?usp=sharing
 
 Executable the program: 
