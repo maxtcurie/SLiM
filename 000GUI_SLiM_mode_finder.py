@@ -21,8 +21,6 @@ windows=tk.Tk()
 windows.title('Mode finder')
 windows.iconbitmap('./SLiM.ico')
 
-Output_Path='./output/'
-
 #global varible
 global geomfile_name
 geomfile_name=''
@@ -304,6 +302,8 @@ def Load_data(profile_name,geomfile_name,Run_mode):
     profile_type=profile_type_var.get()
     geomfile_type=geomfile_type_var.get()
 
+    global outputpath
+
     suffix=suffix_inputbox.get()
 
     q_scale=float(q_scale_inputbox.get())
@@ -327,9 +327,9 @@ def Load_data(profile_name,geomfile_name,Run_mode):
     print('profile_type ='+str(profile_type))
     print('Freq_min=     '+str(Freq_min))
     print('Freq_max=     '+str(Freq_max))
+    print('outputpath=   '+str(outputpath))
 
     path=''
-
     try:
         outputpath=outputpath+'/'
     except: 
@@ -449,12 +449,12 @@ def Load_data(profile_name,geomfile_name,Run_mode):
         'omega_n_cs_a','omega_e_plasma_kHz','omega_e_lab_kHz',\
         'peak_percentage','nu','zeff','eta','shat','beta','ky',\
         'ModIndex','mu','xstar'])   #construct the panda dataframe
-    df.to_csv(Output_Path+'parameter_list.csv',index=False)
+    df.to_csv(outputpath+'parameter_list.csv',index=False)
         
     if Run_mode==1:
         pass
     else:
-        with open(Output_Path+filename, 'w', newline='') as csvfile:     #clear all and then write a row
+        with open(outputpath+filename, 'w', newline='') as csvfile:     #clear all and then write a row
             data = csv.writer(csvfile, delimiter=',')
             data.writerow(['n','m','rho_tor',\
                 'omega_kHz','gamma_cs_a','omega_n_kHz',\
@@ -475,7 +475,7 @@ def Load_data(profile_name,geomfile_name,Run_mode):
             omega_kHz=omega*omega_n_kHz_list[i]
             gamma=np.imag(w0)
             gamma_cs_a=gamma*omega_n_cs_a_list[i]
-            with open(Output_Path+filename, 'a+', newline='') as csvfile: #adding a row
+            with open(outputpath+filename, 'a+', newline='') as csvfile: #adding a row
                 data = csv.writer(csvfile, delimiter=',')
                 data.writerow([ df['n'][i],df['m'][i],df['rho_tor'][i],\
                     omega_kHz,gamma_cs_a,\

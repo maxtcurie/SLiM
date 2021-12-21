@@ -84,7 +84,7 @@ def VectorFinder_auto_tool(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
         #plt.plot(xgrid,np.real(Aparallel))
         #plt.show()
 
-        with open('W_auto_log.csv', 'a') as csvfile:        #clear all and then write a row
+        with open('W_auto.log', 'a') as csvfile:        #clear all and then write a row
             data = csv.writer(csvfile, delimiter=',')
             data.writerow([guess_mod[loopindex],w0,ratio[0],nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar])
         csvfile.close()
@@ -175,7 +175,7 @@ def VectorFinder_auto_tool_w0previous(w0_previous,nu,Zeff,eta,shat,beta,ky,ModIn
         #plt.plot(xgrid,np.real(Aparallel))
         #plt.show()
 
-        with open('W_auto_log.csv', 'a') as csvfile:        #clear all and then write a row
+        with open('W_auto.log', 'a') as csvfile:        #clear all and then write a row
             data = csv.writer(csvfile, delimiter=',')
             data.writerow([guess_mod[loopindex],w0,ratio[0],nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar])
         csvfile.close()
