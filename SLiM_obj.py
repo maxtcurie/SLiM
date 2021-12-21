@@ -606,7 +606,7 @@ class mode_finder:
             if Unstabel_surface_counter>0:
                 p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
             else:
-                p3, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
+                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
 
         
 
@@ -629,7 +629,7 @@ class mode_finder:
         #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
         host.tick_params(axis='x', **tkw)
         
-        lines = [p1,p2,p3]
+        lines = [p1,p2]
         
         #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
         host.legend(lines, [l.get_label() for l in lines])
