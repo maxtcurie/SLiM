@@ -352,14 +352,15 @@ class mode_finder:
         surface_df = pd.DataFrame(temp_ndarray,\
                     columns = ['x_list','m_list','peak_distance'])
         print(surface_df)
-        surface_df.sort_values(by=['peak_distance'])
-        if len(surface_df['x_list'])<top:
-            x_surface_near_peak_list=surface_df['x_list']
-            m_surface_near_peak_list=surface_df['m_list']
+        surface_df_sort=surface_df.sort_values(by='peak_distance')
+        if len(surface_df_sort['x_list'])<top:
+            x_surface_near_peak_list=surface_df_sort['x_list']
+            m_surface_near_peak_list=surface_df_sort['m_list']
         else:
-            x_surface_near_peak_list=surface_df['x_list'][:top]
-            m_surface_near_peak_list=surface_df['m_list'][:top]
-        
+            x_surface_near_peak_list=surface_df_sort['x_list'][:top]
+            m_surface_near_peak_list=surface_df_sort['m_list'][:top]
+        x_surface_near_peak_list=np.array(x_surface_near_peak_list)
+        m_surface_near_peak_list=np.array(m_surface_near_peak_list)
         return x_surface_near_peak_list, m_surface_near_peak_list
 
 
