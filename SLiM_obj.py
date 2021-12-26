@@ -341,6 +341,28 @@ class mode_finder:
         
         return x_surface_near_peak, m_surface_near_peak
 
+    def Rational_surface_top_surfaces(self,n0,top=1):
+        try:
+            x_peak=self.x_peak
+        except:
+            x_peak,x_min,x_max=self.ome_peak_range(peak_percent=0.1)
+
+        x_list, m_list=self.Rational_surface(n0)
+        temp_ndarray=(np.array([x_list, m_list,abs(x_list-x_peak)])).transpose() 
+        surface_df = pd.DataFrame(temp_ndarray,\
+                    columns = ['x_list','m_list','peak_distance'])
+        print(surface_df)
+        surface_df.sort_values(by=['peak_distance'])
+        if len(surface_df['x_list'])<top:
+            x_surface_near_peak_list=surface_df['x_list']
+            m_surface_near_peak_list=surface_df['m_list']
+        else:
+            x_surface_near_peak_list=surface_df['x_list'][:top]
+            m_surface_near_peak_list=surface_df['m_list'][:top]
+        
+        return x_surface_near_peak_list, m_surface_near_peak_list
+
+
     def parameter_for_dispersion(self,x0,n):
         index=np.argmin(abs(x0-self.x))
 

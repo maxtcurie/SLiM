@@ -287,6 +287,11 @@ option_button13=tk.Radiobutton(frame1, text='Local Disperion Calculation',\
                             command=lambda: click_mode(opt_var1.get()))
 option_button13.grid(row=3,column=0)
 
+tk.Label(frame1,text='max number of rational surfaces for each n=').grid(row=4,column=0)
+surface_num_inputbox=tk.Entry(frame1, width=20)
+surface_num_inputbox.insert(0,'1')
+surface_num_inputbox.grid(row=5,column=0)
+
 #***********************run mode****************
 
 
@@ -296,11 +301,12 @@ option_button13.grid(row=3,column=0)
 
 
 #*******************Show all the setting and load the data********************
-omega_percent=float(omega_percent_inputbox.get())
 
 def Load_data(profile_name,geomfile_name,Run_mode):
     profile_type=profile_type_var.get()
     geomfile_type=geomfile_type_var.get()
+    omega_percent=float(omega_percent_inputbox.get())
+    surface_num=int(surface_num_inputbox.get())
 
     global outputpath
 
@@ -319,6 +325,12 @@ def Load_data(profile_name,geomfile_name,Run_mode):
     Impurity_charge=float(Impurity_charge_inputbox.get())
     manual_zeff=float(Zeff_inputbox.get())
 
+    path=''
+    try:
+        outputpath=outputpath+'/'
+    except: 
+        outputpath='./Output/'
+
     print('omega_percent='+str(omega_percent)+'%')
     print('Run_mode=     '+str(Run_mode))
     print('geomfile_name='+str(geomfile_name))
@@ -328,12 +340,6 @@ def Load_data(profile_name,geomfile_name,Run_mode):
     print('Freq_min=     '+str(Freq_min))
     print('Freq_max=     '+str(Freq_max))
     print('outputpath=   '+str(outputpath))
-
-    path=''
-    try:
-        outputpath=outputpath+'/'
-    except: 
-        outputpath='./Output/'
 
     #initidate the data
     mode_finder_obj=mode_finder(profile_type,profile_name,\
@@ -403,34 +409,39 @@ def Load_data(profile_name,geomfile_name,Run_mode):
     print('Finding the rational surfaces')
     n0_list=np.arange(n_min,n_max+1,1)
     for n in tqdm(n0_list):
-        x_surface_near_peak, m_surface_near_peak=mode_finder_obj.Rational_surface_peak_surface(n)
-        if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
-            nu,zeff,eta,shat,beta,ky,mu,xstar=\
-                mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
-        
-            index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
-            omega_n_kHz=float(n)*mode_finder_obj.omn[index]
-            omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
-            omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
-            omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]\
-                        +float(n)*mode_finder_obj.Doppler[index]
-        
-            n_list.append(n)
-            m_list.append(m_surface_near_peak)
-            x_list.append(x_surface_near_peak)
-            nu_list.append(nu)
-            zeff_list.append(zeff)
-            eta_list.append(eta)
-            shat_list.append(shat)
-            beta_list.append(beta)
-            ky_list.append(ky)
-            ModIndex_list.append(ModIndex)
-            mu_list.append(mu)
-            xstar_list.append(xstar)
-            omega_e_plasma_list.append(omega_e_plasma_kHz)
-            omega_e_lab_list.append(omega_e_lab_kHz)
-            omega_n_kHz_list.append(omega_n_kHz)
-            omega_n_cs_a_list.append(omega_n_cs_a)
+        x_surface_near_peak_list, m_surface_near_peak_list=mode_finder_obj.Rational_surface_top_surfaces(n,top=surface_num)
+        print(x_surface_near_peak_list)
+        print(m_surface_near_peak_list)
+        for i in range(len(x_surface_near_peak_list)):
+            x_surface_near_peak=x_surface_near_peak_list[i]
+            m_surface_near_peak=m_surface_near_peak_list[i]
+            if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
+                nu,zeff,eta,shat,beta,ky,mu,xstar=\
+                    mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
+            
+                index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
+                omega_n_kHz=float(n)*mode_finder_obj.omn[index]
+                omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
+                omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
+                omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]\
+                            +float(n)*mode_finder_obj.Doppler[index]
+            
+                n_list.append(n)
+                m_list.append(m_surface_near_peak)
+                x_list.append(x_surface_near_peak)
+                nu_list.append(nu)
+                zeff_list.append(zeff)
+                eta_list.append(eta)
+                shat_list.append(shat)
+                beta_list.append(beta)
+                ky_list.append(ky)
+                ModIndex_list.append(ModIndex)
+                mu_list.append(mu)
+                xstar_list.append(xstar)
+                omega_e_plasma_list.append(omega_e_plasma_kHz)
+                omega_e_lab_list.append(omega_e_lab_kHz)
+                omega_n_kHz_list.append(omega_n_kHz)
+                omega_n_cs_a_list.append(omega_n_cs_a)
     
     
     d = {'n':n_list,'m':m_list,'rho_tor':x_list,\
