@@ -61,7 +61,7 @@ for i in range(len(df['n'])):
             df['shat'][i],df['beta'][i],df['ky'][i],\
             df['ModIndex'][i],df['mu'][i],df['xstar'][i] ])
     csvfile.close()
-    if gamma < -0.05:
+    if gamma < -0.0005:
         break
 
 end=time.time()
