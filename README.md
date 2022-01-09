@@ -25,3 +25,9 @@ https://doi.org/10.13140/RG.2.2.27713.48482
 
 2. J.L. Larakers,  M. Curie, D. R. Hatch, R. D. Hazeltine, and S. M.Mahajan, 2021) "Global Theory of Microtearing Modes in the Tokamak Pedestal" 
 https://doi.org/10.1103/PhysRevLett.126.225001
+
+
+CPU accellerated dispersion calculation:
+
+With    CPU acceleration: 297.5 sec
+Without CPU acceleration: 481.1 sec

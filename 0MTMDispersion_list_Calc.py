@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import csv
 import sys
+import time
 sys.path.insert(1, './Tools')
 
 from DispersionRelationDeterminantFullConductivityZeff import Dispersion
@@ -28,6 +29,8 @@ with open(Output_csv, 'w', newline='') as csvfile:     #clear all and then write
         'nu','zeff','eta','shat','beta','ky',\
         'ModIndex','mu','xstar'])
 csvfile.close()
+
+start=time.time()
 
 for i in range(len(df['n'])):
     nu=df['nu'][i]
@@ -58,6 +61,8 @@ for i in range(len(df['n'])):
             df['shat'][i],df['beta'][i],df['ky'][i],\
             df['ModIndex'][i],df['mu'][i],df['xstar'][i] ])
     csvfile.close()
-
-    if gamma_cs_a<-0.0005:
+    if gamma < -0.05:
         break
+
+end=time.time()
+print(f"Runtime of the program is {end - start} s")

@@ -136,7 +136,7 @@ def parity_finder_short(zgrid,f,name,plot,report): #this function is for local l
     zmin=np.min(zgrid)
     zmax=np.max(zgrid)
 
-    if abs(zmin) > abs(zmax):
+    if abs(zmin) < abs(zmax):
         idx=find_nearest_index(zgrid,-zmax)
         new_z=zgrid[idx:-1]
         f=f[idx:-1]
