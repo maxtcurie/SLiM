@@ -1,7 +1,7 @@
 # SLiM
-The Slab Like Microtearing mode model
+The Slab Like Microtearing mode (SLiM) model
 
-This software provides a rapid assessment of the slab-like microtearing mode using a global linear dispersion model, which takes minutes to calculate the growth rate and frequency of a given mode.  
+This software provides a rapid assessment of the slab-like microtearing mode using a global linear dispersion model, which takes minutes to calculate the growth rate and frequency of a given mode. Potentially uses 10^-5 of the computation resources for discharge study. For detail, one can check on the site(under construction): https://www.drmcurie.com/project-page/Research_Projects/SLiM
 
 SLiM EXE can be found from this link: https://drive.google.com/drive/folders/12e1t6liY5JztwOBOLehPoV8GbfORn_j8?usp=sharing
 
@@ -17,6 +17,7 @@ Executable the program:
 
 3. Calculate a list of dispersion relations provided by a csv file
  script: 0MTMDispersion_list_Calc.py
+ script(CPU accelerated,beta): 0MTMDispersion_list_Calc_parallel.py
 
 This software is based on the following articles and presentations: 
 
@@ -27,7 +28,20 @@ https://doi.org/10.13140/RG.2.2.27713.48482
 https://doi.org/10.1103/PhysRevLett.126.225001
 
 
-CPU accellerated dispersion calculation:
+GitHub repo:
+https://github.com/maxcurie1996/SLiM
 
-With    CPU acceleration: 297.5 sec
-Without CPU acceleration: 481.1 sec
+APS 2021 invited talk about SLiM model:
+https://youtu.be/j2MYfGwlBYY
+
+Playlist for SLiM model:
+https://youtube.com/playlist?list=PLgNi5MiqkBWagsB8yRjRncsz1D4oeedQB
+
+How to use GUI:
+    mode finder GUI: https://youtu.be/R_-ldYNvmhU
+    plot modified safety factor GUI: https://youtu.be/L01xl_e1bpM
+
+
+CPU accellerated dispersion calculation:
+    With    CPU acceleration: 297.5 sec
+    Without CPU acceleration: 481.1 sec
