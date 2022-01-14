@@ -45,3 +45,29 @@ How to use GUI:
 CPU accellerated dispersion calculation:
     With    CPU acceleration: 297.5 sec
     Without CPU acceleration: 481.1 sec
+
+
+SLiM_obj.py
+
+self.r_sigma
+self.R_ref
+self.cs_to_kHz
+self.omn
+self.omn_nominal
+self.cs
+self.rho_s
+self.Lref
+self.x
+self.shat
+self.shat_nominal
+self.eta
+self.ky
+self.ky_nominal=
+self.nu
+self.zeff
+self.beta
+self.q
+self.q_nominal
+self.ome
+self.ome_nominal
+self.Doppler

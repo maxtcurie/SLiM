@@ -468,7 +468,8 @@ def Load_data(profile_name,geomfile_name,Run_mode):
         with open(outputpath+filename, 'w', newline='') as csvfile:     #clear all and then write a row
             data = csv.writer(csvfile, delimiter=',')
             data.writerow(['n','m','rho_tor',\
-                'omega_kHz','gamma_cs_a','omega_n_kHz',\
+                'omega_plasma_kHz','omega_lab_kHz',\
+                'gamma_cs_a','omega_n_kHz',\
                 'omega_n_cs_a','omega_e_plasma_kHz',\
                 'omega_e_lab_kHz','peak_percentage',\
                 'nu','zeff','eta','shat','beta','ky',\
@@ -489,7 +490,7 @@ def Load_data(profile_name,geomfile_name,Run_mode):
             with open(outputpath+filename, 'a+', newline='') as csvfile: #adding a row
                 data = csv.writer(csvfile, delimiter=',')
                 data.writerow([ df['n'][i],df['m'][i],df['rho_tor'][i],\
-                    omega_kHz,gamma_cs_a,\
+                    omega_kHz,omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i],gamma_cs_a,\
                     df['omega_n_kHz'][i],df['omega_n_cs_a'][i],\
                     df['omega_e_plasma_kHz'][i],df['omega_e_lab_kHz'][i],
                     df['peak_percentage'][i],df['nu'][i],\
