@@ -7,9 +7,9 @@ from SLiM_obj import mode_finder
 #**********************************************
 #**********Start of User block*****************
 
-path_list =['./Test_files/169510/1966/',\
-            './Test_files/169510/3069/',\
-            './Test_files/169510/4069/']
+path_list =['./Test_files/DIII_D_169510/1966/',\
+            './Test_files/DIII_D_169510/3069/',\
+            './Test_files/DIII_D_169510/4069/']
 
 profile_name_list =[path_list[0]+'DIIID169510.01966_108.iterdb',\
                     path_list[1]+'DIIID169510.03090_595.iterdb',\
