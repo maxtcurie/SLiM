@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import csv
 import time
+import random
 import concurrent.futures as future #for CPU parallelization
 import sys
 sys.path.insert(1, './../Tools')
@@ -62,7 +63,9 @@ if __name__ == '__main__':
                         for ky in ky_list:
                             for mu in mu_list:
                                 para_list.append([nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv])
-    
+    print(para_list[0])
+    random.shuffle(para_list)
+    print(para_list[0])
     print('***********************************')
     print('*********paraellel calcuation******')
     start=time.time()
