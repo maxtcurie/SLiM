@@ -19,6 +19,16 @@ from DispersionRelationDeterminantFullConductivityZeff import Dispersion
 path='.'
 Input_csv=path+'/parameter_list.csv'   
 Output_csv=path+'/0MTM_scan.csv'
+
+nu_list=np.arange(0,10,1.)
+zeff_list=np.arange(1,2.5,0.5)
+eta_list=np.arange(0.5,5,0.8)
+shat_list=np.arange(0,0.1,0.02)
+beta_list=np.arange(0.0001,0.003,0.0005)
+ky_list=np.arange(0.01,0.1,0.01)
+mu_list=np.arange(0,2,0.3)
+xstar=10.
+ModIndex=1 #global dispersion
 #**********end of user block****************
 df=pd.read_csv(Input_csv)
 
@@ -58,17 +68,14 @@ if __name__ == '__main__':
     csvfile.close()
 
     para_list=[]
-    for i in range(len(df['n'])):
-        nu=df['nu'][i]
-        zeff=df['zeff'][i]
-        eta=df['eta'][i]
-        shat=df['shat'][i]
-        beta=df['beta'][i]
-        ky=df['ky'][i]
-        ModIndex=df['ModIndex'][i]
-        mu=df['mu'][i]
-        xstar=df['xstar'][i]
-        para_list.append([nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv,Input_csv,i])
+    for nu in tqdm(nu_list):
+        for zeff in zeff_list:
+            for eta in eta_list:
+                for shat in shat_list:
+                    for beta in beta_list:
+                        for ky in ky_list:
+                            for mu in mu_list:
+                                para_list.append([nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv,Input_csv,i])
     
     
     print('***********************************')
