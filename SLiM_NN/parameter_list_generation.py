@@ -36,5 +36,5 @@ for nu in tqdm(nu_list):
                         for mu in mu_list:
                             with open(Output_csv, 'a+', newline='') as csvfile: #adding a row
                                 csv_data = csv.writer(csvfile, delimiter=',')
-                                csv_data.writerow([ 0,0,0,0,0,0,0,0,0,0,\
+                                csv_data.writerow([ 0,0,0,0,0,0,0,0,0,0,0,\
                                     nu,zeff,eta,shat,beta,ky,1,mu,xstar])
