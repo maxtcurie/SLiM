@@ -78,7 +78,8 @@ if plot_ome_surface_clean==True:
         ax[i].plot(a.x,a.ome,label=r'$\omega_{*e}$')
         f_lab_max[i]=np.max(float(n)*(a.ome+a.Doppler))
         for x in x_surface_near_peak_list:
-            ax[i].axvline(x,color='red',label='Ratinoal surface')
+            ax[i].axvline(x,color='red')
+        ax[i].axvline(x_surface_near_peak_list[0],color='red',label='Ratinoal surface')
     
     for i in range(nr):
         if i==nr-1:
@@ -104,7 +105,8 @@ if plot_ome_surface_full==True:
         ax[i].plot(a.x,float(n)*(a.ome+a.Doppler),label=r'$\omega_{*e}(lab)$')
         ax[i].set_ylim(0, np.max(f_lab_max[i,:])*1.2 ) 
         for x in x_surface_near_peak_list:
-            ax[i].axvline(x,color='red',label='Ratinoal surface')
+            ax[i].axvline(x,color='red')
+        ax[i].axvline(x_surface_near_peak_list[0],color='red',label='Ratinoal surface')
     
     
     for i in range(nr):

@@ -60,7 +60,8 @@ def VectorFinder_auto_tool(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
         b=np.ones(2*num-2)
         
         w0=1.+eta
-        wguess=w0+ Zeff*nu*0.1 + 1j*guess_mod[loopindex]
+        #wguess=w0+ Zeff*nu*0.1 + 1j*guess_mod[loopindex]
+        wguess=w0 + 1j*guess_mod[loopindex]
 
         
         w0=w_finder(xmax,delx,wguess,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar,1)
