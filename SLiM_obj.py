@@ -21,6 +21,7 @@ from read_EFIT_file import get_geom_pars
 from max_stat_tool import Poly_fit
 from max_stat_tool import coeff_to_Poly
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
+from DispersionRelationDeterminantFullConductivityZeff import VectorFinder
 #Created by Max T. Curie  09/17/2021
 #Last edited by Max Curie 09/17/2021
 #Supported by scripts in IFS
@@ -393,8 +394,11 @@ class mode_finder:
         mu=(x0-x_peak)*self.Lref/(self.rho_s)
         return nu,zeff,eta,shat,beta,ky,mu,xstar
 
-    def Dispersion(self,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
-        w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
+    def Dispersion(self,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,manual=False):
+        if manual==True:
+            w0=VectorFinder(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
+        else:
+            w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
         return w0
     
 

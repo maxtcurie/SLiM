@@ -105,5 +105,4 @@ print(f"Runtime of the program is {end - start} s")
 #save the model
 
 #*********end of trainning***********************
-
 predictions = model.predict(x_train)

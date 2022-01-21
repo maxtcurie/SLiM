@@ -552,7 +552,7 @@ def VectorFinder(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
             change=np.abs(lnew-lold)
             lold=lnew
         Aparallel=b[0:num]
-        ModG=np.abs(b[num/2])*np.exp(-((xgrid-mu)/xstar)**2)
+        ModG=np.abs(b[int(num/2)])*np.exp(-((xgrid-mu)/xstar)**2)
         plt.plot(xgrid,np.real(Aparallel),label="Re(Aparallel)")
         plt.plot(xgrid,np.imag(Aparallel),label="Im(Aparallel)")
         plt.plot(xgrid,ModG,label="Omega*(x)")

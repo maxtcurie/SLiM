@@ -23,9 +23,10 @@ n_min=6                                #minmum mode number (include) that finder
 n_max=6                              #maximum mode number (include) that finder will cover
 
 
-Run_mode=2      # mode1: fast mode
+Run_mode=4      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
+                # mode4: slow mode manual(global)
 
 profile_type= "pfile"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
@@ -85,7 +86,7 @@ for i in range(len(q_scale_list)):
     if Run_mode==1:#simple rational surface alignment
         ModIndex=-1
         filename='rational_surface_alignment'+Output_suffix+'.csv'
-    if Run_mode==2:#global dispersion
+    if Run_mode==2 or Run_mode==4:#global dispersion
         ModIndex=1
         filename='global_dispersion'+Output_suffix+'.csv'
     elif Run_mode==3:#local dispersion
@@ -167,7 +168,12 @@ else:
     print('Calculate the dispersion relations')
     
     for i in tqdm(range(len(n_list))):
-        w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
+        if Run_mode==4:
+            w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                df['shat'][i],df['beta'][i],df['ky'][i],\
+                df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=True)
+        else:
+            w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
                 df['ModIndex'][i],df['mu'][i],df['xstar'][i])
         
