@@ -19,8 +19,8 @@ q_shift_list=[0.]
 #q_shift_list=[0.]*len(q_scale_list)
 
 
-n_min=3                                #minmum mode number (include) that finder will cover
-n_max=5                              #maximum mode number (include) that finder will cover
+n_min=2                                #minmum mode number (include) that finder will cover
+n_max=2                              #maximum mode number (include) that finder will cover
 
 
 Run_mode=5      # mode1: fast mode
@@ -101,6 +101,7 @@ for i in range(len(q_scale_list)):
     cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
     print('Finding the rational surfaces')
     n0_list=np.arange(n_min,n_max+1,1)
+
     for n in tqdm(n0_list):
         x_surface_near_peak, m_surface_near_peak=mode_finder_obj.Rational_surface_peak_surface(n)
         if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:

@@ -14,18 +14,26 @@ import sys
 sys.path.insert(1, './Tools')
 
 from DispersionRelationDeterminantFullConductivityZeff import Dispersion
+from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
 
 #**********Start of user block***************
-path='C:/Users/tx686/Documents/GitHub/Discharge_survey/D3D/169510'
-Input_csv=path+'/parameter_list.csv'   
+path='C:/Users/tx686/Documents/GitHub/Discharge_survey/D3D'
+Input_csv=path+'/parameter_list_summary.csv'   
 Output_csv=path+'/0MTM_scan.csv'
+
+Run_mode=2      #Run_mode=1 quick calculation(30sec/mode)
+                #Run_mode=2 extensive(30min/mode)
+
 #**********end of user block****************
 df=pd.read_csv(Input_csv)
 
 def Dispersion_calc(para_list):
     [nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv,Input_csv,i]=para_list
     
-    w0=Dispersion(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
+    if Run_mode==1:
+        w0=Dispersion(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
+    elif Run_mode==2:
+        w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
 
     omega=np.real(w0)
     omega_kHz=omega*df['omega_n_kHz'][i]
@@ -59,15 +67,15 @@ if __name__ == '__main__':
 
     para_list=[]
     for i in range(len(df['n'])):
-        nu=df['nu'][i]
-        zeff=df['zeff'][i]
-        eta=df['eta'][i]
-        shat=df['shat'][i]
-        beta=df['beta'][i]
-        ky=df['ky'][i]
-        ModIndex=df['ModIndex'][i]
-        mu=df['mu'][i]
-        xstar=df['xstar'][i]
+        nu=float(df['nu'][i])
+        zeff=float(df['zeff'][i])
+        eta=float(df['eta'][i])
+        shat=float(df['shat'][i])
+        beta=float(df['beta'][i])
+        ky=float(df['ky'][i])
+        ModIndex=int(df['ModIndex'][i])
+        mu=float(df['mu'][i])
+        xstar=float(df['xstar'][i])
         para_list.append([nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv,Input_csv,i])
     
     
