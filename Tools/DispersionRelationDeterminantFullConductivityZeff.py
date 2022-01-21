@@ -29,12 +29,107 @@ def VectorFinder_auto(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
         w0=VectorFinder_auto_large_mu(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
     return w0
 
+def VectorFinder_auto_Extensive(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
+    mu=abs(mu)
+    judge=0
+    loopindex=0
+    xmax=20.
+    delx=0.02*shat/0.005
+    guess_mod=[1.,0.7,0.5,0.3,0.35,0.25,0.2,0.15,0.1]#modify the initial guess to( 1+eta+guess_mod[loopindex] )
+
+    guess_1D=np.arange(0.,10,0.1)
+    guess_mod=np.zeros(len(guess_1D)*len(guess_1D))
+    for i in range(len(guess_1D)):
+        for j in range(len(guess_1D)):
+            guess_mod[i*len(guess_1D)+j]=guess_1D[i] + 1j*guess_1D[j]
+    np.random.shuffle(guess_mod)
+    
+    w_list=[]
+    odd_list=[]
+    while judge == 0:
+       
+        print("Parameters:")
+        print("(0) nu="+str(nu))
+        print("(1) Zeff="+str(Zeff))
+        print("(2) eta="+str(eta))
+        print("(3) beta="+str(beta))
+        print("(4) ky="+str(ky))
+        print("(5) Modulation?="+str(ModIndex))
+        print("(6) mu="+str(mu))
+        print("(7) xstar="+str(xstar))
+        print("(8) shat="+str(shat))
+            
+         
+        xgrid=np.arange(-xmax,xmax,delx,complex)
+        num=len(xgrid)
+        b=np.ones(2*num-2)
+        
+        wguess=guess_mod[loopindex]
+
+        
+        w0=w_finder(xmax,delx,wguess,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar,1)
+        A = A_maker(xmax, delx, w0, nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+        AInverse=np.linalg.inv(A)
+        change=1.
+        lold=2.
+        while change > 10.**(-13):
+            b=np.matmul(AInverse,b)
+            b=b/np.linalg.norm(b)
+            lnew=np.matmul(np.conj(b),np.matmul(A,b))
+            change=np.abs(lnew-lold)
+            lold=lnew
+        Aparallel=b[0:num]
+        ModG=np.abs(b[int(num/2)])*np.exp(-((xgrid-mu)/xstar)**2.)
+        
+        parity1,location0,ratio=parity_finder_short(xgrid,Aparallel,name='apar',plot=0,report=0)
+        print('[oddness,eveness]='+str(ratio))
+
+        #plt.clf()
+        #plt.plot(xgrid,np.real(Aparallel))
+        #plt.show()
+
+        with open('W_auto.log', 'a') as csvfile:        #clear all and then write a row
+            data = csv.writer(csvfile, delimiter=',')
+            data.writerow([guess_mod[loopindex],w0,ratio[0],nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar])
+        csvfile.close()
+
+        #SigmaPlotter(xmax, delx, w0, nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+        loopindex=loopindex+1
+        w_list.append(w0)
+        odd_list.append(ratio[0])
+        if ratio[0]<0.3 and np.imag(w0)>0:
+            judge=1
+        #elif loopindex>=2 and np.std(np.array(w_list))<0.02:
+        #    print('std is'+str(np.std(np.array(w_list))))
+        #    judge=1
+        elif loopindex>=len(guess_mod):
+            judge=1
+        else:
+            judge=0
+    print('w_list='+str(w_list))
+    print('odd_list='+str(odd_list))
+    odd_w0s=[]
+    odd_w0_real=[]
+    for i in range(len(w_list)):
+        if odd_list[i]<0.7:
+            odd_w0s.append(w_list[i])
+            odd_w0_real.append(w_list[i].imag)
+    print(np.array(odd_w0_real))
+    if len(odd_w0_real)==0:
+        print('There is no mode in this')
+        return 0.
+    else:
+        w0_index=np.argmax(np.array(odd_w0_real))
+        w0=odd_w0s[w0_index]
+        print('final w0='+str(w0))
+        return w0
+
 def VectorFinder_auto_tool(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
 
     judge=0
     loopindex=0
     xmax=20.
-    delx=0.02
+    delx=0.02 #for low magnetic shear
     guess_mod=[0.3,0.35,0.25,0.2,0.15,0.1]#modify the initial guess to( 1+eta+guess_mod[loopindex] )
 
     mu=abs(mu)
@@ -211,6 +306,7 @@ def VectorFinder_auto_tool_w0previous(w0_previous,nu,Zeff,eta,shat,beta,ky,ModIn
         w0=odd_w0s[w0_index]
         print('final w0='+str(w0))
         return w0
+
 def VectorFinder_auto_large_mu(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
     mu=abs(mu)
     mu0=0.

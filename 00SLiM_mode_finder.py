@@ -19,14 +19,15 @@ q_shift_list=[0.]
 #q_shift_list=[0.]*len(q_scale_list)
 
 
-n_min=6                                #minmum mode number (include) that finder will cover
-n_max=6                              #maximum mode number (include) that finder will cover
+n_min=3                                #minmum mode number (include) that finder will cover
+n_max=5                              #maximum mode number (include) that finder will cover
 
 
-Run_mode=4      # mode1: fast mode
+Run_mode=5      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
                 # mode4: slow mode manual(global)
+                # mode5: slow slow mode(global)
 
 profile_type= "pfile"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
@@ -43,7 +44,7 @@ zeff_manual=-1     #set to -1 automatically calculate the zeff
 suffix='.dat'       #for the 'GENE_tracor' geomfile
 x0_min=0.93         # beginning of the range in rho_tor
 x0_max=0.99         # ending of the range in rho_tor
-peak_percent=0.08
+peak_percent=20.
 mref=2.             #mess of ion in unit of proton, for deuterium is 2
 Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=True
@@ -86,7 +87,7 @@ for i in range(len(q_scale_list)):
     if Run_mode==1:#simple rational surface alignment
         ModIndex=-1
         filename='rational_surface_alignment'+Output_suffix+'.csv'
-    if Run_mode==2 or Run_mode==4:#global dispersion
+    if Run_mode==2 or Run_mode==4 or Run_mode==5:#global dispersion
         ModIndex=1
         filename='global_dispersion'+Output_suffix+'.csv'
     elif Run_mode==3:#local dispersion
@@ -172,6 +173,10 @@ else:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
                 df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=True)
+        elif Run_mode==5:
+            w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                df['shat'][i],df['beta'][i],df['ky'][i],\
+                df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=5)
         else:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
