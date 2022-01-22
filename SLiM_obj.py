@@ -313,21 +313,40 @@ class mode_finder:
 
         x_list=[]
         m_list=[]
+        
+        q_prime=fd_d1_o4(q,uni_rhot)/q
+        peak_index=np.argmin(abs(q_prime))
+        
         qmin = np.min(q)
         qmax = np.max(q)
-    
         m_min = math.ceil(qmin*n0)
         m_max = math.floor(qmax*n0)
         mnums = np.arange(m_min,m_max+1)
+        dq=np.max(abs(q[:-1]-q[1:]))
+
 
         for m in mnums:
             #print(m)
+            x_list_temp=[]
+            index_list_temp=[]
             q0=float(m)/float(n0)
-            index0=np.argmin(abs(q-q0))
-            if abs(q[index0]-q0)<0.1:
-                x_list.append(uni_rhot[index0])
-                m_list.append(m)
-    
+            for index0 in range(len(q)):
+                if abs(q[index0]-q0)<dq:
+                    x_list_temp.append(uni_rhot[index0])
+                    index_list_temp.append(index0)
+            index_diff=np.array(index_list_temp[:-1],dtype=int)-np.array(index_list_temp[1:],dtype=int)
+            #print(index_diff)
+            #print(x_list_temp)
+            #print(index_list_temp)
+            for i in range(len(index_diff)):
+                if index_diff[i]==-1:
+                    pass 
+                else:
+                    x_list.append(x_list_temp[i])
+                    m_list.append(m)
+
+        print(x_list)
+        print(m_list)
         return x_list, m_list
 
     def Rational_surface_peak_surface(self,n0):

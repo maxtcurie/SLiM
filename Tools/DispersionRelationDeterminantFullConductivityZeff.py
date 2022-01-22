@@ -34,7 +34,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
     judge=0
     loopindex=0
     xmax=20.
-    delx=0.02*shat/0.005
+    delx=0.02*abs(shat)/0.005
     guess_mod=[1.,0.7,0.5,0.3,0.35,0.25,0.2,0.15,0.1]#modify the initial guess to( 1+eta+guess_mod[loopindex] )
 
     guess_1D=np.arange(0.,10,0.1)
