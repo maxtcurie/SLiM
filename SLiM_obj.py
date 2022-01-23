@@ -314,7 +314,7 @@ class mode_finder:
         x_list=[]
         m_list=[]
         
-        q_prime=fd_d1_o4(q,uni_rhot)/q
+        q_prime=(fd_d1_o4(q,uni_rhot)/q)[1:-1]
         peak_index=np.argmin(abs(q_prime))
         
         qmin = np.min(q)
@@ -324,30 +324,44 @@ class mode_finder:
         mnums = np.arange(m_min,m_max+1)
         dq=np.max(abs(q[:-1]-q[1:]))
 
-
-        for m in mnums:
-            #print(m)
-            x_list_temp=[]
-            index_list_temp=[]
-            q0=float(m)/float(n0)
-            for index0 in range(len(q)):
-                if abs(q[index0]-q0)<dq:
-                    x_list_temp.append(uni_rhot[index0])
-                    index_list_temp.append(index0)
-            index_diff=np.array(index_list_temp[:-1],dtype=int)-np.array(index_list_temp[1:],dtype=int)
-            #print(index_diff)
-            #print(x_list_temp)
-            #print(index_list_temp)
-            for i in range(len(index_diff)):
-                if index_diff[i]==-1:
-                    pass 
-                else:
-                    x_list.append(x_list_temp[i])
+        if np.min(q_prime)<-0.001: #for non-monotonic increasing q profiles
+            for m in mnums:
+                #print(m)
+                x_list_temp=[]
+                index_list_temp=[]
+                q0=float(m)/float(n0)
+                for index0 in range(len(q)):
+                    if abs(q[index0]-q0)<dq:
+                        x_list_temp.append(uni_rhot[index0])
+                        index_list_temp.append(index0)
+                index_diff=np.array(index_list_temp[:-1],dtype=int)-np.array(index_list_temp[1:],dtype=int)
+                print(index_diff)
+                print(x_list_temp)
+                print(index_list_temp)
+                if len(x_list_temp)>0:
+                    x_list.append(x_list_temp[0])
                     m_list.append(m)
-
-        print(x_list)
-        print(m_list)
-        return x_list, m_list
+                for i in range(len(index_diff)):
+                    if index_diff[i]==-1:
+                        pass 
+                    else:
+                        x_list.append(x_list_temp[i])
+                        m_list.append(m)
+    
+            print(x_list)
+            print(m_list)
+            return x_list, m_list
+        else: #for monotonic increasing q profiles
+            for m in mnums:
+                q0=float(m)/float(n0)
+                index0=np.argmin(abs(q-q0))
+                if abs(q[index0]-q0)<0.1:
+                    x_list.append(uni_rhot[index0])
+                    m_list.append(m)
+                
+            print(x_list)
+            print(m_list)
+            return x_list, m_list
 
     def Rational_surface_peak_surface(self,n0):
         try:
