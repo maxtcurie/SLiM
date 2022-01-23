@@ -136,7 +136,8 @@ for i in range(len(q_scale_list)):
     
 d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\
     'n':n_list,'m':m_list,'rho_tor':x_list,\
-    'omega_kHz':[0]*len(n_list),\
+    'omega_plasma_kHz':[0]*len(n_list),\
+    'omega_lan_kHz':[0]*len(n_list),\
     'gamma_cs_a':[0]*len(n_list),\
     'omega_n_kHz':omega_n_kHz_list,\
     'omega_n_cs_a':omega_n_cs_a_list,\
@@ -148,7 +149,7 @@ d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\
     'shat':shat_list,'beta':beta_list,'ky':ky_list,\
     'ModIndex':ModIndex_list,'mu':mu_list,'xstar':xstar_list}
 df=pd.DataFrame(d, columns=['q_scale','q_shift','n','m','rho_tor',\
-    'omega_kHz','gamma_cs_a','omega_n_kHz',\
+    'omega_plasma_kHz','omega_lab_kHz','gamma_cs_a','omega_n_kHz',\
     'omega_n_cs_a','omega_e_plasma_kHz','omega_e_lab_kHz',\
     'peak_percentage','nu','zeff','eta','shat','beta','ky',\
     'ModIndex','mu','xstar'])   #construct the panda dataframe
@@ -160,7 +161,8 @@ else:
     with open(Output_Path+filename, 'w', newline='') as csvfile:     #clear all and then write a row
         data = csv.writer(csvfile, delimiter=',')
         data.writerow(['q_scale','q_shift','n','m','rho_tor',\
-            'omega_kHz','gamma_cs_a','omega_n_kHz',\
+            'omega_plasma_kHz','omega_lab_kHz',\
+            'gamma_cs_a','omega_n_kHz',\
             'omega_n_cs_a','omega_e_plasma_kHz',\
             'omega_e_lab_kHz','peak_percentage',\
             'nu','zeff','eta','shat','beta','ky',\
@@ -192,7 +194,9 @@ else:
             data.writerow([ q_scale_list0[i],\
                 q_shift_list0[i],\
                 df['n'][i],df['m'][i],df['rho_tor'][i],\
-                omega_kHz,gamma_cs_a,\
+                omega_kHz,\
+                omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i],\
+                gamma_cs_a,\
                 df['omega_n_kHz'][i],df['omega_n_cs_a'][i],\
                 df['omega_e_plasma_kHz'][i],df['omega_e_lab_kHz'][i],
                 df['peak_percentage'][i],df['nu'][i],\

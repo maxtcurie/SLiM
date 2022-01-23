@@ -445,7 +445,8 @@ def Load_data(profile_name,geomfile_name,Run_mode):
     
     
     d = {'n':n_list,'m':m_list,'rho_tor':x_list,\
-        'omega_kHz':[0]*len(n_list),\
+        'omega_plasma_kHz':[0]*len(n_list),\
+        'omega_lab_kHz':[0]*len(n_list),\
         'gamma_cs_a':[0]*len(n_list),\
         'omega_n_kHz':omega_n_kHz_list,\
         'omega_n_cs_a':omega_n_cs_a_list,\
@@ -456,7 +457,7 @@ def Load_data(profile_name,geomfile_name,Run_mode):
         'shat':shat_list,'beta':beta_list,'ky':ky_list,\
         'ModIndex':ModIndex_list,'mu':mu_list,'xstar':xstar_list}
     df=pd.DataFrame(d, columns=['n','m','rho_tor',\
-        'omega_kHz','gamma_cs_a','omega_n_kHz',\
+        'omega_plasma_kHz','omega_lab_kHz','gamma_cs_a','omega_n_kHz',\
         'omega_n_cs_a','omega_e_plasma_kHz','omega_e_lab_kHz',\
         'peak_percentage','nu','zeff','eta','shat','beta','ky',\
         'ModIndex','mu','xstar'])   #construct the panda dataframe
