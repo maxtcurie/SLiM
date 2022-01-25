@@ -19,9 +19,9 @@ q_shift_list=[0.]
 #q_shift_list=[0.]*len(q_scale_list)
 
 
-n_min=2                                #minmum mode number (include) that finder will cover
-n_max=2                              #maximum mode number (include) that finder will cover
-
+n_min=1         #minmum mode number (include) that finder will cover
+n_max=5         #maximum mode number (include) that finder will cover
+surface_num=2   #total amount of rational surfaces one want to look at
 
 Run_mode=5      # mode1: fast mode
                 # mode2: slow mode(global)
@@ -103,35 +103,41 @@ for i in range(len(q_scale_list)):
     n0_list=np.arange(n_min,n_max+1,1)
 
     for n in tqdm(n0_list):
-        x_surface_near_peak, m_surface_near_peak=mode_finder_obj.Rational_surface_peak_surface(n)
-        if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
-            nu,zeff,eta,shat,beta,ky,mu,xstar=\
-                mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
-            factor=mode_finder_obj.factor
-            index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
-            omega_n_kHz=float(n)*mode_finder_obj.omn[index]
-            omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
-            omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
-            omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]+float(n)*mode_finder_obj.Doppler[index]
         
-            n_list.append(n)
-            m_list.append(m_surface_near_peak)
-            x_list.append(x_surface_near_peak)
-            nu_list.append(nu)
-            zeff_list.append(zeff)
-            eta_list.append(eta)
-            shat_list.append(shat)
-            beta_list.append(beta)
-            ky_list.append(ky)
-            ModIndex_list.append(ModIndex)
-            mu_list.append(mu)
-            xstar_list.append(xstar)
-            omega_e_plasma_list.append(omega_e_plasma_kHz)
-            omega_e_lab_list.append(omega_e_lab_kHz)
-            omega_n_kHz_list.append(omega_n_kHz)
-            omega_n_cs_a_list.append(omega_n_cs_a)
-            q_scale_list0.append(q_scale)
-            q_shift_list0.append(q_shift)
+        x_surface_near_peak_list, m_surface_near_peak_list=mode_finder_obj.Rational_surface_top_surfaces(n,top=surface_num)
+        print(x_surface_near_peak_list)
+        print(m_surface_near_peak_list)
+        for i in range(len(x_surface_near_peak_list)):
+            x_surface_near_peak=x_surface_near_peak_list[i]
+            m_surface_near_peak=m_surface_near_peak_list[i]
+            if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
+                nu,zeff,eta,shat,beta,ky,mu,xstar=\
+                    mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
+                factor=mode_finder_obj.factor
+                index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
+                omega_n_kHz=float(n)*mode_finder_obj.omn[index]
+                omega_n_cs_a=float(n)*mode_finder_obj.omn[index]/cs_to_kHz
+                omega_e_plasma_kHz=float(n)*mode_finder_obj.ome[index]
+                omega_e_lab_kHz=float(n)*mode_finder_obj.ome[index]+float(n)*mode_finder_obj.Doppler[index]
+            
+                n_list.append(n)
+                m_list.append(m_surface_near_peak)
+                x_list.append(x_surface_near_peak)
+                nu_list.append(nu)
+                zeff_list.append(zeff)
+                eta_list.append(eta)
+                shat_list.append(shat)
+                beta_list.append(beta)
+                ky_list.append(ky)
+                ModIndex_list.append(ModIndex)
+                mu_list.append(mu)
+                xstar_list.append(xstar)
+                omega_e_plasma_list.append(omega_e_plasma_kHz)
+                omega_e_lab_list.append(omega_e_lab_kHz)
+                omega_n_kHz_list.append(omega_n_kHz)
+                omega_n_cs_a_list.append(omega_n_cs_a)
+                q_scale_list0.append(q_scale)
+                q_shift_list0.append(q_shift)
     
     
 d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\

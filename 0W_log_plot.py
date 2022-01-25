@@ -13,5 +13,6 @@ plt.clf()
 plt.scatter(np.real(w_list),np.imag(w_list))
 plt.xlabel('omega')
 plt.ylabel('gamma')
+plt.ylim(0,100)
 plt.show()
 

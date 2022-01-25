@@ -10,6 +10,9 @@ file_list =['./../Discharge_survey/D3D/169510/1966/global_dispersion.csv',\
             './../Discharge_survey/D3D/169510/4069/global_dispersion.csv']
 
 name_list=['t=1966ms','t=3090ms','t=4069ms']
+
+nmin=1
+nmax=5
 #************End of User Block*****************
 #**********************************************
 
@@ -19,7 +22,11 @@ for i in range(len(file_list)):
     file_name=file_list[i]
     df=pd.read_csv(file_name)
     df_unstabel=df.query('gamma_cs_a>0')
+    df_unstabel=df_unstabel[((nmin<=df_unstabel.n) & (df_unstabel.n<=nmax))]
+
     df_stabel  =df.query('gamma_cs_a<=0')
+    df_stabel  =df_stabel[((nmin<=df_stabel.n) & (df_stabel.n<=nmax))]
+
     n_stable=np.unique(np.array(df_stabel['n']))
     for n in df_unstabel['n']:
         if n in n_stable:
@@ -45,5 +52,5 @@ for i in range(nr):
     ax[0,0].set_ylabel(r'$\gamma(c_s/a)$')
     ax[1,0].set_ylabel('Frequency(kHz)')
 
-plt.subplots_adjust(wspace=0, hspace=0)
+plt.subplots_adjust(wspace=0, hspace=0.03)
 plt.show()

@@ -1,0 +1,2 @@
+Dir,n,m,rho_tor,omega_kHz,omega_lab_kHz,gamma_cs_a,omega_n_kHz,omega_n_cs_a,omega_e_plasma_kHz,omega_e_lab_kHz,peak_percentage,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar
+1069,4,18,0.966232759,1.238851323,17.12696333,-0.002848397,14.29204683,0.36125598,66.88359128,82.77170329,0.988226615,0.518775311,1.759099341,3.679776945,0.039897675,0.001080606,0.061476757,1,1.157218971,11

@@ -35,13 +35,15 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
     loopindex=0
     xmax=20.
     delx=0.02*abs(shat)/0.005
-    guess_mod=[1.,0.7,0.5,0.3,0.35,0.25,0.2,0.15,0.1]#modify the initial guess to( 1+eta+guess_mod[loopindex] )
+    
+    df_guess=0.5
+    guess_f=np.arange(0.,3.+eta,0.1) #Eq 3.17, 3.18
+    guess_gamma=np.arange(0.,1.,0.1)
 
-    guess_1D=np.arange(0.,10,0.1)
-    guess_mod=np.zeros(len(guess_1D)*len(guess_1D))
-    for i in range(len(guess_1D)):
-        for j in range(len(guess_1D)):
-            guess_mod[i*len(guess_1D)+j]=guess_1D[i] + 1j*guess_1D[j]
+    guess_mod=np.zeros(len(guess_f)*len(guess_gamma))
+    for i in range(len(guess_f)):
+        for j in range(len(guess_gamma)):
+            guess_mod[j*len(guess_gamma)+i]=guess_f[i] + 1j*guess_gamma[j]
     np.random.shuffle(guess_mod)
     
     w_list=[]
@@ -507,10 +509,10 @@ def A_maker(x_max, del_x, w1, v1,Zeff,eta,alpha,beta,ky,ModIndex,mu,xstar):
     #print(sigma_grid)
     #print(ModG)
     # computing the diagonal components of the matrix
-#    a11 = ky**2 + 2j*mref*1836.*beta*sigma_grid
-#    a12 = -4j*(mref*1836)**1.5*alpha*beta*sigma_grid*x_grid
-#    a21 = 4j*alpha*np.sqrt(mref*1836.)*sigma_grid/(w1*(w1-1))*x_grid
-#    a22 = ky**2 - 8j*alpha**2*mref*1836.*sigma_grid/(w1*(w1-1))*x_grid**2
+    #    a11 = ky**2 + 2j*mref*1836.*beta*sigma_grid
+    #    a12 = -4j*(mref*1836)**1.5*alpha*beta*sigma_grid*x_grid
+    #    a21 = 4j*alpha*np.sqrt(mref*1836.)*sigma_grid/(w1*(w1-1))*x_grid
+    #    a22 = ky**2 - 8j*alpha**2*mref*1836.*sigma_grid/(w1*(w1-1))*x_grid**2
     tau=+1.0
     a11=ky**2 +1j*mref*1836.*beta*sigma_grid
     a12=-1j*mref*1836*beta*sigma_grid*x_grid

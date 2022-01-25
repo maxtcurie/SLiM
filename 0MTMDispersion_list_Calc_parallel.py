@@ -17,8 +17,8 @@ from DispersionRelationDeterminantFullConductivityZeff import Dispersion
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
 
 #**********Start of user block***************
-path='C:/Users/tx686/Documents/GitHub/Discharge_survey/D3D'
-Input_csv=path+'/parameter_list_summary.csv'   
+path='./Test_files'
+Input_csv=path+'/parameter_list_3.csv'   
 Output_csv=path+'/0MTM_scan.csv'
 
 Run_mode=2      #Run_mode=1 quick calculation(30sec/mode)
