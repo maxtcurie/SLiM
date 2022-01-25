@@ -103,13 +103,12 @@ for i in range(len(q_scale_list)):
     n0_list=np.arange(n_min,n_max+1,1)
 
     for n in tqdm(n0_list):
-        
         x_surface_near_peak_list, m_surface_near_peak_list=mode_finder_obj.Rational_surface_top_surfaces(n,top=surface_num)
         print(x_surface_near_peak_list)
         print(m_surface_near_peak_list)
-        for i in range(len(x_surface_near_peak_list)):
-            x_surface_near_peak=x_surface_near_peak_list[i]
-            m_surface_near_peak=m_surface_near_peak_list[i]
+        for j in range(len(x_surface_near_peak_list)):
+            x_surface_near_peak=x_surface_near_peak_list[j]
+            m_surface_near_peak=m_surface_near_peak_list[j]
             if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
                 nu,zeff,eta,shat,beta,ky,mu,xstar=\
                     mode_finder_obj.parameter_for_dispersion(x_surface_near_peak,n)
