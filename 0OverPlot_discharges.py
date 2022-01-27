@@ -24,9 +24,12 @@ geomfile_type="gfile"          # "gfile"  "GENE_tracor"
 n_list=[1,2,3,4,5]  #list of toroidal mode numbers
 rational_surface_number=3 
 
-plot_ome=False
-plot_ome_surface_clean=False
-plot_ome_surface_full=False
+color_list=['orange','green','red']#list of color for the mode number
+name_list=['t=1966ms','t=3090ms','t=4069ms']
+
+plot_ome=True
+plot_ome_surface_clean=True
+plot_ome_surface_full=True
 plot_parameter=True
 
 outputpath='./Test_files/'
@@ -44,9 +47,6 @@ q_uncertainty=0.1
 mref=2.
 profile_uncertainty=0.2
 doppler_uncertainty=0.5
-
-color_list=['orange','green','red']#list of color for the mode number
-name_list=['t=1966ms','t=3090ms','t=4069ms']
 #************End of User Block*****************
 #**********************************************
 
@@ -61,7 +61,6 @@ for i in range(len(profile_name_list)):
     a_list.append(a)
 
 if plot_ome==True:
-    a_list=[]
     plt.clf()
     for i in range(len(profile_name_list)):
         a=a_list[i]
@@ -107,6 +106,7 @@ if plot_ome_surface_full==True:
     fig, ax=plt.subplots(nrows=len(n_list),\
         ncols=len(a_list),sharex=True) 
     (nr,nc)=np.shape(ax)
+    f_lab_max=np.zeros((nr,nc))
     for i in range(len(n_list)):
         n=n_list[i]
         for j in range(len(a_list)):
@@ -116,7 +116,7 @@ if plot_ome_surface_full==True:
                 =a.Rational_surface_top_surfaces(n,top=rational_surface_number)
             ax[i,j].plot(a.x,float(n)*a.ome,label=r'$\omega_{*e}(plasma)$')
             ax[i,j].plot(a.x,float(n)*(a.ome+a.Doppler),label=r'$\omega_{*e}(lab)$')
-            ax[i,j].set_ylim(0, np.max(f_lab_max[i,:])*1.2 ) 
+            f_lab_max[i,j]=np.max(float(n)*(a.ome+a.Doppler))
             for x in x_surface_near_peak_list:
                 ax[i,j].axvline(x,color='red',label='Ratinoal surface')
             #ax[i,j].grid()
@@ -124,6 +124,7 @@ if plot_ome_surface_full==True:
     
     for i in range(nr):
         for j in range(nc):
+            ax[i,j].set_ylim(0, np.max(f_lab_max[i,:])*1.2 ) 
             #if i!=nr-1:
             #    ax[i,j].set_xticklabels([])
             if i==nr-1:
@@ -154,31 +155,38 @@ if plot_parameter==True:
         a=a_list[i]
         ax[0,i].plot(a.x,a.shat)
         ax[0,0].set_ylabel(r'$L_{ne}/L_{q}$')
-        shat_list.append(a.shat)
+        shat_list.append(np.min(a.shat))
+        shat_list.append(np.max(a.shat))
 
         ax[1,i].plot(a.x,a.eta)
         ax[1,0].set_ylabel(r'$L_{ne}/L_{Te}$')
-        eta_list.append(a.eta)
+        eta_list.append(np.min(a.eta))
+        eta_list.append(np.max(a.eta))
 
         ax[2,i].plot(a.x,a.ky)
         ax[2,0].set_ylabel(r'$k_y\rho_s$')
-        ky_list.append(a.ky)
+        ky_list.append(np.min(a.ky))
+        ky_list.append(np.max(a.ky))
 
         ax[3,i].plot(a.x,a.nu)
         ax[3,0].set_ylabel(r'$\nu_{ei}/\omega_{*ne}$')
-        nu_list.append(a.nu)
+        nu_list.append(np.min(a.nu))
+        nu_list.append(np.max(a.nu))
 
         ax[4,i].plot(a.x,a.beta)
         ax[4,0].set_ylabel(r'$\beta$')
-        beta_list.append(a.beta)
+        beta_list.append(np.min(a.beta))
+        beta_list.append(np.max(a.beta))
 
         ax[5,i].plot(a.x,a.q,label=r'$q$')
         ax[5,0].set_ylabel(r'$q$')
-        q_list.append(a.q)
+        q_list.append(np.min(a.q))
+        q_list.append(np.max(a.q))
 
         ax[6,i].plot(a.x,a.ome)
         ax[6,0].set_ylabel(r'$\omega_{*e}(kHz)$')
-        ome_list.append(a.ome)
+        ome_list.append(np.min(a.ome))
+        ome_list.append(np.max(a.ome))
 
     for i in range(len(a_list)):
         ax[0,i].set_ylim(np.min(shat_list)*0.8,np.max(shat_list)*1.2)

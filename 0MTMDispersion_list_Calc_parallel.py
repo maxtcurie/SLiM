@@ -18,7 +18,7 @@ from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_
 
 #**********Start of user block***************
 path='./Test_files'
-Input_csv=path+'/parameter_list_3.csv'   
+Input_csv=path+'/parameter_list_2.csv'   
 Output_csv=path+'/0MTM_scan.csv'
 
 Run_mode=2      #Run_mode=1 quick calculation(30sec/mode)
