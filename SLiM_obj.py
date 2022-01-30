@@ -125,7 +125,7 @@ class mode_finder:
         ne=ne_u/(10.**19.)      # in 10^19 /m^3
         ni=ni_u/(10.**19.)      # in 10^19 /m^3
         nz=nz_u/(10.**19.)      # in 10^19 /m^3
-        te=te_u/1000.           #in keV
+        te=te_u/1000.           # in keV
         m_SI = mref *1.6726*10**(-27)
         me_SI = 9.11*10**(-31)
         c  = 1.
@@ -176,6 +176,10 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
+        self.ne=ne      # in 10^19 /m^3
+        self.ni=ni      # in 10^19 /m^3
+        self.nz=nz      # in 10^19 /m^3
+        self.te=te      # in keV      
         self.r_sigma=(1./shat)*( (me_SI/m_SI)**0.5 )
         self.R_ref=R_ref
         self.cs_to_kHz=gyroFreq/(2.*np.pi*1000.)

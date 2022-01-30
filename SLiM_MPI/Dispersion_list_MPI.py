@@ -13,20 +13,22 @@ from mpi4py import MPI
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
 from MPI_tools import task_dis
 
+#**********Start of user block***************
+path='.'   
+Output_csv=path+'/0Disperson_calc.csv'
+Input_csv=path+'/parameter_list.csv'
+log_file_name=path+'/Disperson_calc_W_auto.log'
+#**********end of user block****************
+
+
 comm=MPI.COMM_WORLD
 rank=comm.Get_rank()
 size=comm.Get_size()
 
+
 print('*******rank='+str(rank)+'*************')
 
 if rank==0:
-    #**********Start of user block***************
-    path='.'   
-    Output_csv=path+'/0Disperson_calc.csv'
-    log_file_name=path+'/Disperson_calc_W_auto.log'
-    #**********end of user block****************
-    
-
     with open(Output_csv, 'w', newline='') as csvfile:     #clear all and then write a row
         csv_data = csv.writer(csvfile, delimiter=',')
         csv_data.writerow(['omega_omega_n','gamma_omega_n',\
