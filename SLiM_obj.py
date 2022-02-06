@@ -176,6 +176,18 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
+
+        self.shat_nominal=shat
+        self.eta_nominal=eta
+        self.ky_nominal=ky
+        self.nu_nominal=nu
+        self.zeff_nominal=zeff
+        self.beta_nominal=beta
+        self.q_nominal=q
+        self.ome_nominal=mtmFreq
+        self.Doppler_nominal=omegaDoppler
+
+
         self.ne=ne      # in 10^19 /m^3
         self.ni=ni      # in 10^19 /m^3
         self.nz=nz      # in 10^19 /m^3
@@ -200,7 +212,6 @@ class mode_finder:
         self.q=q
         self.q_nominal=q
         self.ome=mtmFreq
-        self.ome_nominal=mtmFreq
         self.Doppler=omegaDoppler
 
     def __str__(self):
@@ -224,6 +235,28 @@ class mode_finder:
         self.xstar=xstar
         #setter for xstar
         
+    def set_profile(self):
+        self.shat=self.shat_nominal
+        self.eta=self.eta_nominal
+        self.ky=self.ky_nominal
+        self.nu=self.nu_nominal
+        self.zeff=self.zeff_nominal
+        self.beta=self.beta_nominal
+        self.q=self.q_nominal
+        self.ome=self.ome_nominal
+        self.Doppler=self.Doppler_nominal
+        return 0
+
+    def reset_profile(self):
+        self.shat=self.shat_nominal
+        self.eta=self.eta_nominal
+        self.ky=self.ky_nominal
+        self.nu=self.nu_nominal
+        self.zeff=self.zeff_nominal
+        self.beta=self.beta_nominal
+        self.q=self.q_nominal
+        self.ome=self.ome_nominal
+        self.Doppler=self.Doppler_nominal
 
     def q_fit(self,order=5,show=False):
         dq= np.gradient(self.q,self.x)

@@ -1,15 +1,22 @@
 import numpy as np 
 
-def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
-    alpha,beta,ky,ModIndex,mu,xstar):
-    mref=2.
-    tau=+1.0
-    w_hat = w1/v1
-    x_min = -x_max
-    x_TEMP=1./del_x**2.
+cpdef A_maker(float x_max, double del_x,\
+    complex w1, float v1,float Zeff,float eta,\
+    float alpha, float beta,\
+    float ky,int ModIndex,float mu,float xstar):
+
+    cdef int i #iteration index
+    cdef float k #varible in the for loop
+    cdef float mref=2.
+    #cdef float BC=0.
+    cdef float tau=+1.0
+    cdef complex w_hat = w1/v1
+    # making grid
+    cdef float x_min = -x_max
+    cdef float x_TEMP=1./del_x**2.
 
     x_grid = np.arange(x_min, x_max+del_x, del_x)
-    num = len(x_grid)
+    cdef int num = len(x_grid)
     # print(num)
     # initializing matrix A
     A = np.zeros((2*num-4, 2*num-4), dtype=complex)
@@ -271,14 +278,20 @@ def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
     return A
 
 #integrate the w_finder and VectorFinder
-def VectorFinder_auto_Extensive(nu,Zeff,eta,\
-    shat,beta,ky,ModIndex,mu,xstar):
+cpdef VectorFinder_auto_Extensive(float nu,float Zeff,float eta,\
+    float shat,float beta,float ky,int ModIndex,float mu,float xstar):
     mu=abs(mu)
-    x_max=20.
-    del_x=0.02
-    neg_streak=0
+    cdef int judge=0
+    cdef int loopindex=0
+    cdef int i
+    cdef float x_max=20.
+    cdef float del_x=0.02
+    cdef complex del_w
+    cdef int neg_streak=0
+    cdef float total_odd_even
+    cdef complex w0
     x_grid=np.arange(-x_max,x_max,del_x,dtype=complex)
-    num=len(x_grid)
+    cdef int num=len(x_grid)
     b=np.ones(2*num-2)
 
     #new guessing model(02/02/2022)
@@ -288,7 +301,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
     #print(guess_mod)
 
-    guess_num=len(guess_mod)
+    cdef int guess_num=len(guess_mod)
     w_list=np.zeros(guess_num,dtype=float)
     odd_list=np.zeros(guess_num,dtype=float)
 

@@ -20,20 +20,19 @@ testing_output=True
 
 #*********start of creating of model***************
 def create_model():
-    
     #creating the model
-    model = keras.Sequential([
-        keras.layers.Dense(units=6, input_shape=(1,), activation='relu'),                      # input layer (1)
-        keras.layers.Dense(units=64, activation='relu'), # hidden layer (2)
-        keras.layers.Dense(units=64, activation='relu'), # hidden layer (3)
-        keras.layers.Dense(units=2, activation='softmax') # output layer (4)
-    ])
+    model = keras.Sequential()
+    model.add(tf.keras.Input(shape=(6))) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=32, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=64, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=32, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=2, activation='relu')) # input layer (1)
+
     print(model.summary())
     
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
-                  loss=tf.keras.losses.BinaryCrossentropy(),
-                  metrics=[tf.keras.metrics.BinaryAccuracy(),
-                           tf.keras.metrics.FalseNegatives()])
+    model.compile(loss='huber_loss',
+                optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+                    )
     #*********end of creating of model***************
     return model
 
@@ -46,7 +45,7 @@ except:
 
 df=df.astype('float')
 
-df=df.query('omega_omega_n!=0')
+df=df.query('omega_omega_n!=0 and gamma_omega_n>0')
 
 df_x=pd.DataFrame(np.transpose([df['nu'],df['zeff'],\
                     df['eta'],df['shat'],\
@@ -60,10 +59,6 @@ df_y=pd.DataFrame(np.transpose([df['omega_omega_n'],\
 x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2)
 
 if testing_output==True:
-    #print(df_x)
-    #print(df_y)
-    #print(len(df_x))
-    #print(len(df_y))
     print('x_train')
     print(x_train)
     print('y_train')
@@ -88,10 +83,33 @@ if gpus:
 start = time.time()
 #with tf.device('/GPU:0'):
 model=create_model()
+print(np.shape(x_train))
+print(np.shape(y_train))
 model.fit(x_train, y_train, epochs=epochs)  # we pass the data, labels and epochs and watch the magic!
 end = time.time()
 print(f"Runtime of the program is {end - start} s")
 #save the model
 
+#the trained model can be saved 
+model.save("SLiM_NN.h5")  # we can save the model and reload it at anytime in the future
+load_model = tf.keras.models.load_model('SLiM_NN.h5')
+
+
 #*********end of trainning***********************
-predictions = model.predict(x_train)
+predictions = load_model.predict(x_train)
+print('x_train')
+print(x_train)
+print('y_train')
+print(y_train)
+print('predictions')
+print(predictions)
+print('abs(y_train-predictions)')
+print(abs(y_train-predictions))
+
+predictions = load_model.predict(x_test)
+print('y_test')
+print(y_test)
+print('predictions')
+print(predictions)
+print('abs(y_train-predictions)')
+print(abs(y_test-predictions))

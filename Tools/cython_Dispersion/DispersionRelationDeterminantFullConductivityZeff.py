@@ -343,7 +343,7 @@ def VectorFinder_auto_large_mu(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
     return w0
 
 def Gaussian(sigma,mu,x_list):
-	return 1./(sigma * np.sqrt(2. * np.pi)) * np.exp( - (x_list - mu)**2. / (2. * sigma**2.) )
+    return 1./(sigma * np.sqrt(2. * np.pi)) * np.exp( - (x_list - mu)**2. / (2. * sigma**2.) )
 
 def A_maker(x_max, del_x, w1, v1,Zeff,eta,alpha,beta,ky,ModIndex,mu,xstar):
     

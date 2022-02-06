@@ -9,7 +9,7 @@ import numpy as np
 import csv
 from mpi4py import MPI
 
-from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
+from Cython_Dispersion import VectorFinder_auto_Extensive
 from MPI_tools import task_dis
 
 comm=MPI.COMM_WORLD

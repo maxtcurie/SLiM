@@ -193,6 +193,20 @@ def parity_finder_short(zgrid,f,name,plot,report): #this function is for local l
 
     return parity1,location0,ratio
 
+def parity_finder_short2(zgrid,f): #this function is for local linear simulation with short range of z 
+    len_z_half=int(len(zgrid)/2)
+    f_inv=np.flip(f) 
+    #even parity sum(f(x)-f(-x)) = 0 if even -- f(x)= f(-x)
+    evenness=np.sum(abs(f[len_z_half:]-f_inv[len_z_half:]))
+    #odd  parity sum(f(x)+f(-x)) = 0 if odd  -- f(x)=-f(-x)
+    oddness=np.sum(abs(f[len_z_half:]+f_inv[len_z_half:]))
+    total=evenness+oddness
+    oddness_norm=1.-oddness/total #percentage of oddness
+    eveness_norm=1.-evenness/total #percentage of evenness
+
+    return oddness_norm,eveness_norm
+
+
 def parity_finder_general(zgrid,f,name,plot,report):
     zmin=np.min(zgrid)
     zmax=np.max(zgrid)
@@ -200,3 +214,11 @@ def parity_finder_general(zgrid,f,name,plot,report):
         return parity_finder_long(zgrid,f,name,plot,report)
     else:
         return parity_finder_short(zgrid,f,name,plot,report)
+'''
+x=np.arange(-6,6,0.01)
+test_function1=np.sin(x)
+test_function2=np.cos(x)
+test_function3=x*np.cos(x)
+oddness_norm,eveness_norm=parity_finder_short2(x,test_function1)
+print([oddness_norm,eveness_norm])
+'''

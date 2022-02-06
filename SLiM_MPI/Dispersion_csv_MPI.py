@@ -10,14 +10,13 @@ import pandas as pd
 import csv
 from mpi4py import MPI
 
-from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
+from Cython_Dispersion import VectorFinder_auto_Extensive
 from MPI_tools import task_dis
 
 #**********Start of user block***************
 path='.'   
 Output_csv=path+'/0Disperson_calc.csv'
 Input_csv=path+'/parameter_list.csv'
-log_file_name=path+'/Disperson_calc_W_auto.log'
 #**********end of user block****************
 
 
@@ -67,7 +66,7 @@ elif rank!=0:
     for para in task_list_rank:
         [nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv]=para
     
-        w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,file_name=log_file_name) 
+        w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
         #w0=0.+0j
         omega=np.real(w0)
         gamma=np.imag(w0)

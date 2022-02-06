@@ -1,6 +1,6 @@
 import numpy as np 
 
-def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
+def A_maker(x_max,del_x,w1,v1,Zeff,eta,\
     alpha,beta,ky,ModIndex,mu,xstar):
     mref=2.
     tau=+1.0
