@@ -21,7 +21,7 @@ from read_EFIT_file import get_geom_pars
 from max_stat_tool import Poly_fit
 from max_stat_tool import coeff_to_Poly
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
-from DispersionRelationDeterminantFullConductivityZeff import VectorFinder
+from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_manual
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
 #Created by Max T. Curie  09/17/2021
 #Last edited by Max Curie 09/17/2021
@@ -467,7 +467,7 @@ class mode_finder:
 
     def Dispersion(self,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,manual=False):
         if manual==True:
-            w0=VectorFinder(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
+            w0=VectorFinder_manual(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
         elif manual==5:
             w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
         else:

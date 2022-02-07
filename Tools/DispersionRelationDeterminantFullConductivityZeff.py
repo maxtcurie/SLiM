@@ -283,6 +283,88 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
 
     #new guessing model(02/02/2022)
     #guess_f=np.array([1.+eta,0.5+eta,1.5+eta],dtype=float)+0.2
+    guess_f=np.arange(0.2,3.+eta,0.5)
+    #guess_gamma=0.05+0.012*guess_f**2.
+    guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
+    #print(guess_mod)
+
+    guess_num=len(guess_mod)
+    w_list=np.zeros(guess_num,dtype=float)
+    odd_list=np.zeros(guess_num,dtype=float)
+
+    for i in range(guess_num):
+        w0=guess_mod[i]
+
+        del_w = 0.1j
+        neg_streak=0
+
+        A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+        det_A_minus = np.linalg.slogdet(A)
+        w0=w0+del_w
+    
+        while np.abs(del_w) > 10**(-3.):
+            # call A_maker to create and populate matrix A
+            A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+            det_A0 = np.linalg.slogdet(A)
+
+            #parameter for the next run
+            del_w = -del_w/(1-(det_A_minus[0]/det_A0[0])*np.exp(det_A_minus[1]-det_A0[1]))
+            w0 = w0 + del_w
+            det_A_minus = det_A0
+    
+            if w0.imag<0:
+                neg_streak=neg_streak+1
+            else:
+                neg_streak=0
+    
+            if neg_streak==4:
+                break
+
+        if neg_streak==4:
+            continue
+        else:
+            AInverse=np.linalg.inv(A)
+            change=1.
+            lold=2.
+            while change > 10.**(-8):
+                b=np.matmul(AInverse,b)
+                b=b/np.linalg.norm(b)
+                lnew=np.matmul(np.conj(b),np.matmul(A,b))
+                change=np.abs(lnew-lold)
+                lold=lnew
+            Aparallel=b[0:num]
+            
+            len_z_half=int(num/2)
+            Aparallel_inv=np.flip(Aparallel) 
+            #even parity sum(f(x)-f(-x)) = 0 if even -- f(x)= f(-x)
+            evenness=np.sum(abs(Aparallel[len_z_half:]-Aparallel_inv[len_z_half:]))
+            #odd  parity sum(f(x)+f(-x)) = 0 if odd  -- f(x)=-f(-x)
+            oddness=np.sum(abs(Aparallel[len_z_half:]+Aparallel_inv[len_z_half:]))
+
+            total_odd_even=evenness+oddness
+            oddness_norm=1.-oddness/total_odd_even #percentage of oddness
+            eveness_norm=1.-evenness/total_odd_even #percentage of evenness
+            
+            #Apar has even parity, and positive growth
+            if oddness_norm<0.3 and np.imag(w0)>0:
+                return w0
+                break
+    return 0.
+
+
+#integrate the w_finder and VectorFinder
+def VectorFinder_auto(nu,Zeff,eta,\
+    shat,beta,ky,ModIndex,mu,xstar):
+    mu=abs(mu)
+    x_max=20.
+    del_x=0.02
+    neg_streak=0
+    x_grid=np.arange(-x_max,x_max,del_x,dtype=complex)
+    num=len(x_grid)
+    b=np.ones(2*num-2)
+
+    #new guessing model(02/02/2022)
+    #guess_f=np.array([1.+eta,0.5+eta,1.5+eta],dtype=float)+0.2
     guess_f=np.array([2.5,0.5+eta,1.5+eta],dtype=float)+0.2
     #guess_gamma=0.05+0.012*guess_f**2.
     guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
@@ -350,3 +432,96 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
                 return w0
                 break
     return 0.
+    
+
+
+
+def VectorFinder_manual(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
+#    mref=2.
+#    xsigma=1/shat*np.sqrt(1./(mref*1836))
+#    xmax=xsigma*35
+#    delx=xsigma/50
+#    xmax=20.
+#    delx=0.02
+    judge=0
+    loopindex=0
+    xmax=float(input("(x) xmax="))
+    delx=float(input("(x) delx="))
+    while judge == 0:
+        
+       
+        print("Parameters:")
+        print("(0) nu="+str(nu))
+        print("(1) Zeff="+str(Zeff))
+        print("(2) eta="+str(eta))
+        print("(3) beta="+str(beta))
+        print("(4) ky="+str(ky))
+        print("(5) Modulation?="+str(ModIndex))
+        print("(6) mu="+str(mu))
+        print("(7) xstar="+str(xstar))
+        print("(8) shat="+str(shat))
+        changeParameters=int(input("Would you like to change parameters? 0 signifies no. 1 signifies yes: "))
+        while changeParameters!=0:
+            which=int(input('Enter the parameters indices to change: '))
+            if which==0:
+                nu=float(input("nu="))
+            elif which ==1:
+                Zeff=float(input("Zeff="))
+            elif which==2:
+                eta=float(input("eta"))
+            elif which==3:
+                beta=float(input("beta="))
+            elif which==4:
+                ky=float(input("ky="))
+            elif which==5:
+                ModIndex=float(input("ModIndex="))
+            elif which==6:
+                mu=float(input("mu="))
+            elif which==7:
+                xstar=float(input("xstar="))
+            elif which==8:
+                shat=float(input("shat="))
+            changeParameters=int(input('Are there other parameters to change? 0 signifies no. 1 signifies yes: '))
+            
+        changeGrid=int(input("Would you like to change the grid? 0 signifies no. 1 signifies yes: "))
+        if changeGrid==1:
+            print("Current Values:")
+            print("(0) xmax="+str(xmax))
+            print("(1) delx="+str(delx))
+            print("Enter new values:")
+            xmax=float(input("xmax="))
+            delx=float(input("delx="))
+        #wguess=3.1902795704258415+0.08383523830945384j
+        wguess=complex(input("Enter initial guess for omega (enter 0 to use previous or 1 to use default): "))
+        xgrid=np.arange(-xmax,xmax,delx,complex)
+        num=len(xgrid)
+        b=np.ones(2*num-2)
+        if wguess==0:
+            if loopindex==0:
+                w0=1.+eta
+            wguess=w0
+        if wguess==1:
+            wguess=1.+eta
+        w0=w_finder(xmax,delx,wguess,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar,1)
+        A = A_maker(xmax, delx, w0, nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+        AInverse=np.linalg.inv(A)
+        change=1.
+        lold=2.
+        while change > 10.**(-13):
+            b=np.matmul(AInverse,b)
+            b=b/np.linalg.norm(b)
+            lnew=np.matmul(np.conj(b),np.matmul(A,b))
+            change=np.abs(lnew-lold)
+            lold=lnew
+        Aparallel=b[0:num]
+        ModG=np.abs(b[int(num/2)])*np.exp(-((xgrid-mu)/xstar)**2)
+        plt.plot(xgrid,np.real(Aparallel),label="Re(Aparallel)")
+        plt.plot(xgrid,np.imag(Aparallel),label="Im(Aparallel)")
+        plt.plot(xgrid,ModG,label="Omega*(x)")
+        plt.legend()
+        plt.show()
+        SigmaPlotter(xmax, delx, w0, nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+        loopindex=loopindex+1
+        judge=int(input("Would you like to continue searching for modes?: To exit routine enter 1 and to repeat the routine enter 0: "))
+    
+    return w0
