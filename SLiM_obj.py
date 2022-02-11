@@ -31,6 +31,7 @@ from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_
 class mode_finder:
     profile_type=('pfile','ITERDB')
     geomfile_type=('gfile','GENE_tracor')
+    
     def __init__(self,profile_type,profile_name,geomfile_type,geomfile_name,\
             outputpath,inputpath,x0_min,x0_max,zeff_manual=-1,suffix='.dat',\
             mref=2.,Impurity_charge=6.):
@@ -176,43 +177,56 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
-
-        self.shat_nominal=shat
-        self.eta_nominal=eta
-        self.ky_nominal=ky
-        self.nu_nominal=nu
-        self.zeff_nominal=zeff
-        self.beta_nominal=beta
-        self.q_nominal=q
-        self.ome_nominal=mtmFreq
-        self.Doppler_nominal=omegaDoppler
+        self.mref=mref
+        self.Z=Z
+        self.Bref=Bref
 
 
         self.ne=ne      # in 10^19 /m^3
         self.ni=ni      # in 10^19 /m^3
         self.nz=nz      # in 10^19 /m^3
         self.te=te      # in keV      
+        self.nref=nref
         self.r_sigma=(1./shat)*( (me_SI/m_SI)**0.5 )
         self.R_ref=R_ref
         self.cs_to_kHz=gyroFreq/(2.*np.pi*1000.)
         self.omn=omega_n    #omega_n in kHz
-        self.omn_nominal=omega_n
         self.cs=cref
         self.rho_s=rhoref*np.sqrt(2.)
         self.Lref=Lref
         self.x=uni_rhot
         self.shat=shat
-        self.shat_nominal=shat
         self.eta=eta
         self.ky=ky
-        self.ky_nominal=ky
         self.nu=nu
         self.zeff=zeff
         self.beta=beta
         self.q=q
-        self.q_nominal=q
         self.ome=mtmFreq
         self.Doppler=omegaDoppler
+        self.coll_ei=coll_ei
+        self.gyroFreq=gyroFreq
+
+        self.nref_nominal=nref
+        self.ne_nominal=self.ne     
+        self.te_nominal=self.te       
+        self.r_sigma_nominal=self.r_sigma
+        self.cs_to_kHz_nominal=self.cs_to_kHz
+        self.omn_nominal=self.omn
+        self.cs_nominal=self.cs
+        self.rho_s_nominal=self.rho_s
+        self.shat_nominal=self.shat
+        self.eta_nominal=self.eta
+        self.ky_nominal=self.ky
+        self.nu_nominal=self.nu
+        self.zeff_nominal=self.zeff
+        self.beta_nominal=self.beta
+        self.q_nominal=self.q
+        self.ome_nominal=self.ome
+        self.Doppler_nominal=self.Doppler
+        self.coll_ei_nominal=self.coll_ei
+        self.gyroFreq_nominal=self.gyroFreq
+
 
     def __str__(self):
         try:
@@ -231,41 +245,305 @@ class mode_finder:
         r_sigma={self.r_sigma[index]},\n\
         xstar={self.xstar}'
 
+    
     def set_xstar(self,xstar):
         self.xstar=xstar
         #setter for xstar
+
+    
+    def find_pedestal(self,x,p):
+        dp=np.gradient(p,x)  #Second order of pressure
+        ddp   = np.gradient(dp,x)  #Second order of pressure
+        midped = x[np.argmin(dp)]
+        topped = x[np.argmin(ddp)]
+        return topped,midped
+
+
+    def profile_fit(self,show_plot=False):
+        x=self.x
+        ne=self.ne
+        te=self.te
+
+        if show_plot==True:
+            fig, ax=plt.subplots(nrows=3,ncols=1,sharex=True) 
+            ax[0].plot(x,ne,label='original')
+            ax[0].set_ylabel(r'$n_e(10^19/m^3)$',fontsize=20)
+            ax[1].plot(x,te,label='original')
+            ax[1].set_ylabel(r'$T_e(keV)$',fontsize=20)
+            ax[1].set_xlabel(r'$\rho_{tor}$',fontsize=20)
+            plt.tight_layout()
+            plt.show()
+
+        ne_popt, pcov = optimize.curve_fit(tanh_func, x, ne)
+        ne_mid_ped, ne_ped_width, ne_height,ne_edge=ne_popt[0], ne_popt[1], ne_popt[2], ne_popt[3]
+
+        te_popt, pcov = optimize.curve_fit(tanh_func, x, te)
+        te_mid_ped, te_ped_width, te_height,te_edge=te_popt[0], te_popt[1], te_popt[2], te_popt[3]
+
+        if show_plot==True:
+            ne_fit=tanh_func(x, ne_popt[0], ne_popt[1], ne_popt[2], ne_popt[3])
+            te_fit=tanh_func(x, te_popt[0], te_popt[1], te_popt[2], te_popt[3])
+
+            fig, ax=plt.subplots(nrows=2,ncols=1,sharex=True) 
+            ax[0].plot(x,ne,label='original')
+            ax[0].plot(x,ne_fit,label='fit')
+            ax[0].legend()
+            ax[0].set_ylabel(r'$n_e(10^19/m^3)$',fontsize=10)
+            ax[1].plot(x,te,label='original')
+            ax[1].plot(x,te_fit,label='fit')
+            ax[1].set_ylabel(r'$T_e(keV)$',fontsize=10)
+            ax[1].set_xlabel(r'$\rho_{tor}$',fontsize=10)
+            plt.tight_layout()
+            plt.show()
         
-    def set_profile(self):
-        self.shat=self.shat_nominal
-        self.eta=self.eta_nominal
-        self.ky=self.ky_nominal
-        self.nu=self.nu_nominal
-        self.zeff=self.zeff_nominal
-        self.beta=self.beta_nominal
-        self.q=self.q_nominal
-        self.ome=self.ome_nominal
-        self.Doppler=self.Doppler_nominal
-        return 0
+        self.ne_mid_ped=ne_mid_ped
+        self.ne_ped_width=ne_ped_width
+        self.ne_height=ne_height
+        self.ne_edge=ne_edge
+        self.te_mid_ped=te_mid_ped
+        self.te_ped_width=te_ped_width
+        self.te_height=te_height
+        self.te_edge=te_edge
 
-    def reset_profile(self):
-        self.shat=self.shat_nominal
-        self.eta=self.eta_nominal
-        self.ky=self.ky_nominal
-        self.nu=self.nu_nominal
-        self.zeff=self.zeff_nominal
-        self.beta=self.beta_nominal
-        self.q=self.q_nominal
-        self.ome=self.ome_nominal
-        self.Doppler=self.Doppler_nominal
+        return ne_mid_ped, ne_ped_width, ne_height,ne_edge,\
+                te_mid_ped, te_ped_width, te_height,te_edge
 
-    def q_fit(self,order=5,show=False):
+
+    def q_fit(self,q_order=5,show_plot=False):
         dq= np.gradient(self.q,self.x)
-        x_dq_min=self.x[np.argmin(abs(dq))]
+        x_dq_min=x[np.argmin(abs(dq))]
+        q_coeff=Poly_fit(self.x-x_dq_min, self.q, q_order, show=False)
+        q_fit=coeff_to_Poly(self.x, x_dq_min, q_coeff, show=False)
+        if show_plot==Ture:
+            plt.clf()
+            plt.plot(self.x,self.q,label='orginal')
+            plt.plot(self.x,q_fit,label='fit')
+            plt.legend()
+            plt.show()
 
-        coeff=Poly_fit(self.x-x_dq_min, self.q, order, show)
-        q_fit_coeff=coeff_to_Poly(self.x, x_dq_min, coeff, show)
+            
+    def modify_profile(self,\
+                    q_scale=1.,q_shift=0.,\
+                    ne_scale=1.,te_scale=1.,\
+                    Doppler_scale=1.,\
+                    show_plot=False):
+        
+        #************start of modification***********
+        #********************************************
 
-        return coeff, q_fit_coeff
+        #**********************************
+        #*************modify ne************
+        try:
+            self.ne_weight
+        except:
+            ne_top_ped,ne_mid_ped=self.find_pedestal(self.x,self.ne)
+            ne_width=ne_mid_ped-ne_top_ped
+            self.ne_weight = ((np.exp((self.x-ne_top_ped)*2/ne_width)-1)/(np.exp((self.x-ne_top_ped)*2/ne_width)+1)+1)/2 
+            print('[ne_top_ped,ne_mid_ped]')
+            print([ne_top_ped,ne_mid_ped])
+        ne_mod=self.ne*(1+(ne_scale-1)*self.ne_weight)
+        #*************modify ne************
+        #**********************************
+
+        #**********************************
+        #*************modify Te************
+        try:
+            self.te_weight
+        except:
+            te_top_ped,te_mid_ped=self.find_pedestal(self.x,self.te)
+            print('[te_top_ped,te_mid_ped]')
+            print([te_top_ped,te_mid_ped])
+            te_width=te_mid_ped-te_top_ped
+            self.te_weight = ((np.exp((self.x-te_top_ped)*2/te_width)-1)/(np.exp((self.x-te_top_ped)*2/te_width)+1)+1)/2 
+        
+        te_mod=self.te*(1+(te_scale-1)*self.te_weight)
+        #*************modify Te************
+        #**********************************
+
+        q_mod=self.q*q_scale+q_shift
+        Doppler_mod=self.Doppler*Doppler_scale
+
+        if show_plot==True:
+            fig, ax=plt.subplots(nrows=4,ncols=1,sharex=True) 
+            ax[0].plot(self.x,self.ne,label='original')
+            ax[0].plot(self.x,ne_mod,label='modified')
+            ax[0].legend()
+            ax[0].set_ylabel(r'$n_e(10^19/m^3)$',fontsize=10)
+            ax[1].plot(self.x,self.te)
+            ax[1].plot(self.x,te_mod)
+            ax[1].set_ylabel(r'$T_e(keV)$',fontsize=10)
+            ax[2].plot(self.x,self.q)
+            ax[2].plot(self.x,q_mod)
+            ax[2].set_ylabel(r'$q$',fontsize=10)
+            ax[3].plot(self.x,self.Doppler)
+            ax[3].plot(self.x,Doppler_mod)
+            ax[3].set_ylabel(r'$f_{Doppler}(kHz)$',fontsize=10)
+            ax[3].set_xlabel(r'$\rho_{tor}$',fontsize=10)
+            plt.tight_layout()
+            plt.show()
+
+        #*************end of modification************
+        #********************************************
+
+
+        tprime_e = -fd_d1_o4(te_mod,self.x)/te_mod
+        nprime_e = -fd_d1_o4(ne_mod,self.x)/ne_mod
+        qprime = fd_d1_o4(q_mod,self.x)/q_mod
+
+
+        mid_ped,top_ped=self.find_pedestal(self.x,self.ne*self.te)
+
+        center_index=np.argmin(abs(self.x-mid_ped))
+
+        Tref_mod=te_mod[center_index]
+
+        
+        #*********start of calculation******
+        #****************Start setting up ******************
+        #get the data from attribute
+        ni=self.ni
+        nz=self.nz
+
+        te_u=te_mod*1000.
+        ne_u=ne_mod*10.**19.
+        ni_u=ni*10.**19.
+        nz_u=nz*10.**19.
+        mref=self.mref
+        Lref=self.Lref
+        Bref=self.Bref
+        uni_rhot=self.x
+        Z=self.Z
+        R_ref=self.R_ref
+
+
+        x0_center=mid_ped
+        ne=ne_mod
+        te=te_mod
+        q=q_mod
+
+        
+        n0=1.
+        m_SI = mref *1.6726*10**(-27)
+        me_SI = 9.11*10**(-31)
+        c  = 1.
+        qref = 1.6*10**(-19)
+        #refes to GENE manual
+        coll_c=2.3031*10**(-5)*Lref*ne/(te)**2*(24-np.log(np.sqrt(ne*10**13)/(te*1000)))
+        coll_ei=4.*coll_c*np.sqrt(te*1000.*qref/me_SI)/Lref
+        nuei=coll_ei
+        beta=403.*10**(-5)*ne*te/Bref**2.
+    
+        
+        nref=ne_u[center_index]
+        te_mid=te_u[center_index]
+        Tref=te_u[center_index]*qref
+        q0=q_mod[center_index]
+        
+        cref = np.sqrt(Tref / m_SI)
+        Omegaref = qref * Bref / m_SI / c
+        rhoref = cref / Omegaref 
+        rhoref_temp = rhoref * np.sqrt(te_u/te_mid) 
+        kymin=n0*q0*rhoref/(Lref*x0_center)
+        kyGENE =kymin * (q/q0) * np.sqrt(te_u/te_mid) * (x0_center/uni_rhot) #Add the effect of the q varying
+        #from mtm_doppler
+        omMTM = kyGENE*(tprime_e+nprime_e)
+        gyroFreq = 9.79E3/np.sqrt(mref)*np.sqrt(te_u)/Lref
+        mtmFreq = omMTM*gyroFreq/(2.*np.pi*1000.)
+        omegaDoppler = Doppler_mod
+        omega=mtmFreq + omegaDoppler
+        
+        zeff=self.zeff*nref/self.nref
+
+    
+        omega_n_GENE=kyGENE*(nprime_e)       #in cs/a
+        omega_n=omega_n_GENE*gyroFreq/(2.*np.pi*1000.)  #in kHz
+    
+        coll_ei=coll_ei/(2.*np.pi*1000.)  #in kHz
+
+        Lt=1./tprime_e
+        Ln=1./nprime_e
+        Lq=1./(Lref/(R_ref*q)*qprime)
+        
+        shat=Ln/Lq
+        eta=Ln/Lt
+        ky=kyGENE*np.sqrt(2.)
+        nu=(coll_ei)/(np.max(omega_n))
+
+        self.nref=nref
+        self.ne=ne      # in 10^19 /m^3
+        self.ni=ni      # in 10^19 /m^3
+        self.nz=nz      # in 10^19 /m^3
+        self.te=te      # in keV      
+        self.r_sigma=(1./shat)*( (me_SI/m_SI)**0.5 )
+        self.cs_to_kHz=gyroFreq/(2.*np.pi*1000.)
+        self.omn=omega_n    #omega_n in kHz
+        self.cs=cref
+        self.rho_s=rhoref*np.sqrt(2.)
+        self.shat=shat
+        self.eta=eta
+        self.ky=ky
+        self.nu=nu
+        self.zeff=zeff
+        self.beta=beta
+        self.q=q
+        self.ome=mtmFreq
+        self.Doppler=omegaDoppler
+        self.coll_ei=coll_ei
+        self.gyroFreq=gyroFreq
+        #**********end of calculation*******
+        if show_plot==True:
+            fig, ax=plt.subplots(nrows=7,\
+            ncols=1,sharex=True) 
+        
+            ax[0].plot(self.x,self.shat_nominal,label='nominal')
+            ax[0].plot(self.x,self.shat,label='modified')
+            ax[0].legend()
+            ax[0].set_ylabel(r'$L_{ne}/L_{q}$')
+            ax[1].plot(self.x,self.eta_nominal)
+            ax[1].plot(self.x,self.eta)
+            ax[1].set_ylabel(r'$L_{ne}/L_{Te}$')
+            ax[2].plot(self.x,self.ky_nominal)
+            ax[2].plot(self.x,self.ky)
+            ax[2].set_ylabel(r'$k_y\rho_s$')
+            ax[3].plot(self.x,self.nu_nominal)
+            ax[3].plot(self.x,self.nu)
+            ax[3].set_ylabel(r'$\nu_{ei}/\omega_{*ne}$')
+            ax[4].plot(self.x,self.beta_nominal)
+            ax[4].plot(self.x,self.beta)
+            ax[4].set_ylabel(r'$\beta$')
+            ax[5].plot(self.x,self.q_nominal)
+            ax[5].plot(self.x,self.q)
+            ax[5].set_ylabel(r'$q$')
+            ax[6].plot(self.x,self.ome_nominal)
+            ax[6].plot(self.x,self.ome)
+            ax[6].set_ylabel(r'$\omega_{*e}(kHz)$')
+    
+            ax[6].set_xlabel(r'$\rho_{tor}$')  
+            plt.subplots_adjust(wspace=0, hspace=0)
+            plt.show()  
+
+    
+    def reset_profile(self):
+        self.ne=self.ne_nominal   
+        self.te=self.te_nominal
+        self.r_sigma=self.r_sigma_nominal
+        self.cs_to_kHz=self.cs_to_kHz_nominal
+        self.omn=self.omn_nominal
+        self.cs=self.cs_nominal
+        self.rho_s=self.rho_s_nominal
+        self.shat=self.shat_nominal
+        self.eta=self.eta_nominal
+        self.ky=self.ky_nominal
+        self.nu=self.nu_nominal
+        self.zeff=self.zeff_nominal
+        self.beta=self.beta_nominal
+        self.q=self.q_nominal
+        self.ome=self.ome_nominal
+        self.Doppler=self.Doppler_nominal
+        self.coll_ei=self.coll_ei_nominal
+        self.gyroFreq=self.gyroFreq_nominal
+        self.nref=self.nref_nominal
+
 
     def q_modify(self,q_scale,q_shift):
         q_mod=self.q*q_scale+q_shift
@@ -279,13 +557,14 @@ class mode_finder:
 
         return self.q
 
+
     def q_back_to_nominal(self):
         self.q=self.q_nominal
         self.ome= self.ome_nominal
         self.omn= self.omn_nominal
         self.shat= self.shat_nominal
         self.ky=self.ky_nominal
-        return self.q
+
 
     def omega_gaussian_fit_GUI(self,root,x,data,rhoref,Lref):
         amplitude,mean,stddev=gaussian_fit_GUI(root,x,data)
@@ -302,7 +581,8 @@ class mode_finder:
         print(mean_rho,xstar)
     
         return mean_rho,xstar
-    
+  
+
     def omega_gaussian_fit(self,manual=False):
         x=self.x 
         data=self.ome 
@@ -323,7 +603,8 @@ class mode_finder:
         print(mean_rho,xstar)
     
         return mean_rho,xstar
-    
+  
+
     def ome_peak_range(self,peak_percent=0.01):
         y1=self.ome
         x=self.x
@@ -343,6 +624,7 @@ class mode_finder:
         self.x_max=right_x[right_index]
 
         return self.x_peak,self.x_min,self.x_max
+
 
     def Rational_surface(self,n0):
         q=self.q
@@ -400,6 +682,7 @@ class mode_finder:
             print(m_list)
             return x_list, m_list
 
+
     def Rational_surface_peak_surface(self,n0):
         try:
             x_peak=self.x_peak
@@ -412,6 +695,7 @@ class mode_finder:
         m_surface_near_peak=m_list[index]
         
         return x_surface_near_peak, m_surface_near_peak
+
 
     def Rational_surface_top_surfaces(self,n0,top=1):
         try:
@@ -465,6 +749,7 @@ class mode_finder:
         mu=(x0-x_peak)*self.Lref/(self.rho_s)
         return nu,zeff,eta,shat,beta,ky,mu,xstar
 
+
     def Dispersion(self,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,manual=False):
         if manual==True:
             w0=VectorFinder_manual(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
@@ -473,7 +758,31 @@ class mode_finder:
         else:
             w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,abs(mu),xstar)
         return w0
-    
+ 
+
+    def plot_parameter(self):
+        fig, ax=plt.subplots(nrows=7,\
+            ncols=1,sharex=True) 
+        
+        ax[0].plot(self.x,self.shat)
+        ax[0].set_ylabel(r'$L_{ne}/L_{q}$')
+        ax[1].plot(self.x,self.eta)
+        ax[1].set_ylabel(r'$L_{ne}/L_{Te}$')
+        ax[2].plot(self.x,self.ky)
+        ax[2].set_ylabel(r'$k_y\rho_s$')
+        ax[3].plot(self.x,self.nu)
+        ax[3].set_ylabel(r'$\nu_{ei}/\omega_{*ne}$')
+        ax[4].plot(self.x,self.beta)
+        ax[4].set_ylabel(r'$\beta$')
+        ax[5].plot(self.x,self.q,label=r'$q$')
+        ax[5].set_ylabel(r'$q$')
+        ax[6].plot(self.x,self.ome)
+        ax[6].set_ylabel(r'$\omega_{*e}(kHz)$')
+
+        ax[6].set_xlabel(r'$\rho_{tor}$')  
+        plt.subplots_adjust(wspace=0, hspace=0)
+        plt.show()  
+
 
     def Plot_q_scale_rational_surfaces_colored(self,peak_percent,\
             q_scale,q_shift,q_uncertainty,n_list,unstable_list,color_list):
@@ -535,7 +844,8 @@ class mode_finder:
         ax.set_ylabel('Safety factor')
         plt.legend(loc='upper left')
         plt.show()
-        
+ 
+
     #color_lsit=-1 for auto color assignment
     def Plot_q_scale_rational_surfaces_colored_obj(self,peak_percent,\
             q_scale,q_shift,q_uncertainty,n_list,unstable_list,color_list):
@@ -672,6 +982,7 @@ class mode_finder:
         plt.legend(loc='upper left')
         plt.show()
 
+
     #this attribute only plot the nearest rational surface for the given toroidal mode number
     def Plot_ome_q_surface_demo(self,peak_percent,n_min,n_max,f_min,f_max):
         n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
@@ -691,7 +1002,10 @@ class mode_finder:
         
         for n in n_list:
             Unstabel_surface_counter=0
-            x0,m=self.Rational_surface_peak_surface(n)
+            try:
+                x0,m=self.Rational_surface_peak_surface(n)
+            except:
+                continue
 
             if x_min_plot<x0 and x0<x_max_plot:
                 if x_min<x0 and x0<x_max:
@@ -736,6 +1050,82 @@ class mode_finder:
         plt.show()
 
 
+    def Plot_ome_q_surface_frequency_list(self,peak_percent,n_min,n_max,\
+                Frequency_list,Frequency_error=0.2,save_imag=False,\
+                image_name='./plot.jpg'):
+        n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
+        x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
+        x_peak_plot,x_min_plot,x_max_plot=self.ome_peak_range(peak_percent*10.)
+
+        fig, host = plt.subplots()
+        fig.subplots_adjust(right=0.75)
+        
+        #par1 = host.twinx()
+        #p1, = par1.plot(self.x, self.q, "b-", label='Safety Factor')
+        for f in Frequency_list:
+            f_min=f*(1-Frequency_error)
+            f_max=f*(1+Frequency_error)
+            x_fill=[x_min,x_min,x_max,x_max]
+            y_fill=[f_min,f_max,f_max,f_min]
+            #matplotlib.patches.Rectangle((0,total_trans-trans_error),10,2.*trans_error,alpha=0.4)
+            p1, = host.fill(x_fill,y_fill,color='blue',alpha=0.3,label='Unstable area')
+        
+        
+        for n in n_list:
+            Unstabel_surface_counter=0
+            try:
+                x0,m=self.Rational_surface_peak_surface(n)
+            except:
+                continue
+            if x_min_plot<x0 and x0<x_max_plot:
+                if x_min<x0 and x0<x_max:
+                    host.axvline(x0,color='orange',alpha=1)
+                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    Unstabel_surface_counter=Unstabel_surface_counter+1
+                else:
+                    host.axvline(x0,color='orange',alpha=0.3)
+                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+            
+                    
+            if Unstabel_surface_counter>0:
+                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+            else:
+                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
+
+
+        
+        f_max=np.max(Frequency_list)
+        host.set_xlim(np.min(self.x),np.max(self.x))
+        host.set_ylim(0, np.max(f_max)*1.2)
+        #par1.set_ylim(np.min(self.q)*0.8,np.max(self.q)*1.2)
+        
+        host.set_xlabel(r"$\rho_{tor}$")
+        host.set_ylabel(r"$\omega_{*e}$(kHz)")
+        #par1.set_ylabel("Safety factor")
+
+        
+        host.yaxis.label.set_color('black')
+        #par1.yaxis.label.set_color('black')
+        
+        
+        tkw = dict(size=4, width=1.5)
+        host.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
+        host.tick_params(axis='x', **tkw)
+        
+        lines = [p1,p2]
+        
+        #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
+        host.legend(lines, [l.get_label() for l in lines])
+        if save_imag==True:
+            plt.savefig(image_name)#save the 
+        else:
+            plt.show()
+
+        plt.close(fig)
+
+
     def Plot_ome_q_stability_boundary(self,peak_percent):
         fig, host = plt.subplots()
         fig.subplots_adjust(right=0.75)
@@ -776,11 +1166,12 @@ class mode_finder:
         
         host.legend(lines, [l.get_label() for l in lines], loc='upper left')
         plt.show()
-    
+
 
     def Plot_highlight_top_percent_ome(self,peak_percent,n_min,n_max,f_min,f_max):
         n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
         x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
+        plt.clf()
         fig, host = plt.subplots()
         fig.subplots_adjust(right=0.75)
         fig.set_size_inches(8, 6)

@@ -10,7 +10,7 @@ import pandas as pd
 import csv
 from mpi4py import MPI
 
-from Cython_Dispersion import VectorFinder_auto_Extensive
+from Dispersion import VectorFinder_auto_Extensive
 from MPI_tools import task_dis
 
 #**********Start of user block***************
@@ -35,12 +35,6 @@ if rank==0:
                 'ModIndex','mu','xstar'])
     csvfile.close()
 
-    with open(log_file_name, 'w') as csvfile:        #clear all and then write a row
-        data = csv.writer(csvfile, delimiter=',')
-        data.writerow(['init_guess','omega','gamma',\
-            'w0','ratio','nu','Zeff','eta','shat',\
-            'beta','ky','ModIndex','mu','xstar'])
-    csvfile.close()
 
     df=pd.read_csv(Input_csv)
     para_list=[]

@@ -9,7 +9,7 @@ import numpy as np
 import csv
 from mpi4py import MPI
 
-from Cython_Dispersion import VectorFinder_auto_Extensive
+from Dispersion import VectorFinder_auto_Extensive
 from MPI_tools import task_dis
 
 comm=MPI.COMM_WORLD
@@ -41,13 +41,6 @@ if rank==0:
                 'ModIndex','mu','xstar'])
     csvfile.close()
 
-    with open('./W_auto.log', 'w') as csvfile:        #clear all and then write a row
-        data = csv.writer(csvfile, delimiter=',')
-        data.writerow(['init_guess','omega','gamma',\
-            'w0','ratio','nu','Zeff','eta','shat',\
-            'beta','ky','ModIndex','mu','xstar'])
-    csvfile.close()
-
     para_list=[]
     for nu in nu_list:
         for zeff in zeff_list:
@@ -57,6 +50,7 @@ if rank==0:
                         for ky in ky_list:
                             for mu in mu_list:
                                 para_list.append([nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv])
+    np.random.shuffle(para_list)
     task_list = task_dis(size,para_list)
 
     for i in range(size-1):

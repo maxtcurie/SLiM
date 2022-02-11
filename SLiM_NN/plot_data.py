@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 #****************************************
 #**********start of user block***********
-filename='./NN_data/0MTM_scan.csv'
-plot=1
+filename='./NN_data/0MTM_scan_CORI_2.csv'
+plot=0 #plot 0 for plotting all
 #**********end of user block*************
 #****************************************
 
@@ -17,7 +17,7 @@ print(len(df_unstable))
 print(len(df_stable))
 x=np.arange(0,np.max(df_unstable['omega_omega_n'])*1.5,0.01)
 
-if plot==1:
+if plot==1 or plot==0:
     plt.clf()
     plt.scatter(1.+df_unstable['eta'],df_unstable['omega_omega_n'],label='data')
     plt.plot(x,1.4*x,color='orange',label='y=1.4*x')
@@ -30,7 +30,13 @@ if plot==1:
     plt.grid()
     plt.show()
 
-if plot==2:
+    plt.clf()
+    plt.scatter(np.arange(len(df_unstable['omega_omega_n']/(1.+df_unstable['eta']))),df_unstable['omega_omega_n']/(1.+df_unstable['eta']),label='data')
+    plt.ylabel(r'$\omega/\omega_{*e}$')
+    plt.grid()
+    plt.show()
+
+if plot==2 or plot==0:
     plt.clf()
     plt.scatter(df_unstable['nu'],df_unstable['gamma_omega_n'],label='data')
     #plt.plot(x,x,color='orange',label='y=x')
@@ -41,7 +47,7 @@ if plot==2:
     plt.legend()
     plt.show()
 
-if plot==3:
+if plot==3 or plot==0:
     plt.clf()
     plt.scatter(df['omega_omega_n'],df['gamma_omega_n'],label='data')
     plt.plot(x,0.05+x**2.*0.012,color='orange',label=r'y=0.012*$x^2$+0.05')
