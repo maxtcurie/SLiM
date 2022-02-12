@@ -145,13 +145,12 @@ mode_finder_obj.q_back_to_nominal()
 scale_list=[]
 for ne_scale in ne_scale_list:
     for te_scale in te_scale_list:
-        if [ne_scale,te_scale]!=[1.,1.]:
-            scale_list.append([ne_scale,te_scale])
+        scale_list.append([ne_scale,te_scale,abs(1-ne_scale*te_scale)])
 
+scale_list=np.array(scale_list)
+order_index=np.argsort(scale_list[:, 2])
 
-np.random.shuffle(scale_list)
-scale_list.append([1.,1.])
-scale_list.reverse()
+scale_list = scale_list[order_index][:,:2]
 
 for i in tqdm(scale_list):
     [ne_scale,te_scale]=i
