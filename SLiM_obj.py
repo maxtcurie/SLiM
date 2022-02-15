@@ -1096,7 +1096,7 @@ class mode_finder:
         
         f_max=np.max(Frequency_list)
         host.set_xlim(np.min(self.x),np.max(self.x))
-        host.set_ylim(0, np.max(f_max)*1.2)
+        host.set_ylim(0, np.max(f_max)*(1+Frequency_error)*1.2)
         #par1.set_ylim(np.min(self.q)*0.8,np.max(self.q)*1.2)
         
         host.set_xlabel(r"$\rho_{tor}$")

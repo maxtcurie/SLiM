@@ -12,7 +12,7 @@ import time
 #****************************************
 #**********start of user block***********
 filename='./NN_data/0MTM_scan_CORI_2.csv'
-epochs = 2
+epochs = 10
 batch_size = 100
 testing_output=True
 #**********end of user block*************
@@ -25,8 +25,8 @@ def create_model():
     model.add(tf.keras.Input(shape=(6))) # input layer (1)
     model.add(tf.keras.layers.Dense(units=16, activation='relu')) # input layer (1)
     model.add(tf.keras.layers.Dense(units=32, activation='relu')) # input layer (1)
-    model.add(tf.keras.layers.Dense(units=8, activation='relu')) # input layer (1)
-    model.add(tf.keras.layers.Dense(units=1, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=16, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=2, activation='relu')) # input layer (1)
 
     print(model.summary())
     
@@ -52,11 +52,9 @@ df_x=pd.DataFrame(np.transpose([df['nu'],df['zeff'],\
                     df['ky'],df['mu']/df['xstar']]),
                   columns=['nu', 'zeff','eta','shat',\
                     'ky','mu_norm'])
-#df_y=pd.DataFrame(np.transpose([df['omega_omega_n'],\
-#                    df['gamma_omega_n']]),
-#                  columns=['omega_norm','gamma_norm'])
-df_y=pd.DataFrame(np.transpose([df['omega_omega_n']]),
-                  columns=['omega_norm'])
+df_y=pd.DataFrame(np.transpose([df['omega_omega_n'],\
+                    df['gamma_omega_n']]),\
+                  columns=['omega_norm','gamma_norm'])
 
 x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2)
 
@@ -93,8 +91,8 @@ print(f"Runtime of the program is {end - start} s")
 #save the model
 
 #the trained model can be saved 
-model.save("./Trained_model/SLiM_NN_omega.h5")  # we can save the model and reload it at anytime in the future
-load_model = tf.keras.models.load_model('./Trained_model/SLiM_NN_omega.h5')
+model.save("SLiM_NN_omega.h5")  # we can save the model and reload it at anytime in the future
+load_model = tf.keras.models.load_model('SLiM_NN_omega.h5')
 
 
 #*********end of trainning***********************

@@ -281,16 +281,26 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     num=len(x_grid)
     b=np.ones(2*num-2)
 
-    #new guessing model(02/02/2022)
-    #guess_f=np.array([1.+eta,0.5+eta,1.5+eta],dtype=float)+0.2
-    guess_f=np.arange(0.2,3.+eta,0.5)
+
+    #new guessing model(02/15/2022)
+    guess_f=np.arange(0.5,1.6+eta,0.5)
+    guess_f_list=[]
+    for f in guess_f:
+        guess_f_list.append([f,abs(f-1-eta)])
+    
+    guess_f_list=np.array(guess_f_list)
+    order_index=np.argsort(guess_f_list[:, 1])
+    
+    guess_f = guess_f_list[order_index][:,0]
+
     #guess_gamma=0.05+0.012*guess_f**2.
-    guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
+    #guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
+    guess_mod=guess_f+1j*1
     #print(guess_mod)
 
     guess_num=len(guess_mod)
-    w_list=np.zeros(guess_num,dtype=float)
-    odd_list=np.zeros(guess_num,dtype=float)
+    w_list=[]
+    odd_list=[]
 
     for i in range(guess_num):
         w0=guess_mod[i]
@@ -300,16 +310,17 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
 
         A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
         det_A_minus = np.linalg.slogdet(A)
-        w0=w0+del_w
     
         while np.abs(del_w) > 10**(-3.):
+            w0 = w0 + del_w
             # call A_maker to create and populate matrix A
             A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
             det_A0 = np.linalg.slogdet(A)
 
             #parameter for the next run
             del_w = -del_w/(1-(det_A_minus[0]/det_A0[0])*np.exp(det_A_minus[1]-det_A0[1]))
-            w0 = w0 + del_w
+            
+            print('w0='+str(w0))
             det_A_minus = det_A0
     
             if w0.imag<0:
@@ -346,10 +357,24 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
             eveness_norm=1.-evenness/total_odd_even #percentage of evenness
             
             #Apar has even parity, and positive growth
-            if oddness_norm<0.3 and np.imag(w0)>0:
-                return w0
-                break
-    return 0.
+            if oddness_norm<0.3:
+                w_list.append(w0)
+                odd_list.append(oddness_norm)
+                if np.imag(w0)>0:
+                    return w0
+                    break
+    print('w_list')
+    print(w_list)
+    print('odd_list')
+    print(odd_list)
+    if len(w_list)==0:
+        return 0
+    else:
+        growth_list=np.imag(np.array(w_list,dtype=complex))
+        index=np.argmax(growth_list)
+        
+        w0=w_list[index]
+        return w0
 
 
 #integrate the w_finder and VectorFinder
@@ -364,15 +389,15 @@ def VectorFinder_auto(nu,Zeff,eta,\
     b=np.ones(2*num-2)
 
     #new guessing model(02/02/2022)
-    #guess_f=np.array([1.+eta,0.5+eta,1.5+eta],dtype=float)+0.2
-    guess_f=np.array([2.5,0.5+eta,1.5+eta],dtype=float)+0.2
+    guess_f=1.+eta
+    #guess_f=np.arange(0.2,3.+eta,0.5)
     #guess_gamma=0.05+0.012*guess_f**2.
     guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
     #print(guess_mod)
 
     guess_num=len(guess_mod)
-    w_list=np.zeros(guess_num,dtype=float)
-    odd_list=np.zeros(guess_num,dtype=float)
+    w_list=[]
+    odd_list=[]
 
     for i in range(guess_num):
         w0=guess_mod[i]
@@ -382,16 +407,17 @@ def VectorFinder_auto(nu,Zeff,eta,\
 
         A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
         det_A_minus = np.linalg.slogdet(A)
-        w0=w0+del_w
     
         while np.abs(del_w) > 10**(-3.):
+            w0 = w0 + del_w
             # call A_maker to create and populate matrix A
             A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
             det_A0 = np.linalg.slogdet(A)
 
             #parameter for the next run
             del_w = -del_w/(1-(det_A_minus[0]/det_A0[0])*np.exp(det_A_minus[1]-det_A0[1]))
-            w0 = w0 + del_w
+            
+            print('w0='+str(w0))
             det_A_minus = det_A0
     
             if w0.imag<0:
@@ -428,21 +454,34 @@ def VectorFinder_auto(nu,Zeff,eta,\
             eveness_norm=1.-evenness/total_odd_even #percentage of evenness
             
             #Apar has even parity, and positive growth
-            if oddness_norm<0.3 and np.imag(w0)>0:
-                return w0
-                break
-    return 0.
-    
+            if oddness_norm<0.3:
+                w_list.append(w0)
+                odd_list.append(oddness_norm)
+                if np.imag(w0)>0:
+                    return w0
+                    break
+    print('w_list')
+    print(w_list)
+    print('odd_list')
+    print(odd_list)
+    if len(w_list)==0:
+        return 0
+    else:
+        growth_list=np.imag(np.array(w_list,dtype=complex))
+        index=np.argmax(growth_list)
+        
+        w0=w_list[index]
+        return w0
 
 
 
 def VectorFinder_manual(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
-#    mref=2.
-#    xsigma=1/shat*np.sqrt(1./(mref*1836))
-#    xmax=xsigma*35
-#    delx=xsigma/50
-#    xmax=20.
-#    delx=0.02
+    #    mref=2.
+    #    xsigma=1/shat*np.sqrt(1./(mref*1836))
+    #    xmax=xsigma*35
+    #    delx=xsigma/50
+    #    xmax=20.
+    #    delx=0.02
     judge=0
     loopindex=0
     xmax=float(input("(x) xmax="))

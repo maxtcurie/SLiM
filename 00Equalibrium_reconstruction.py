@@ -9,7 +9,7 @@ from SLiM_obj import mode_finder
 #**********************************************
 #**********Start of User block*****************
 Frequency_list=[65,109] #frequency observed from experiment
-weight_list=[1.,1.3]    #frequency observed from experiment
+weight_list=[1.,1.3]    #weight mu calculation for each frequency
 Frequency_error=0.10    #error for frequency
 q_scale_list=np.arange(0.95,1.05,0.005)
 q_shift_list=np.zeros(len(q_scale_list),dtype=float)
@@ -39,9 +39,11 @@ show_plot=True
 #************End of User Block*****************
 #**********************************************
 
-Run_mode=2      # mode1: fast mode
+Run_mode=5      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
+                # mode4: slow mode manual(global)
+                # mode5: slow slow mode(global)
 
 mode_finder_obj=mode_finder(profile_type,profile_name,\
                             geomfile_type,geomfile_name,\
@@ -53,7 +55,7 @@ index=np.argmax(mode_finder_obj.ome)
 omega_e_lab_kHz=mode_finder_obj.ome[index]+mode_finder_obj.Doppler[index]
 
 n_min=1                              #minmum mode number (include) that finder will cover
-n_max=int(1.2*np.max(Frequency_list)/omega_e_lab_kHz)#maximum mode number (include) that finder will cover
+n_max=int((1+Frequency_error)*np.max(Frequency_list)/omega_e_lab_kHz)#maximum mode number (include) that finder will cover
 
 n0_list=np.arange(n_min,n_max+1,1)
 
@@ -128,6 +130,10 @@ for i in range(len(q_scale_list)):
 
 print(mu_works_list)
 print(q_scale_works_list)
+if len(mu_works_list)==0:
+    print('No possible variation of q profile for the given frequency range, please check the frequency or the frequency_error.')
+    exit()
+    
 index=np.argmin(mu_works_list)
 q_scale=q_scale_works_list[index]
 q_shift=q_shift_works_list[index]
@@ -145,7 +151,7 @@ mode_finder_obj.q_back_to_nominal()
 scale_list=[]
 for ne_scale in ne_scale_list:
     for te_scale in te_scale_list:
-        scale_list.append([ne_scale,te_scale,abs(1-ne_scale*te_scale)])
+        scale_list.append([ne_scale,te_scale,abs(1-ne_scale)*abs(1-te_scale)])
 
 scale_list=np.array(scale_list)
 order_index=np.argsort(scale_list[:, 2])
