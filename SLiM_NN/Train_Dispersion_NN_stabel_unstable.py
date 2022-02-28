@@ -11,116 +11,129 @@ import time
 
 #****************************************
 #**********start of user block***********
-filename='./NN_data/0MTM_scan_PC.csv'
-epochs = 10
+filename='./NN_data/0MTM_scan_CORI_2.csv'
+epochs = 1000
 batch_size = 100
-testing_output=True
+checkpoint_path='./tmp/checkpoint'
 #**********end of user block*************
 #****************************************
 
 #*********start of creating of model***************
-def create_model():
+def create_model(checkpoint_path):
     #creating the model
     model = keras.Sequential()
     model.add(tf.keras.Input(shape=(6))) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=16, activation='relu')) # input layer (1)
     model.add(tf.keras.layers.Dense(units=32, activation='relu')) # input layer (1)
-    model.add(tf.keras.layers.Dense(units=64, activation='relu')) # input layer (1)
-    model.add(tf.keras.layers.Dense(units=32, activation='relu')) # input layer (1)
-    model.add(tf.keras.layers.Dense(units=1, activation='relu')) # input layer (1)
+    #model.add(tf.keras.layers.Dense(units=256, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dropout(0.2)) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=4, activation='relu')) # input layer (1)
+    model.add(tf.keras.layers.Dense(units=1, activation='sigmoid')) # input layer (1)
+    model.summary()
 
-    print(model.summary())
+    model.compile(loss='binary_crossentropy',\
+                #optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
+                optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
+                metrics=['accuracy'])
+
+    #*create callback function (optional)
+    class myCallback(tf.keras.callbacks.Callback):
+        def on_epoch_end(self,epoch,log={}):
     
-    model.compile(loss='sparse_categorical_crossentropy',\
-                optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),\
-                metrics=['accuracy']    )
+            #print(log.get.keys())
+            #print(log.get('epoch'))
+            if(log.get('val_accuracy')>0.99):
+                print('val_accuracy>0.99, stop training!')
+                self.model.stop_training=True
+    
+    callbacks=myCallback()
+    
+    import os 
+    if not os.path.exists('./tmp'):
+        os.mkdir('./tmp')
+    #https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/ModelCheckpoint
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path, 
+        verbose=1, 
+        save_weights_only=True,
+        save_freq='epoch')
+    callback_func=[cp_callback,callbacks]
+
     #*********end of creating of model***************
-    return model
+    return model,callback_func
 
-#*******start of loading data*******************
-df=pd.read_csv(filename)
-try:
-    df=df.drop(columns=['change'])
-except:
-    pass
 
-#df=df.astype('float')
 
-df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0')
-df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
-
-df_unstable['unstable']=[1]*len(df_unstable)
-#df_unstable['stable']=[0]*len(df_unstable)
-df_stable['unstable']=[0]*len(df_stable)
-#df_stable['stable']=[1]*len(df_stable)
-
-df=pd.concat([df_unstable, df_stable], axis=0)
-print(df)
-
-df_x=pd.DataFrame(np.transpose([df['nu'],df['zeff'],\
-                    df['eta'],df['shat'],\
-                    df['ky'],df['mu']/df['xstar']]),
-                  columns=['nu', 'zeff','eta','shat',\
-                    'ky','mu_norm'])
-
-#df_y=pd.DataFrame(np.transpose([df['unstable'],df['stable']]),
-#                  columns=['unstable','stable'])
-
-df_y=pd.DataFrame(np.transpose([df['unstable']]),\
-                  columns=['unstable'])
-
-x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2)
-
-if testing_output==True:
-    print('x_train')
-    print(x_train)
-    print('y_train')
-    print(y_train)
-
-#*******end of  of loading data*******************
-
-gpus=tf.config.list_physical_devices('GPU')
-if gpus:
+def load_data(filename):
+    #*******start of loading data*******************
+    
+    df=pd.read_csv(filename)
+    df=df.dropna()
     try:
-        # Currently, memory growth needs to be the same across GPUs
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-    except RuntimeError as e:
-        # Memory growth must be set before GPUs have been initialized
-        print(e)
+        df=df.drop(columns=['change'])
+    except:
+        pass
+    
+    #df=df.astype('float')
+    
+    df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0')
+    df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
+    
+    
+    df_unstable['unstable']=[1]*len(df_unstable)
+    
+    df_stable['unstable']=[0]*len(df_stable)
+    
+    df=pd.concat([df_unstable, df_stable], axis=0)
+    
+    df_x=pd.DataFrame(np.transpose([df['nu'],df['zeff'],\
+                        df['eta'],df['shat'],\
+                        df['ky'],df['mu']/df['xstar']]),
+                      columns=['nu', 'zeff','eta','shat',\
+                        'ky','mu_norm'])
 
+    keys=df_x.keys()
+    df_norm_name=[i for i in keys]
+    df_norm_factor=[1./np.max(df_x[i]) for i in keys]
+    
+    
+    for i in range(len(keys)):
+        df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
+    
+    
+    #df_y=pd.DataFrame(np.transpose([df['unstable'],df['stable']]),
+    #                  columns=['unstable','stable'])
+    
+    df_y=pd.DataFrame(np.transpose([df['unstable']]),\
+                      columns=['unstable'])
+    df_y=df_y.astype('int32')
+    #print(df)
+    #input()
+    d = {'name':df_norm_name,'factor':df_norm_factor}
+    df=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
+    df.to_csv('NN_norm_factor.csv',index=False)
+
+    x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2)
+    
+    #*******end of  of loading data*******************
+    return x_train, x_test, y_train, y_test
+
+
+x_train, x_test, y_train, y_test=load_data(filename)
 
 #*********start of trainning***********************
-start = time.time()
-#with tf.device('/GPU:0'):
-model=create_model()
-print(np.shape(x_train))
-print(np.shape(y_train))
-model.fit(x_train, y_train, epochs=epochs)  # we pass the data, labels and epochs and watch the magic!
-end = time.time()
-print(f"Runtime of the program is {end - start} s")
+#print(x_test)
+#print(y_test)
+#input()
+model,callback_func=create_model(checkpoint_path)
+history=model.fit(x_train, y_train, epochs=epochs,
+            callbacks=callback_func,\
+            validation_data=(x_test,y_test))  
+
 #save the model
-
-#the trained model can be saved 
 model.save("SLiM_NN_stabel_unstable.h5")  # we can save the model and reload it at anytime in the future
-load_model = tf.keras.models.load_model('SLiM_NN_stabel_unstable.h5')
-
 #*********end of trainning***********************
-predictions = load_model.predict(x_train)
-print('x_train')
-print(x_train)
-print('y_train')
-print(y_train)
-print('predictions')
-print(predictions)
-print('abs(y_train-predictions)')
-print(abs(y_train-predictions))
 
-predictions = load_model.predict(x_test)
-print('y_test')
-print(y_test)
-print('predictions')
-print(predictions)
-print('abs(y_train-predictions)')
-print(abs(y_test-predictions))
+from Post_plot_learning_rate import plot_hist
+plot_hist(history)
+

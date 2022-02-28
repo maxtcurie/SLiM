@@ -11,7 +11,7 @@ import time
 
 #**********start of user block***********
 filename='./NN_data/0MTM_scan_CORI_2.csv'
-loaded_model = tf.keras.models.load_model('./Trained_model/SLiM_NN_omega.h5')
+loaded_model = tf.keras.models.load_model('./Trained_model/SLiM_NN_omega_backup.h5')
 #**********end of user block*************
 #****************************************
 

@@ -283,7 +283,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
 
 
     #new guessing model(02/15/2022)
-    guess_f=np.arange(0.5,1.6+eta,0.5)
+    guess_f=np.arange(0.5,1.6+eta,1.+eta,0.5+eta)
     guess_f_list=[]
     for f in guess_f:
         guess_f_list.append([f,abs(f-1-eta)])
@@ -295,7 +295,8 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
 
     #guess_gamma=0.05+0.012*guess_f**2.
     #guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
-    guess_mod=guess_f+1j*1
+    #Larakers Dissertation 3.16
+    guess_mod=guess_f+1j*(0.8*(1+eta)/nu)
     #print(guess_mod)
 
     guess_num=len(guess_mod)
@@ -305,7 +306,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     for i in range(guess_num):
         w0=guess_mod[i]
 
-        del_w = 0.1j
+        del_w = 0.01j
         neg_streak=0
 
         A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
@@ -363,6 +364,8 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
                 if np.imag(w0)>0:
                     return w0
                     break
+
+                    
     print('w_list')
     print(w_list)
     print('odd_list')
@@ -402,7 +405,7 @@ def VectorFinder_auto(nu,Zeff,eta,\
     for i in range(guess_num):
         w0=guess_mod[i]
 
-        del_w = 0.1j
+        del_w = 0.01j
         neg_streak=0
 
         A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
@@ -472,7 +475,6 @@ def VectorFinder_auto(nu,Zeff,eta,\
         
         w0=w_list[index]
         return w0
-
 
 
 def VectorFinder_manual(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):

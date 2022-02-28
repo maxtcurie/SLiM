@@ -13,7 +13,7 @@ import time
 #**********start of user block***********
 filename='./NN_data/0MTM_scan_CORI_2.csv'
 epochs = 2
-batch_size = 100
+batch_size = 1000
 testing_output=True
 #**********end of user block*************
 #****************************************
