@@ -10,7 +10,7 @@ from SLiM_obj import mode_finder
 #**********Start of User block*****************
 Frequency_list=[65,109] #frequency observed from experiment
 weight_list=[1.,1.3]    #weight mu calculation for each frequency
-Frequency_error=0.10    #error for frequency
+Frequency_error=0.15    #error for frequency
 q_scale_list=np.arange(0.95,1.05,0.005)
 q_shift_list=np.zeros(len(q_scale_list),dtype=float)
 ne_scale_list=np.arange(0.8,1.2,0.05)
@@ -36,14 +36,21 @@ peak_percent=0.08
 mref=2.             #mess of ion in unit of proton, for deuterium is 2
 Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=True
+
+path_tmp='./SLiM_NN/Trained_model/'
+NN_omega_file      =path_tmp+'SLiM_NN_omega.h5'
+NN_gamma_file      =path_tmp+'SLiM_NN_stabel_unstable.h5'
+norm_omega_csv_file=path_tmp+'NN_omega_norm_factor.csv'
+norm_gamma_csv_file=path_tmp+'NN_gamma_norm_factor.csv'
 #************End of User Block*****************
 #**********************************************
 
-Run_mode=5      # mode1: fast mode
+Run_mode=6      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
                 # mode4: slow mode manual(global)
                 # mode5: slow slow mode(global)
+                # mode6: NN mode (global)
 
 mode_finder_obj=mode_finder(profile_type,profile_name,\
                             geomfile_type,geomfile_name,\
@@ -158,6 +165,10 @@ order_index=np.argsort(scale_list[:, 2])
 
 scale_list = scale_list[order_index][:,:2]
 
+if Run_mode==6:
+    from SLiM_NN.Dispersion_NN import Dispersion_NN
+    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+
 for i in tqdm(scale_list):
     [ne_scale,te_scale]=i
     Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_ne_scale={ne_scale:.3f}_te_scale={te_scale:.3f}'
@@ -201,7 +212,7 @@ for i in tqdm(scale_list):
     if Run_mode==1:#simple rational surface alignment
         ModIndex=-1
         filename='rational_surface_alignment'+Output_suffix+'.csv'
-    if Run_mode==2 or Run_mode==4 or Run_mode==5:#global dispersion
+    if Run_mode==2 or Run_mode==4 or Run_mode==5 or Run_mode==6:#global dispersion
         ModIndex=1
         filename='global_dispersion'+Output_suffix+'.csv'
     elif Run_mode==3:#local dispersion
@@ -304,6 +315,9 @@ for i in tqdm(scale_list):
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
                 df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=5)
+        elif Run_mode==6:
+            w0=Dispersion_NN_obj.Dispersion_omega(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                    df['shat'][i],df['beta'][i],df['ky'][i],df['mu'][i],df['xstar'][i])
         else:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
