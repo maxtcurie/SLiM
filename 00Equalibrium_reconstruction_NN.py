@@ -10,11 +10,15 @@ from SLiM_obj import mode_finder
 #**********Start of User block*****************
 Frequency_list=[65,109] #frequency observed from experiment
 weight_list=[1.,1.3]    #weight mu calculation for each frequency
-Frequency_error=0.15    #error for frequency
-q_scale_list=np.arange(0.95,1.05,0.005)
+Frequency_error=0.00    #error for frequency
+q_scale_list=np.arange(0.95,1.05,0.01)
 q_shift_list=np.zeros(len(q_scale_list),dtype=float)
 ne_scale_list=np.arange(0.8,1.2,0.05)
 te_scale_list=np.arange(0.8,1.2,0.05)
+ne_shift_list=np.array([0.],dtype=float) #default: [0.]
+te_shift_list=np.array([0.],dtype=float) #default: [0.]
+#ne_shift_list=np.arange(0.,0.2,0.05)
+#te_shift_list=np.arange(0.,0.2,0.05)
 
 profile_type= "ITERDB"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
@@ -38,8 +42,8 @@ Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=True
 
 path_tmp='./SLiM_NN/Trained_model/'
-NN_omega_file      =path_tmp+'SLiM_NN_omega.h5'
-NN_gamma_file      =path_tmp+'SLiM_NN_stabel_unstable.h5'
+NN_omega_file      =path_tmp+'SLiM_NN_omega_V1_2022_02_28.h5'
+NN_gamma_file      =path_tmp+'SLiM_NN_stabel_unstable_V1_2022_02_28.h5'
 norm_omega_csv_file=path_tmp+'NN_omega_norm_factor.csv'
 norm_gamma_csv_file=path_tmp+'NN_gamma_norm_factor.csv'
 #************End of User Block*****************
@@ -73,6 +77,28 @@ peak_index=np.argmin(abs(mode_finder_obj.x-mode_finder_obj.x_peak))
 omega_e_peak_kHz=mode_finder_obj.ome[peak_index]
 
 cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
+
+
+with open(Output_Path+'0Equalibrium_summary.csv', 'w', newline='') as csvfile:     #clear all and then write a row
+    data = csv.writer(csvfile, delimiter=',')
+    data.writerow(['q_scale','ne_scale','te_scale',\
+                'frequency_match','frequency_list',\
+                'frequency_error_list'])
+csvfile.close()
+
+
+
+ne_scale_error=1.+np.max(abs(1.-ne_scale_list))
+ne_shift_error=1.+np.max(abs(1.-ne_shift_list))
+te_scale_error=1.+np.max(abs(1.-te_scale_list))
+te_shift_error=1.+np.max(abs(1.-te_shift_list))
+
+(ne_scale_error+te_scale_error)/2.
+
+q_scan_f_err=(1.+Frequency_error)*\
+            (ne_scale_error+te_scale_error)/2.-1.
+            #ne_scale_error*ne_shift_error*\
+            #te_scale_error*te_shift_error
 
 #***step 1:
 
@@ -117,7 +143,7 @@ for i in range(len(q_scale_list)):
                     f_error=abs(f-omega_e_lab_kHz)/f
                     print('f_error')
                     print(f_error)
-                    if f_error<=Frequency_error:
+                    if f_error<=q_scan_f_err:
                         judge_list[k]=1
                         mu_list_temp.append(weight_list[k]*abs(x_surface_near_peak-mode_finder_obj.x_peak))
 
@@ -130,7 +156,7 @@ for i in range(len(q_scale_list)):
         mu_works_list.append(np.mean(mu_list_temp))
         if show_plot==True:
             mode_finder_obj.Plot_ome_q_surface_frequency_list(\
-                peak_percent,n_min,n_max,Frequency_list,Frequency_error=Frequency_error,\
+                peak_percent,n_min,n_max,Frequency_list,Frequency_error=q_scan_f_err,\
                 save_imag=True,\
                 image_name=Output_Path+f'q_scale={q_scale:.3f}_q_shift={q_shift:.3f}.jpg')
 
@@ -140,7 +166,8 @@ print(q_scale_works_list)
 if len(mu_works_list)==0:
     print('No possible variation of q profile for the given frequency range, please check the frequency or the frequency_error.')
     exit()
-    
+
+'''
 index=np.argmin(mu_works_list)
 q_scale=q_scale_works_list[index]
 q_shift=q_shift_works_list[index]
@@ -151,29 +178,35 @@ if show_plot==True:
                         Frequency_error=Frequency_error,save_imag=False)
 
 mode_finder_obj.q_back_to_nominal()
+'''
+
+
 
 
 #***step 2:
 
 scale_list=[]
-for ne_scale in ne_scale_list:
-    for te_scale in te_scale_list:
-        scale_list.append([ne_scale,te_scale,abs(1-ne_scale)*abs(1-te_scale)])
 
-scale_list=np.array(scale_list)
-order_index=np.argsort(scale_list[:, 2])
+for q_scale in q_scale_works_list:
+    for q_shift in q_shift_works_list:
+        for ne_scale in ne_scale_list:
+            for ne_shift in ne_shift_list:
+                for te_scale in te_scale_list:
+                    for te_shift in te_shift_list:
+                        scale_list.append([q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift])
 
-scale_list = scale_list[order_index][:,:2]
 
 if Run_mode==6:
     from SLiM_NN.Dispersion_NN import Dispersion_NN
     Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
 
-for i in tqdm(scale_list):
-    [ne_scale,te_scale]=i
-    Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_ne_scale={ne_scale:.3f}_te_scale={te_scale:.3f}'
+for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
+    Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_ne_scale={ne_scale:.3f}_ne_shift={ne_shift:.3f}_te_scale={te_scale:.3f}_te_shift={te_shift:.3f}'
+
+    mode_finder_obj.reset_profile()
     mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=q_shift,\
                                     ne_scale=ne_scale,te_scale=te_scale,\
+                                    ne_shift=ne_shift,te_shift=te_shift,\
                                     Doppler_scale=1.,\
                                     show_plot=False)
     mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=False)
@@ -200,13 +233,9 @@ for i in tqdm(scale_list):
     q_scale_list0=[]
     q_shift_list0=[]
     ne_scale_list0=[]
+    ne_shift_list0=[]
     te_scale_list0=[]
-
-    mode_finder_obj.q_back_to_nominal()
-    mode_finder_obj.q_modify(q_scale,q_shift)
-    mode_finder_obj.ome_peak_range(peak_percent)
-    mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=manual_fit)
-    mode_finder_obj.set_xstar(xstar)
+    te_shift_list0=[]
     
     
     if Run_mode==1:#simple rational surface alignment
@@ -224,12 +253,9 @@ for i in tqdm(scale_list):
     omega_e_peak_kHz=mode_finder_obj.ome[peak_index]
     
     cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
-    print('Finding the rational surfaces')
 
     for n in tqdm(n0_list):
         x_surface_near_peak_list, m_surface_near_peak_list=mode_finder_obj.Rational_surface_top_surfaces(n,top=surface_num)
-        print(x_surface_near_peak_list)
-        print(m_surface_near_peak_list)
         for j in range(len(x_surface_near_peak_list)):
             x_surface_near_peak=x_surface_near_peak_list[j]
             m_surface_near_peak=m_surface_near_peak_list[j]
@@ -262,7 +288,9 @@ for i in tqdm(scale_list):
                 q_scale_list0.append(q_scale)
                 q_shift_list0.append(q_shift)
                 ne_scale_list0.append(ne_scale)
+                ne_shift_list0.append(ne_shift)
                 te_scale_list0.append(te_scale)
+                te_shift_list0.append(te_shift)
     
     
     d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\
@@ -285,7 +313,6 @@ for i in tqdm(scale_list):
         'omega_n_cs_a','omega_e_plasma_kHz','omega_e_lab_kHz',\
         'peak_percentage','nu','zeff','eta','shat','beta','ky',\
         'ModIndex','mu','xstar'])   #construct the panda dataframe
-    df.to_csv(Output_Path+'parameter_list'+Output_suffix+'.csv',index=False)
     
     judge_list=np.zeros(len(Frequency_list),dtype=int)
     
@@ -303,7 +330,6 @@ for i in tqdm(scale_list):
                 'ModIndex','mu','xstar'])
         csvfile.close()
 
-    print('Calculate the dispersion relations')
     omega_lab_kHz_list=[]
     gamma_list=[]
     for i in tqdm(range(len(n_list))):
@@ -338,7 +364,9 @@ for i in tqdm(scale_list):
             data.writerow([ q_scale_list0[i],\
                 q_shift_list0[i],\
                 ne_scale_list0[i],\
+                ne_shift_list0[i],\
                 te_scale_list0[i],\
+                te_shift_list0[i],\
                 df['n'][i],df['m'][i],df['rho_tor'][i],\
                 omega_kHz,\
                 omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i],\
@@ -352,20 +380,23 @@ for i in tqdm(scale_list):
         csvfile.close()
         omega_lab_kHz_list.append(omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i])
         gamma_list.append(gamma_cs_a)
+    Frequency_error_list=np.zeros(len(omega_lab_kHz_list),dtype=float)
     for k in range(len(Frequency_list)):
         for j in range(len(omega_lab_kHz_list)):
             f=Frequency_list[k]
             f_error=abs(f-omega_lab_kHz_list[j])/f
-            print('f_error')
-            print(f_error)
             if f_error<=Frequency_error and gamma_list[j]>=0:
                 judge_list[k]=1
-            
+                Frequency_error_list[j]=f_error
+    
 
-    if np.prod(judge_list)==1:
-        print('*******************')
-        print('!!!!!!!!!!!!!!!!!!!')
-        print('[ne_scale,te_scale]')
-        print([ne_scale,te_scale])
-        print('*******************')
-        break
+    if np.prod(judge_list)!=1:
+        Frequency_error_list='NA'
+
+    with open(Output_Path+'0Equalibrium_summary.csv', 'a+', newline='') as csvfile:     #clear all and then write a row
+        data = csv.writer(csvfile, delimiter=',')
+        data.writerow([q_scale,ne_scale,te_scale,\
+                    np.prod(judge_list),omega_lab_kHz_list,\
+                    Frequency_error_list])
+    csvfile.close()
+        

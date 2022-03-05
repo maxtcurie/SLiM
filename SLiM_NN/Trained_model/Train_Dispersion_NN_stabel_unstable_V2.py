@@ -14,10 +14,10 @@ import time
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC.csv',
                 './NN_data/0MTM_scan_CORI_1.csv']
-epochs = 1
+epochs = 100
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_gamma'
-Read_from_checkpoint=True
+Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
@@ -27,15 +27,13 @@ def create_model(checkpoint_path):
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
                     #tf.keras.layers.Dense(units=7, input_shape=[7],activation='relu'),
-                    tf.keras.layers.Dense(units=10240, activation='relu'),
-                    #tf.keras.layers.Dense(units=32, activation='relu'),
-                    #tf.keras.layers.Dense(units=32, activation='relu'),
+                    tf.keras.layers.Dense(units=16, activation='relu'),
+                    tf.keras.layers.Dense(units=32, activation='relu'),
                     #tf.keras.layers.Dense(units=256, activation='relu'),
                     #tf.keras.layers.Dense(units=1024, activation='relu'),
-                    #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dense(units=16, activation='relu'),
-                    #tf.keras.layers.Dropout(0.2),
-                    #tf.keras.layers.Dense(units=8, activation='relu'),
+                    tf.keras.layers.Dense(units=256, activation='relu'),
+                    tf.keras.layers.Dropout(0.2),
+                    tf.keras.layers.Dense(units=8, activation='relu'),
                     tf.keras.layers.Dense(units=1, activation='sigmoid')
         ])
 
@@ -70,7 +68,7 @@ def create_model(checkpoint_path):
 
     lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='val_loss', factor=0.1, patience=10, verbose=0,
-        mode='auto', min_delta=0.0001, cooldown=0, min_lr=0
+        mode='auto', min_delta=0.0001, cooldown=0, min_lr=0.000001
     )
     callback_func=[cp_callback,callbacks,lr_callback]
 

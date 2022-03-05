@@ -325,6 +325,7 @@ class mode_finder:
     def modify_profile(self,\
                     q_scale=1.,q_shift=0.,\
                     ne_scale=1.,te_scale=1.,\
+                    ne_shift=0.,te_shift=0.,\
                     Doppler_scale=1.,\
                     show_plot=False):
         
@@ -337,11 +338,12 @@ class mode_finder:
             self.ne_weight
         except:
             ne_top_ped,ne_mid_ped=self.find_pedestal(self.x,self.ne)
+            self.ne_mid_ped=ne_mid_ped
             ne_width=ne_mid_ped-ne_top_ped
             self.ne_weight = ((np.exp((self.x-ne_top_ped)*2/ne_width)-1)/(np.exp((self.x-ne_top_ped)*2/ne_width)+1)+1)/2 
-            print('[ne_top_ped,ne_mid_ped]')
-            print([ne_top_ped,ne_mid_ped])
-        ne_mod=self.ne*(1+(ne_scale-1)*self.ne_weight)
+
+        index=np.argmin(abs(self.x-self.ne_mid_ped))
+        ne_mod=self.ne*(1+(ne_scale-1)*self.ne_weight)+(1+ne_shift)*self.ne[index]
         #*************modify ne************
         #**********************************
 
@@ -351,12 +353,12 @@ class mode_finder:
             self.te_weight
         except:
             te_top_ped,te_mid_ped=self.find_pedestal(self.x,self.te)
-            print('[te_top_ped,te_mid_ped]')
-            print([te_top_ped,te_mid_ped])
+            self.te_mid_ped=te_mid_ped
             te_width=te_mid_ped-te_top_ped
             self.te_weight = ((np.exp((self.x-te_top_ped)*2/te_width)-1)/(np.exp((self.x-te_top_ped)*2/te_width)+1)+1)/2 
         
-        te_mod=self.te*(1+(te_scale-1)*self.te_weight)
+        index=np.argmin(abs(self.x-self.te_mid_ped))
+        te_mod=self.te*(1+(te_scale-1)*self.te_weight)+(1+te_shift)*self.te[index]
         #*************modify Te************
         #**********************************
 
@@ -568,7 +570,7 @@ class mode_finder:
 
     def omega_gaussian_fit_GUI(self,root,x,data,rhoref,Lref):
         amplitude,mean,stddev=gaussian_fit_GUI(root,x,data)
-        print(f'amplitude,mean,stddev={amplitude},{mean},{stddev}')
+        #print(f'amplitude,mean,stddev={amplitude},{mean},{stddev}')
         mean_rho=mean*Lref/rhoref         #normalized to rhoi
         xstar=abs(stddev*Lref/rhoref)
         
@@ -577,8 +579,8 @@ class mode_finder:
         popt[1] = mean     
         popt[2] = stddev   
     
-        print(popt)
-        print(mean_rho,xstar)
+        #print(popt)
+        #print(mean_rho,xstar)
     
         return mean_rho,xstar
   
@@ -590,7 +592,7 @@ class mode_finder:
         Lref=self.Lref 
 
         amplitude,mean,stddev=gaussian_fit(x,data,manual)
-        print(f'amplitude,mean,stddev={amplitude},{mean},{stddev}')
+        #print(f'amplitude,mean,stddev={amplitude},{mean},{stddev}')
         mean_rho=mean*Lref/rhoref         #normalized to rhoi
         xstar=abs(stddev*Lref/rhoref)
         
@@ -599,8 +601,8 @@ class mode_finder:
         popt[1] = mean     
         popt[2] = stddev   
     
-        print(popt)
-        print(mean_rho,xstar)
+        #print(popt)
+        #print(mean_rho,xstar)
     
         return mean_rho,xstar
   
@@ -654,9 +656,9 @@ class mode_finder:
                         x_list_temp.append(uni_rhot[index0])
                         index_list_temp.append(index0)
                 index_diff=np.array(index_list_temp[:-1],dtype=int)-np.array(index_list_temp[1:],dtype=int)
-                print(index_diff)
-                print(x_list_temp)
-                print(index_list_temp)
+                #print(index_diff)
+                #print(x_list_temp)
+                #print(index_list_temp)
                 if len(x_list_temp)>0:
                     x_list.append(x_list_temp[0])
                     m_list.append(m)
@@ -667,8 +669,8 @@ class mode_finder:
                         x_list.append(x_list_temp[i])
                         m_list.append(m)
     
-            print(x_list)
-            print(m_list)
+            #print(x_list)
+            #print(m_list)
             return x_list, m_list
         else: #for monotonic increasing q profiles
             for m in mnums:
@@ -678,8 +680,8 @@ class mode_finder:
                     x_list.append(uni_rhot[index0])
                     m_list.append(m)
                 
-            print(x_list)
-            print(m_list)
+            #print(x_list)
+            #print(m_list)
             return x_list, m_list
 
 
@@ -707,7 +709,7 @@ class mode_finder:
         temp_ndarray=(np.array([x_list, m_list,abs(x_list-x_peak)])).transpose() 
         surface_df = pd.DataFrame(temp_ndarray,\
                     columns = ['x_list','m_list','peak_distance'])
-        print(surface_df)
+        #print(surface_df)
         surface_df_sort=surface_df.sort_values(by='peak_distance')
         if len(surface_df_sort['x_list'])<top:
             x_surface_near_peak_list=surface_df_sort['x_list']
