@@ -10,13 +10,19 @@ from SLiM_obj import mode_finder
 #**********Start of User block*****************
 Frequency_list=[65,109] #frequency observed from experiment
 weight_list=[1.,1.3]    #weight mu calculation for each frequency
-Frequency_error=0.00    #error for frequency
+Frequency_error=0.10    #error for frequency
 q_scale_list=np.arange(0.95,1.05,0.01)
 q_shift_list=np.zeros(len(q_scale_list),dtype=float)
 ne_scale_list=np.arange(0.8,1.2,0.05)
 te_scale_list=np.arange(0.8,1.2,0.05)
 ne_shift_list=np.array([0.],dtype=float) #default: [0.]
 te_shift_list=np.array([0.],dtype=float) #default: [0.]
+
+scan_mode=0     #scan_mode=-1, take 1 q scaling and do ne, te scan(stop if one matches): 10s
+                #scan_mode=0, take 1 q scaling and do ne, te scan: 10s
+                #scan_mode=1, take all working q scale and do ne, te scan: 30min
+                #scan_mode=2, take all q scale and do ne, te scan: 11hr
+
 #ne_shift_list=np.arange(0.,0.2,0.05)
 #te_shift_list=np.arange(0.,0.2,0.05)
 
@@ -93,12 +99,12 @@ ne_shift_error=1.+np.max(abs(1.-ne_shift_list))
 te_scale_error=1.+np.max(abs(1.-te_scale_list))
 te_shift_error=1.+np.max(abs(1.-te_shift_list))
 
-(ne_scale_error+te_scale_error)/2.
 
-q_scan_f_err=(1.+Frequency_error)*\
-            (ne_scale_error+te_scale_error)/2.-1.
+#q_scan_f_err=(1.+Frequency_error)*\
+            #(ne_scale_error+te_scale_error)/2.-1.
             #ne_scale_error*ne_shift_error*\
             #te_scale_error*te_shift_error
+q_scan_f_err=(ne_scale_error+te_scale_error)/2.-1.
 
 #***step 1:
 
@@ -167,25 +173,38 @@ if len(mu_works_list)==0:
     print('No possible variation of q profile for the given frequency range, please check the frequency or the frequency_error.')
     exit()
 
-'''
-index=np.argmin(mu_works_list)
-q_scale=q_scale_works_list[index]
-q_shift=q_shift_works_list[index]
-mode_finder_obj.q_back_to_nominal()
-mode_finder_obj.q_modify(q_scale,q_shift)
-if show_plot==True:
-    mode_finder_obj.Plot_ome_q_surface_frequency_list(peak_percent,n_min,n_max,Frequency_list,\
-                        Frequency_error=Frequency_error,save_imag=False)
+if scan_mode==0:
+    index=np.argmin(mu_works_list)
+    q_scale=q_scale_works_list[index]
+    q_shift=q_shift_works_list[index]
+    mode_finder_obj.q_back_to_nominal()
+    mode_finder_obj.q_modify(q_scale,q_shift)
+    if show_plot==True:
+        mode_finder_obj.Plot_ome_q_surface_frequency_list(peak_percent,n_min,n_max,Frequency_list,\
+                            Frequency_error=Frequency_error,save_imag=False)
+    q_scale_works_list=[q_scale]
+    q_shift_works_list=[q_shift]
+elif scan_mode==1:
+    pass 
+elif scan_mode==2:
+    q_scale_works_list=q_scale_list
+    q_shift_works_list=q_shift_list
 
-mode_finder_obj.q_back_to_nominal()
-'''
 
 
 
 
 #***step 2:
 
-scale_list=[]
+scale_list=[
+    [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift]\
+        for q_scale in q_scale_works_list\
+        for q_shift in q_shift_works_list\
+        for ne_scale in ne_scale_list\
+        for ne_shift in ne_shift_list\
+        for te_scale in te_scale_list\
+        for te_shift in te_shift_list\
+                    ]
 
 for q_scale in q_scale_works_list:
     for q_shift in q_shift_works_list:
@@ -399,4 +418,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
                     np.prod(judge_list),omega_lab_kHz_list,\
                     Frequency_error_list])
     csvfile.close()
+
+    if np.prod(judge_list)==1 and scan_mode==-1:
+        break
         
