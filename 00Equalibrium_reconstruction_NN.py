@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import csv
+import os 
 
 from SLiM_obj import mode_finder 
 
@@ -54,6 +55,16 @@ norm_omega_csv_file=path_tmp+'NN_omega_norm_factor.csv'
 norm_gamma_csv_file=path_tmp+'NN_gamma_norm_factor.csv'
 #************End of User Block*****************
 #**********************************************
+
+
+if not os.path.exists(Output_Path):
+    os.makedirs(Output_Path)
+else:
+    from os import listdir
+    from os.path import isfile, join
+    onlyfiles = [f for f in listdir(Output_Path) if (isfile(join(Output_Path, f)) and f!='.gitignore')]
+    for i in onlyfiles:
+        os.remove(join(Output_Path, i))
 
 Run_mode=6      # mode1: fast mode
                 # mode2: slow mode(global)
@@ -205,15 +216,6 @@ scale_list=[
         for te_scale in te_scale_list\
         for te_shift in te_shift_list\
                     ]
-
-for q_scale in q_scale_works_list:
-    for q_shift in q_shift_works_list:
-        for ne_scale in ne_scale_list:
-            for ne_shift in ne_shift_list:
-                for te_scale in te_scale_list:
-                    for te_shift in te_shift_list:
-                        scale_list.append([q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift])
-
 
 if Run_mode==6:
     from SLiM_NN.Dispersion_NN import Dispersion_NN
@@ -399,14 +401,17 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
         csvfile.close()
         omega_lab_kHz_list.append(omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i])
         gamma_list.append(gamma_cs_a)
-    Frequency_error_list=np.zeros(len(omega_lab_kHz_list),dtype=float)
+
+    Frequency_error_list=[]
+    omega_lab_kHz_work_list=[]
     for k in range(len(Frequency_list)):
         for j in range(len(omega_lab_kHz_list)):
             f=Frequency_list[k]
             f_error=abs(f-omega_lab_kHz_list[j])/f
             if f_error<=Frequency_error and gamma_list[j]>=0:
                 judge_list[k]=1
-                Frequency_error_list[j]=f_error
+                Frequency_error_list.append(f_error)
+                omega_lab_kHz_work_list.append(omega_lab_kHz_list[j])
     
 
     if np.prod(judge_list)!=1:
@@ -415,7 +420,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
     with open(Output_Path+'0Equalibrium_summary.csv', 'a+', newline='') as csvfile:     #clear all and then write a row
         data = csv.writer(csvfile, delimiter=',')
         data.writerow([q_scale,ne_scale,te_scale,\
-                    np.prod(judge_list),omega_lab_kHz_list,\
+                    np.prod(judge_list),omega_lab_kHz_work_list,\
                     Frequency_error_list])
     csvfile.close()
 
