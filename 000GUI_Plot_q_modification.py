@@ -16,8 +16,10 @@ from SLiM_obj import mode_finder
 
 windows=tk.Tk()
 windows.title('Mode finder')
-windows.iconbitmap('./SLiM.ico')
-
+try:
+    windows.iconbitmap('./SLiM.ico')
+except:
+    pass
 Output_Path='./output/'
 
 #global varible
