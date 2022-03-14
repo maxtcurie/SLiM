@@ -10,13 +10,12 @@ from SLiM_obj import mode_finder
 #**********Start of User block*****************
 
 #for signal q
-q_scale_list=[1.]  
+q_scale_list=[1.]
 q_shift_list=[0.]
-
-
-#for q scan
-#q_scale_list=np.arange(1.0,1.08,0.0005)
-#q_shift_list=[0.]*len(q_scale_list)
+ne_scale_list=[1.]
+ne_shift_list=[0.]
+te_scale_list=[1.]
+te_shift_list=[0.]
 
 
 n_min=1         #minmum mode number (include) that finder will cover
@@ -28,6 +27,7 @@ Run_mode=5      # mode1: fast mode
                 # mode3: slow mode(local) 
                 # mode4: slow mode manual(global)
                 # mode5: slow slow mode(global)
+                # mode6: NN mode (global)
 
 profile_type= "pfile"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
@@ -50,6 +50,21 @@ Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=True
 #************End of User Block*****************
 #**********************************************
+
+scale_list=[
+        [q_scale,q_shift,\
+        ne_scale,ne_shift,\
+        te_scale,te_shift]\
+    \
+    for     q_scale,q_shift,\
+            ne_scale,ne_shift,\
+            te_scale,te_shift \
+    \
+    in zip( q_scale_list,q_shift_list,\
+            ne_scale_list,ne_shift_list,\
+            te_scale_list,te_shift_list)
+    ]
+
 
 mode_finder_obj=mode_finder(profile_type,profile_name,\
             geomfile_type,geomfile_name,\
@@ -75,11 +90,18 @@ xstar_list=[]
 q_scale_list0=[]
 q_shift_list0=[]
 
-for i in range(len(q_scale_list)):
-    q_scale=q_scale_list[i]
-    q_shift=q_shift_list[i]
-    mode_finder_obj.q_back_to_nominal()
-    mode_finder_obj.q_modify(q_scale,q_shift)
+for i in range(len(scale_list)):
+    [   q_scale,q_shift,\
+        ne_scale,ne_shift,\
+        te_scale,te_shift\
+        ]=scale_list[i]
+
+    mode_finder_obj.reset_profile()
+    mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=q_shift,\
+                                    ne_scale=ne_scale,te_scale=te_scale,\
+                                    ne_shift=ne_shift,te_shift=te_shift,\
+                                    Doppler_scale=1.,\
+                                    show_plot=True)
     mode_finder_obj.ome_peak_range(peak_percent)
     mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=manual_fit)
     mode_finder_obj.set_xstar(xstar)
@@ -87,7 +109,7 @@ for i in range(len(q_scale_list)):
     if Run_mode==1:#simple rational surface alignment
         ModIndex=-1
         filename='rational_surface_alignment'+Output_suffix+'.csv'
-    if Run_mode==2 or Run_mode==4 or Run_mode==5:#global dispersion
+    if Run_mode==2 or Run_mode==4 or Run_mode==5 or Run_mode==6:#global dispersion
         ModIndex=1
         filename='global_dispersion'+Output_suffix+'.csv'
     elif Run_mode==3:#local dispersion
@@ -159,6 +181,11 @@ df=pd.DataFrame(d, columns=['q_scale','q_shift','n','m','rho_tor',\
     'peak_percentage','nu','zeff','eta','shat','beta','ky',\
     'ModIndex','mu','xstar'])   #construct the panda dataframe
 df.to_csv(Output_Path+'parameter_list'+Output_suffix+'.csv',index=False)
+
+if Run_mode==6:
+    from SLiM_NN.Dispersion_NN import Dispersion_NN
+    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+
     
 if Run_mode==1:
     pass
@@ -185,6 +212,9 @@ else:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
                 df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=5)
+        elif Run_mode==6:
+            w0=Dispersion_NN_obj.Dispersion_omega(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                    df['shat'][i],df['beta'][i],df['ky'][i],df['mu'][i],df['xstar'][i])
         else:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\

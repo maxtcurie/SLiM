@@ -79,7 +79,7 @@ class mode_finder:
             vrot0=vrot0[rhot0_range_min:rhot0_range_max]
     
     
-        uni_rhot = np.linspace(min(rhot0),max(rhot0),len(rhot0)*3)
+        uni_rhot = np.linspace(min(rhot0),max(rhot0),len(rhot0)*5)
         
 
         ni_u = interp(rhot0,ni0,uni_rhot)
@@ -207,6 +207,7 @@ class mode_finder:
         self.coll_ei=coll_ei
         self.gyroFreq=gyroFreq
 
+        self.x_nominal=uni_rhot
         self.nref_nominal=nref
         self.ne_nominal=self.ne     
         self.te_nominal=self.te       
@@ -343,7 +344,7 @@ class mode_finder:
             self.ne_weight = ((np.exp((self.x-ne_top_ped)*2/ne_width)-1)/(np.exp((self.x-ne_top_ped)*2/ne_width)+1)+1)/2 
 
         index=np.argmin(abs(self.x-self.ne_mid_ped))
-        ne_mod=self.ne*(1+(ne_scale-1)*self.ne_weight)+(1+ne_shift)*self.ne[index]
+        ne_mod=self.ne*(1.+(ne_scale-1.)*self.ne_weight)+(ne_shift)*self.ne[index]
         #*************modify ne************
         #**********************************
 
@@ -358,7 +359,7 @@ class mode_finder:
             self.te_weight = ((np.exp((self.x-te_top_ped)*2/te_width)-1)/(np.exp((self.x-te_top_ped)*2/te_width)+1)+1)/2 
         
         index=np.argmin(abs(self.x-self.te_mid_ped))
-        te_mod=self.te*(1+(te_scale-1)*self.te_weight)+(1+te_shift)*self.te[index]
+        te_mod=self.te*(1.+(te_scale-1.)*self.te_weight)+(te_shift)*self.te[index]
         #*************modify Te************
         #**********************************
 
@@ -471,61 +472,62 @@ class mode_finder:
         ky=kyGENE*np.sqrt(2.)
         nu=(coll_ei)/(np.max(omega_n))
 
+        self.x=self.x[2:-2] 
         self.nref=nref
-        self.ne=ne      # in 10^19 /m^3
-        self.ni=ni      # in 10^19 /m^3
-        self.nz=nz      # in 10^19 /m^3
-        self.te=te      # in keV      
-        self.r_sigma=(1./shat)*( (me_SI/m_SI)**0.5 )
-        self.cs_to_kHz=gyroFreq/(2.*np.pi*1000.)
-        self.omn=omega_n    #omega_n in kHz
+        self.ne=ne[2:-2]      # in 10^19 /m^3
+        self.ni=ni[2:-2]      # in 10^19 /m^3
+        self.nz=nz[2:-2]      # in 10^19 /m^3
+        self.te=te[2:-2]      # in keV      
+        self.r_sigma=(1./shat[:-2])*( (me_SI/m_SI)**0.5 )
+        self.cs_to_kHz=gyroFreq[:-2]/(2.*np.pi*1000.)
+        self.omn=omega_n[2:-2]    #omega_n in kHz
         self.cs=cref
         self.rho_s=rhoref*np.sqrt(2.)
-        self.shat=shat
-        self.eta=eta
-        self.ky=ky
-        self.nu=nu
+        self.shat=shat[2:-2]
+        self.eta=eta[2:-2]
+        self.ky=ky[2:-2]
+        self.nu=nu[2:-2]
         self.zeff=zeff
-        self.beta=beta
-        self.q=q
-        self.ome=mtmFreq
-        self.Doppler=omegaDoppler
-        self.coll_ei=coll_ei
-        self.gyroFreq=gyroFreq
+        self.beta=beta[2:-2]
+        self.q=q[2:-2]
+        self.ome=mtmFreq[2:-2]
+        self.Doppler=omegaDoppler[2:-2]
+        self.coll_ei=coll_ei[2:-2]
+        self.gyroFreq=gyroFreq[2:-2]
         #**********end of calculation*******
         if show_plot==True:
             fig, ax=plt.subplots(nrows=7,\
             ncols=1,sharex=True) 
         
-            ax[0].plot(self.x,self.shat_nominal,label='nominal')
+            ax[0].plot(self.x_nominal,self.shat_nominal,label='nominal')
             ax[0].plot(self.x,self.shat,label='modified')
             ax[0].legend()
             ax[0].set_ylabel(r'$L_{ne}/L_{q}$')
-            ax[1].plot(self.x,self.eta_nominal)
+            ax[1].plot(self.x_nominal,self.eta_nominal)
             ax[1].plot(self.x,self.eta)
             ax[1].set_ylabel(r'$L_{ne}/L_{Te}$')
-            ax[2].plot(self.x,self.ky_nominal)
+            ax[2].plot(self.x_nominal,self.ky_nominal)
             ax[2].plot(self.x,self.ky)
             ax[2].set_ylabel(r'$k_y\rho_s$')
-            ax[3].plot(self.x,self.nu_nominal)
+            ax[3].plot(self.x_nominal,self.nu_nominal)
             ax[3].plot(self.x,self.nu)
             ax[3].set_ylabel(r'$\nu_{ei}/\omega_{*ne}$')
-            ax[4].plot(self.x,self.beta_nominal)
+            ax[4].plot(self.x_nominal,self.beta_nominal)
             ax[4].plot(self.x,self.beta)
             ax[4].set_ylabel(r'$\beta$')
-            ax[5].plot(self.x,self.q_nominal)
+            ax[5].plot(self.x_nominal,self.q_nominal)
             ax[5].plot(self.x,self.q)
             ax[5].set_ylabel(r'$q$')
-            ax[6].plot(self.x,self.ome_nominal)
+            ax[6].plot(self.x_nominal,self.ome_nominal)
             ax[6].plot(self.x,self.ome)
             ax[6].set_ylabel(r'$\omega_{*e}(kHz)$')
-    
             ax[6].set_xlabel(r'$\rho_{tor}$')  
             plt.subplots_adjust(wspace=0, hspace=0)
             plt.show()  
 
     
     def reset_profile(self):
+        self.x=self.x_nominal
         self.ne=self.ne_nominal   
         self.te=self.te_nominal
         self.r_sigma=self.r_sigma_nominal

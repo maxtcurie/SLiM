@@ -281,12 +281,11 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     num=len(x_grid)
     b=np.ones(2*num-2)
 
-
     #new guessing model(02/15/2022)
-    guess_f=np.arange(0.5,1.6+eta,1.+eta,0.5+eta)
+    guess_f=np.arange(0.5,eta+2.1,0.5,dtype=float)
     guess_f_list=[]
     for f in guess_f:
-        guess_f_list.append([f,abs(f-1-eta)])
+        guess_f_list.append([f,abs(f-1.-eta)])
     
     guess_f_list=np.array(guess_f_list)
     order_index=np.argsort(guess_f_list[:, 1])

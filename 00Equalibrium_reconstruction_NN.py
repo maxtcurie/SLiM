@@ -98,12 +98,15 @@ cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
 
 with open(Output_Path+'0Equalibrium_summary.csv', 'w', newline='') as csvfile:     #clear all and then write a row
     data = csv.writer(csvfile, delimiter=',')
-    data.writerow(['q_scale','ne_scale','te_scale',\
+    data.writerow(['q_scale','q_shift',\
+                'ne_scale','ne_shift',\
+                'te_scale','te_shift',\
                 'frequency_match','frequency_list',\
-                'frequency_error_list'])
+                'frequency_error_list',\
+                'best_frequency_list',\
+                'best_frequency_error_list',\
+                'best_f_error_avg'])
 csvfile.close()
-
-
 
 ne_scale_error=1.+np.max(abs(1.-ne_scale_list))
 ne_shift_error=1.+np.max(abs(1.-ne_shift_list))
@@ -342,7 +345,10 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
     else:    
         with open(Output_Path+filename, 'w', newline='') as csvfile:     #clear all and then write a row
             data = csv.writer(csvfile, delimiter=',')
-            data.writerow(['q_scale','q_shift','ne_scale','te_scale','n','m','rho_tor',\
+            data.writerow(['q_scale','q_shift',\
+                'ne_scale','ne_shift',\
+                'te_scale','te_shift',\
+                'n','m','rho_tor',\
                 'omega_plasma_kHz','omega_lab_kHz',\
                 'gamma_cs_a','omega_n_kHz',\
                 'omega_n_cs_a','omega_e_plasma_kHz',\
@@ -404,24 +410,44 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
 
     Frequency_error_list=[]
     omega_lab_kHz_work_list=[]
+    best_f_list=[]
+    best_f_error_list=[]
     for k in range(len(Frequency_list)):
+        f_list=[]
+        f_error_list=[]
+        f_tmp=0.
+        f_error_tmp=99999999.
+        
         for j in range(len(omega_lab_kHz_list)):
             f=Frequency_list[k]
             f_error=abs(f-omega_lab_kHz_list[j])/f
             if f_error<=Frequency_error and gamma_list[j]>=0:
                 judge_list[k]=1
-                Frequency_error_list.append(f_error)
-                omega_lab_kHz_work_list.append(omega_lab_kHz_list[j])
+                f_error_list.append(f_error)
+                f_list.append(omega_lab_kHz_list[j])
+                if f_error_tmp>f_error:
+                    f_tmp=omega_lab_kHz_list[j]
+                    f_error_tmp=f_error
+        Frequency_error_list.append(f_error_list)
+        omega_lab_kHz_work_list.append(f_list)
+        best_f_list.append(f_tmp)
+        best_f_error_list.append(f_error_tmp)
+        best_f_error_avg=np.mean(np.array(best_f_error_list,dtype=float))
     
-
     if np.prod(judge_list)!=1:
         Frequency_error_list='NA'
 
     with open(Output_Path+'0Equalibrium_summary.csv', 'a+', newline='') as csvfile:     #clear all and then write a row
         data = csv.writer(csvfile, delimiter=',')
-        data.writerow([q_scale,ne_scale,te_scale,\
-                    np.prod(judge_list),omega_lab_kHz_work_list,\
-                    Frequency_error_list])
+        data.writerow([q_scale,q_shift,\
+                    ne_scale,ne_shift,\
+                    te_scale,te_shift,\
+                    np.prod(judge_list),\
+                    omega_lab_kHz_work_list,\
+                    Frequency_error_list,\
+                    best_f_list,\
+                    best_f_error_list,\
+                    best_f_error_avg])
     csvfile.close()
 
     if np.prod(judge_list)==1 and scan_mode==-1:
