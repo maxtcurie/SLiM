@@ -78,8 +78,8 @@ class mode_finder:
             ni0=ni0[rhot0_range_min:rhot0_range_max]
             vrot0=vrot0[rhot0_range_min:rhot0_range_max]
     
-    
-        uni_rhot = np.linspace(min(rhot0),max(rhot0),len(rhot0)*5)
+        
+        uni_rhot = np.linspace(min(rhot0),max(rhot0),2000)
         
 
         ni_u = interp(rhot0,ni0,uni_rhot)

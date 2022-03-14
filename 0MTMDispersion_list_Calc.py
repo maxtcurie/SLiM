@@ -12,11 +12,15 @@ import sys
 import time
 sys.path.insert(1, './Tools')
 
-from DispersionRelationDeterminantFullConductivityZeff import Dispersion
+from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
+from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
 
 #**********Start of user block***************
 Input_csv='./Test_files/parameter_list_2.csv'   
 Output_csv='./Output/0MTM_scan.csv'
+
+Run_mode=2      #Run_mode=1 quick calculation(30sec/mode)
+                #Run_mode=2 extensive(30min/mode)
 #**********end of user block****************
         
 df=pd.read_csv(Input_csv)
@@ -44,7 +48,10 @@ for i in range(len(df['n'])):
     mu=df['mu'][i]
     xstar=df['xstar'][i]
 
-    w0=Dispersion(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
+    if Run_mode==1:
+        w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
+    elif Run_mode==2:
+        w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
     
     omega=np.real(w0)
     omega_kHz=omega*df['omega_n_kHz'][i]
@@ -62,8 +69,6 @@ for i in range(len(df['n'])):
                     df['shat'][i],df['beta'][i],df['ky'][i],\
                     df['ModIndex'][i],df['mu'][i],df['xstar'][i] ])
     csvfile.close()
-    if gamma < -0.0005:
-        break
 
 end=time.time()
 print(f"Runtime of the program is {end - start} s")

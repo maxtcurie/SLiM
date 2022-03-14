@@ -13,7 +13,7 @@ import concurrent.futures as future #for CPU parallelization
 import sys
 sys.path.insert(1, './Tools')
 
-from DispersionRelationDeterminantFullConductivityZeff import Dispersion
+from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
 
 #**********Start of user block***************
@@ -31,7 +31,7 @@ def Dispersion_calc(para_list):
     [nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar,Output_csv,Input_csv,i]=para_list
     
     if Run_mode==1:
-        w0=Dispersion(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
+        w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
     elif Run_mode==2:
         w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
 

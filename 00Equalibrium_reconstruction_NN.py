@@ -12,10 +12,10 @@ from SLiM_obj import mode_finder
 Frequency_list=[65,109] #frequency observed from experiment
 weight_list=[1.,1.3]    #weight mu calculation for each frequency
 Frequency_error=0.10    #error for frequency
-q_scale_list=np.arange(0.95,1.05,0.01)
+q_scale_list=np.arange(0.95,1.051,0.01)
 q_shift_list=np.zeros(len(q_scale_list),dtype=float)
-ne_scale_list=np.arange(0.8,1.2,0.05)
-te_scale_list=np.arange(0.8,1.2,0.05)
+ne_scale_list=np.arange(0.8,1.21,0.05)
+te_scale_list=np.arange(0.8,1.21,0.05)
 ne_shift_list=np.array([0.],dtype=float) #default: [0.]
 te_shift_list=np.array([0.],dtype=float) #default: [0.]
 
@@ -105,7 +105,8 @@ with open(Output_Path+'0Equalibrium_summary.csv', 'w', newline='') as csvfile:  
                 'frequency_error_list',\
                 'best_frequency_list',\
                 'best_frequency_error_list',\
-                'best_f_error_avg'])
+                'best_f_error_avg',\
+                'file_name'])
 csvfile.close()
 
 ne_scale_error=1.+np.max(abs(1.-ne_scale_list))
@@ -118,8 +119,10 @@ te_shift_error=1.+np.max(abs(1.-te_shift_list))
             #(ne_scale_error+te_scale_error)/2.-1.
             #ne_scale_error*ne_shift_error*\
             #te_scale_error*te_shift_error
-q_scan_f_err=(ne_scale_error+te_scale_error)/2.-1.
 
+#q_scan_f_err=(ne_scale_error+te_scale_error)/2.-1.
+
+q_scan_f_err=Frequency_error
 #***step 1:
 
 #find the q profile for the frequency
@@ -339,7 +342,9 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
         'ModIndex','mu','xstar'])   #construct the panda dataframe
     
     judge_list=np.zeros(len(Frequency_list),dtype=int)
-    
+
+    file_name=Output_Path+filename
+
     if Run_mode==1:
         pass
     else:    
@@ -447,7 +452,8 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
                     Frequency_error_list,\
                     best_f_list,\
                     best_f_error_list,\
-                    best_f_error_avg])
+                    best_f_error_avg,\
+                    file_name])
     csvfile.close()
 
     if np.prod(judge_list)==1 and scan_mode==-1:

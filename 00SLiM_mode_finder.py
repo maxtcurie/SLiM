@@ -47,7 +47,7 @@ x0_max=0.99         # ending of the range in rho_tor
 peak_percent=20.
 mref=2.             #mess of ion in unit of proton, for deuterium is 2
 Impurity_charge=6.  #charge of impurity, for carbon is 6
-show_plot=True
+show_plot=False
 #************End of User Block*****************
 #**********************************************
 
