@@ -260,6 +260,12 @@ class mode_finder:
         return topped,midped
 
 
+    def inside_freq_band_check(self,f,freq_min_list,freq_max_list):
+        for freq_min, freq_max in zip(freq_min_list,freq_max_list):
+            if freq_min<=f and f<=freq_max:
+                return True
+                break
+
     def profile_fit(self,show_plot=False):
         x=self.x
         ne=self.ne

@@ -9,7 +9,7 @@ from SLiM_obj import mode_finder
 
 #**********************************************
 #**********Start of User block*****************
-Frequency_list=[65,109] #frequency observed from experiment
+Frequency_list=[65,110] #frequency observed from experiment
 weight_list=[1.,1.3]    #weight mu calculation for each frequency
 Frequency_error=0.10    #error for frequency
 q_scale_list=np.arange(0.95,1.051,0.01)
@@ -19,13 +19,13 @@ te_scale_list=np.arange(0.8,1.21,0.05)
 ne_shift_list=np.array([0.],dtype=float) #default: [0.]
 te_shift_list=np.array([0.],dtype=float) #default: [0.]
 
-scan_mode=0     #scan_mode=-1, take 1 q scaling and do ne, te scan(stop if one matches): 10s
+scan_mode=1     #scan_mode=-1, take 1 q scaling and do ne, te scan(stop if one matches): 10s
                 #scan_mode=0, take 1 q scaling and do ne, te scan: 10s
                 #scan_mode=1, take all working q scale and do ne, te scan: 30min
                 #scan_mode=2, take all q scale and do ne, te scan: 11hr
 
-#ne_shift_list=np.arange(0.,0.2,0.05)
-#te_shift_list=np.arange(0.,0.2,0.05)
+reject_band_outside=True #Change to True if one want to the q scale \
+                         #  that only have the desired frequency band
 
 profile_type= "ITERDB"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
@@ -124,6 +124,8 @@ te_shift_error=1.+np.max(abs(1.-te_shift_list))
 
 q_scan_f_err=Frequency_error
 #***step 1:
+freq_min_list=[f*(1.-q_scan_f_err) for f in Frequency_list]
+freq_max_list=[f*(1.+q_scan_f_err) for f in Frequency_list]
 
 #find the q profile for the frequency
 mu_works_list=[] #the list of mu that has frequency observed from experiment
@@ -143,6 +145,7 @@ for i in range(len(q_scale_list)):
     omega_e_lab_kHz_list=[]
     Doppler_kHz_list=[]
     mu_list_temp=[]
+    outside_frequency=[]
     for n in n0_list:
         x_surface_near_peak_list, m_surface_near_peak_list=mode_finder_obj.Rational_surface_top_surfaces(n,top=3)
         print(x_surface_near_peak_list)
@@ -150,6 +153,7 @@ for i in range(len(q_scale_list)):
         for j in range(len(x_surface_near_peak_list)):
             x_surface_near_peak=x_surface_near_peak_list[j]
             m_surface_near_peak=m_surface_near_peak_list[j]
+            judge_tmp=0
             if mode_finder_obj.x_min<=x_surface_near_peak and x_surface_near_peak<=mode_finder_obj.x_max:
                 index=np.argmin(abs(mode_finder_obj.x-x_surface_near_peak))
                 
@@ -160,7 +164,7 @@ for i in range(len(q_scale_list)):
                 omega_e_plasma_kHz_list.append(omega_e_plasma_kHz)
                 omega_e_lab_kHz_list.append(omega_e_lab_kHz)
                 Doppler_kHz_list.append(Doppler_kHz)
-    
+                k_tmp=0
                 for k in range(len(Frequency_list)):
                     f=Frequency_list[k]
                     f_error=abs(f-omega_e_lab_kHz)/f
@@ -168,7 +172,15 @@ for i in range(len(q_scale_list)):
                     print(f_error)
                     if f_error<=q_scan_f_err:
                         judge_list[k]=1
+                        k_tmp=k
                         mu_list_temp.append(weight_list[k]*abs(x_surface_near_peak-mode_finder_obj.x_peak))
+                if reject_band_outside:                
+                    if not mode_finder_obj.\
+                            inside_freq_band_check(\
+                                omega_e_lab_kHz,\
+                                freq_min_list,\
+                                freq_max_list):
+                        judge_list[k_tmp]=0
 
 
     if np.prod(judge_list)==1:
@@ -212,6 +224,9 @@ elif scan_mode==2:
 
 
 #***step 2:
+
+freq_min_list=[f*(1.-Frequency_error) for f in Frequency_list]
+freq_max_list=[f*(1.+Frequency_error) for f in Frequency_list]
 
 scale_list=[
     [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift]\

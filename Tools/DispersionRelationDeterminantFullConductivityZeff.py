@@ -283,6 +283,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
 
     #new guessing model(02/15/2022)
     guess_f=np.arange(0.5,eta+2.1,0.5,dtype=float)
+    print(guess_f)
     guess_f_list=[]
     for f in guess_f:
         guess_f_list.append([f,abs(f-1.-eta)])
