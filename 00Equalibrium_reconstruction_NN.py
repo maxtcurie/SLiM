@@ -12,6 +12,7 @@ from SLiM_obj import mode_finder
 Frequency_list=[65,110] #frequency observed from experiment
 weight_list=[1.,1.3]    #weight mu calculation for each frequency
 Frequency_error=0.10    #error for frequency
+q_scan_f_err   =0.2    #error for frequency when doing q scan
 q_scale_list=np.arange(0.95,1.051,0.01)
 q_shift_list=np.zeros(len(q_scale_list),dtype=float)
 ne_scale_list=np.arange(0.8,1.21,0.05)
@@ -19,13 +20,16 @@ te_scale_list=np.arange(0.8,1.21,0.05)
 ne_shift_list=np.array([0.],dtype=float) #default: [0.]
 te_shift_list=np.array([0.],dtype=float) #default: [0.]
 
-scan_mode=1     #scan_mode=-1, take 1 q scaling and do ne, te scan(stop if one matches): 10s
+scan_mode=0     #scan_mode=-1, take 1 q scaling and do ne, te scan(stop if one matches): 10s
                 #scan_mode=0, take 1 q scaling and do ne, te scan: 10s
                 #scan_mode=1, take all working q scale and do ne, te scan: 30min
                 #scan_mode=2, take all q scale and do ne, te scan: 11hr
 
-reject_band_outside=True #Change to True if one want to the q scale \
-                         #  that only have the desired frequency band
+reject_band_outside_for_q_scan=False #Change to True if one want to the q scale \
+                                    #  that only have the desired frequency band
+
+reject_band_outside_for_scale_scan=False #Change to True if one want to the q scale \
+                                            #  that only have the desired frequency band
 
 profile_type= "ITERDB"          # "ITERDB" "pfile", "profile_e", "profile_both" 
 geomfile_type="gfile"          # "gfile"  "GENE_tracor"
@@ -36,7 +40,7 @@ profile_name=InputPath+'DIIID174819.iterdb'
 geomfile_name=InputPath+'g174819.03560'
 
 manual_fit=False #Change to False for auto fit for xstar
-surface_num=2
+surface_num=1
 
 zeff_manual=-1     #set to -1 automatically calculate the zeff
 
@@ -106,23 +110,11 @@ with open(Output_Path+'0Equalibrium_summary.csv', 'w', newline='') as csvfile:  
                 'best_frequency_list',\
                 'best_frequency_error_list',\
                 'best_f_error_avg',\
+                'more_f_band_than_need',\
                 'file_name'])
 csvfile.close()
 
-ne_scale_error=1.+np.max(abs(1.-ne_scale_list))
-ne_shift_error=1.+np.max(abs(1.-ne_shift_list))
-te_scale_error=1.+np.max(abs(1.-te_scale_list))
-te_shift_error=1.+np.max(abs(1.-te_shift_list))
 
-
-#q_scan_f_err=(1.+Frequency_error)*\
-            #(ne_scale_error+te_scale_error)/2.-1.
-            #ne_scale_error*ne_shift_error*\
-            #te_scale_error*te_shift_error
-
-#q_scan_f_err=(ne_scale_error+te_scale_error)/2.-1.
-
-q_scan_f_err=Frequency_error
 #***step 1:
 freq_min_list=[f*(1.-q_scan_f_err) for f in Frequency_list]
 freq_max_list=[f*(1.+q_scan_f_err) for f in Frequency_list]
@@ -174,7 +166,7 @@ for i in range(len(q_scale_list)):
                         judge_list[k]=1
                         k_tmp=k
                         mu_list_temp.append(weight_list[k]*abs(x_surface_near_peak-mode_finder_obj.x_peak))
-                if reject_band_outside:                
+                if reject_band_outside_for_q_scan:                
                     if not mode_finder_obj.\
                             inside_freq_band_check(\
                                 omega_e_lab_kHz,\
@@ -432,15 +424,18 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
     omega_lab_kHz_work_list=[]
     best_f_list=[]
     best_f_error_list=[]
+    best_f_error_reject_list=[]
     for k in range(len(Frequency_list)):
         f_list=[]
         f_error_list=[]
+        f_error_reject_list=[]
         f_tmp=0.
         f_error_tmp=99999999.
-        
+                
         for j in range(len(omega_lab_kHz_list)):
             f=Frequency_list[k]
             f_error=abs(f-omega_lab_kHz_list[j])/f
+
             if f_error<=Frequency_error and gamma_list[j]>=0:
                 judge_list[k]=1
                 f_error_list.append(f_error)
@@ -448,11 +443,24 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
                 if f_error_tmp>f_error:
                     f_tmp=omega_lab_kHz_list[j]
                     f_error_tmp=f_error
+
+
         Frequency_error_list.append(f_error_list)
         omega_lab_kHz_work_list.append(f_list)
         best_f_list.append(f_tmp)
         best_f_error_list.append(f_error_tmp)
-        best_f_error_avg=np.mean(np.array(best_f_error_list,dtype=float))
+
+    best_f_error_avg=np.mean(np.array(best_f_error_list,dtype=float))
+
+    reject=0
+    for j in range(len(omega_lab_kHz_list)):
+        f=omega_lab_kHz_list[j]
+        gamma=gamma_list[j]
+        if (not mode_finder_obj.inside_freq_band_check(\
+            f,freq_min_list,freq_max_list)) and gamma>=0:
+            reject=1
+
+    best_f_error_reject_avg=np.mean(np.array(best_f_error_reject_list,dtype=float))
     
     if np.prod(judge_list)!=1:
         Frequency_error_list='NA'
@@ -468,6 +476,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
                     best_f_list,\
                     best_f_error_list,\
                     best_f_error_avg,\
+                    reject,\
                     file_name])
     csvfile.close()
 
