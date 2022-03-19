@@ -13,11 +13,12 @@ import time
 #**********start of user block***********
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC.csv',
-                './NN_data/0MTM_scan_CORI_1.csv']
-epochs = 1
+                './NN_data/0MTM_scan_CORI_1.csv',
+                './NN_data/0MTM_scan_CORI_3_large_nu.csv']
+epochs = 100
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_gamma'
-Read_from_checkpoint=True
+Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
@@ -90,14 +91,12 @@ def load_data(filename_list):
         except:
             pass
         
-        #df=df.astype('float')
         
         df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0')
         df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
         
         
         df_unstable['unstable']=[1]*len(df_unstable)
-        
         df_stable['unstable']=[0]*len(df_stable)
         
         df=pd.concat([df_unstable, df_stable], axis=0)
@@ -112,30 +111,24 @@ def load_data(filename_list):
                               columns=['unstable'])
         df_y=df_y.astype('int32')
 
-        #get normalizing factor
+        #merge the dataframe
         if i==0:
-            keys=df_x.keys()
-            df_norm_name=[i for i in keys]
-            df_norm_factor=[1./np.max(df_x[i]) for i in keys]
-            keys=df_x.keys()
-            df_norm_name=[i for i in keys]
-            df_norm_factor=[1./np.max(df_x[i]) for i in keys]
-            d = {'name':df_norm_name,'factor':df_norm_factor}
-            df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
-            df_norm.to_csv('./Trained_model/NN_gamma_norm_factor.csv',index=False)
-
-            for i in range(len(keys)):
-                df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
             df_x_merge=df_x
             df_y_merge=df_y
         elif i!=0:
-            for i in range(len(keys)):
-                df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
-
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
-    
-        x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
+
+    #get normalizing factor
+    keys=df_x_merge.keys()
+    df_norm_name=[i for i in keys]
+    df_norm_factor=[1./np.max(df_x_merge[i]) for i in keys]
+    d = {'name':df_norm_name,'factor':df_norm_factor}
+    df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
+    df_norm.to_csv('./Trained_model/NN_stabel_unstable_norm_factor.csv',index=False)
+    for i in range(len(keys)):
+        df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
+    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -144,8 +137,10 @@ def load_data(filename_list):
 x_train, x_test, y_train, y_test=load_data(filename_list)
 
 #*********start of trainning***********************
-#print(x_test)
-#print(y_test)
+print('x_test')
+print(x_test)
+print(y_test)
+print(len(x_test)+len(x_train))
 #input()
 model,callback_func=create_model(checkpoint_path)
 if Read_from_checkpoint:

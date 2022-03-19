@@ -13,8 +13,9 @@ import time
 #**********start of user block***********
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC.csv',
-                './NN_data/0MTM_scan_CORI_1.csv']
-epochs = 1000
+                './NN_data/0MTM_scan_CORI_1.csv',
+                './NN_data/0MTM_scan_CORI_3_large_nu.csv']
+epochs = 100
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_omega'
 Read_from_checkpoint=False
@@ -108,30 +109,26 @@ def load_data(filename_list):
                               columns=['omega_omega_n'])
         df_y=df_y.astype('float')
 
-        #get normalizing factor
+        #merge the dataframe
         if i==0:
-            keys=df_x.keys()
-            df_norm_name=[i for i in keys]
-            df_norm_factor=[1./np.max(df_x[i]) for i in keys]
-            keys=df_x.keys()
-            df_norm_name=[i for i in keys]
-            df_norm_factor=[1./np.max(df_x[i]) for i in keys]
-            d = {'name':df_norm_name,'factor':df_norm_factor}
-            df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
-            df_norm.to_csv('./Trained_model/NN_omega_norm_factor.csv',index=False)
-
-            for i in range(len(keys)):
-                df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
             df_x_merge=df_x
             df_y_merge=df_y
         elif i!=0:
-            for i in range(len(keys)):
-                df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
-
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
+
+    #get normalizing factor
+    keys=df_x_merge.keys()
+    df_norm_name=[i for i in keys]
+    df_norm_factor=[1./np.max(df_x_merge[i]) for i in keys]
+    d = {'name':df_norm_name,'factor':df_norm_factor}
+    df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
+    df_norm.to_csv('./Trained_model/NN_stabel_unstable_norm_factor.csv',index=False)
+    for i in range(len(keys)):
+        df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
+
     
-        x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -157,4 +154,3 @@ model.save("./Trained_model/SLiM_NN_omega.h5")  # we can save the model and relo
 
 from Post_plot_learning_rate import plot_hist
 plot_hist(history)
-
