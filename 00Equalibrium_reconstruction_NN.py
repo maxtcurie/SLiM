@@ -14,7 +14,8 @@ weight_list=[1.,1.3]    #weight mu calculation for each frequency
 Frequency_error=0.10    #error for frequency
 q_scan_f_err   =0.2    #error for frequency when doing q scan
 q_scale_list=np.arange(0.95,1.051,0.01)
-q_shift_list=np.zeros(len(q_scale_list),dtype=float)
+q_shift_list=np.array([0.],dtype=float)
+shat_scale_list=np.arange(0.95,1.051,0.01)
 ne_scale_list=np.arange(0.8,1.21,0.05)
 te_scale_list=np.arange(0.8,1.21,0.05)
 ne_shift_list=np.array([0.],dtype=float) #default: [0.]
@@ -42,10 +43,10 @@ geomfile_name=InputPath+'g174819.03560'
 manual_fit=False #Change to False for auto fit for xstar
 surface_num=1
 
-zeff_manual=-1     #set to -1 automatically calculate the zeff
+zeff_manual=-1      #set to -1 automatically calculate the zeff
 
 suffix='.dat'       #for the 'GENE_tracor' geomfile
-x0_min=0.93       # beginning of the range in rho_tor
+x0_min=0.93         # beginning of the range in rho_tor
 x0_max=0.99         # ending of the range in rho_tor
 peak_percent=0.08
 mref=2.             #mess of ion in unit of proton, for deuterium is 2
@@ -103,6 +104,7 @@ cs_to_kHz=mode_finder_obj.cs_to_kHz[peak_index]
 with open(Output_Path+'0Equalibrium_summary.csv', 'w', newline='') as csvfile:     #clear all and then write a row
     data = csv.writer(csvfile, delimiter=',')
     data.writerow(['q_scale','q_shift',\
+                'shat_scale',\
                 'ne_scale','ne_shift',\
                 'te_scale','te_shift',\
                 'frequency_match','frequency_list',\
@@ -123,14 +125,21 @@ freq_max_list=[f*(1.+q_scan_f_err) for f in Frequency_list]
 mu_works_list=[] #the list of mu that has frequency observed from experiment
 q_scale_works_list=[]#the list of q_scale that has frequency observed from experiment
 q_shift_works_list=[]#the list of q_shift that has frequency observed from experiment
+shat_scale_works_list=[]
 
-for i in range(len(q_scale_list)):
-    q_scale=q_scale_list[i]
-    q_shift=q_shift_list[i]
+parameter_list=[[q_scale,q_shift,shat_scale]\
+                for q_scale in q_scale_list\
+                for q_shift in q_shift_list\
+                for shat_scale in shat_scale_list\
+                ]
+print('********q_scan********')
+
+for [q_scale,q_shift,shat_scale] in tqdm(parameter_list):
+
     judge_list=np.zeros(len(Frequency_list),dtype=int)
 
     mode_finder_obj.q_back_to_nominal()
-    mode_finder_obj.q_modify(q_scale,q_shift)
+    mode_finder_obj.q_modify(q_scale,q_shift,shat_scale)
     mode_finder_obj.ome_peak_range(peak_percent)
 
     omega_e_plasma_kHz_list=[]
@@ -140,8 +149,8 @@ for i in range(len(q_scale_list)):
     outside_frequency=[]
     for n in n0_list:
         x_surface_near_peak_list, m_surface_near_peak_list=mode_finder_obj.Rational_surface_top_surfaces(n,top=3)
-        print(x_surface_near_peak_list)
-        print(m_surface_near_peak_list)
+        #print(x_surface_near_peak_list)
+        #print(m_surface_near_peak_list)
         for j in range(len(x_surface_near_peak_list)):
             x_surface_near_peak=x_surface_near_peak_list[j]
             m_surface_near_peak=m_surface_near_peak_list[j]
@@ -160,8 +169,8 @@ for i in range(len(q_scale_list)):
                 for k in range(len(Frequency_list)):
                     f=Frequency_list[k]
                     f_error=abs(f-omega_e_lab_kHz)/f
-                    print('f_error')
-                    print(f_error)
+                    #print('f_error')
+                    #print(f_error)
                     if f_error<=q_scan_f_err:
                         judge_list[k]=1
                         k_tmp=k
@@ -176,19 +185,21 @@ for i in range(len(q_scale_list)):
 
 
     if np.prod(judge_list)==1:
-        print('q_scale')
-        print(q_scale)
+        #print('q_scale')
+        #print(q_scale)
         q_scale_works_list.append(q_scale)
         q_shift_works_list.append(q_shift)
+        shat_scale_works_list.append(shat_scale)
         mu_works_list.append(np.mean(mu_list_temp))
         if show_plot==True:
             mode_finder_obj.Plot_ome_q_surface_frequency_list(\
                 peak_percent,n_min,n_max,Frequency_list,Frequency_error=q_scan_f_err,\
                 save_imag=True,\
-                image_name=Output_Path+f'q_scale={q_scale:.3f}_q_shift={q_shift:.3f}.jpg')
+                image_name=Output_Path+f'q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_shat_scale={shat_scale:.3f}.jpg')
 
-
+print('********mu_works_list********')
 print(mu_works_list)
+print('********q_scale_works_list********')
 print(q_scale_works_list)
 if len(mu_works_list)==0:
     print('No possible variation of q profile for the given frequency range, please check the frequency or the frequency_error.')
@@ -196,22 +207,35 @@ if len(mu_works_list)==0:
 
 if scan_mode==0:
     index=np.argmin(mu_works_list)
+
     q_scale=q_scale_works_list[index]
     q_shift=q_shift_works_list[index]
-    mode_finder_obj.q_back_to_nominal()
-    mode_finder_obj.q_modify(q_scale,q_shift)
+    shat_scale=shat_scale_works_list[index]
+
+    q_scale_works_list=[q_scale]
+    q_shift_works_list=[q_shift]
+    shat_scale_works_list=[shat_scale]
+
+    mode_finder_obj.reset_profile()
+    mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=q_shift,\
+                                    shat_scale=shat_scale,\
+                                    ne_scale=1.,te_scale=1.,\
+                                    ne_shift=0.,te_shift=0.,\
+                                    Doppler_scale=1.,\
+                                    show_plot=False)
+
+    #mode_finder_obj.q_back_to_nominal()
+    #mode_finder_obj.q_modify(q_scale,q_shift)
     if show_plot==True:
         mode_finder_obj.Plot_ome_q_surface_frequency_list(peak_percent,n_min,n_max,Frequency_list,\
                             Frequency_error=Frequency_error,save_imag=False)
-    q_scale_works_list=[q_scale]
-    q_shift_works_list=[q_shift]
+
 elif scan_mode==1:
     pass 
 elif scan_mode==2:
     q_scale_works_list=q_scale_list
     q_shift_works_list=q_shift_list
-
-
+    shat_scale_works_list=shat_scale_list
 
 
 
@@ -221,9 +245,10 @@ freq_min_list=[f*(1.-Frequency_error) for f in Frequency_list]
 freq_max_list=[f*(1.+Frequency_error) for f in Frequency_list]
 
 scale_list=[
-    [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift]\
+    [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift]\
         for q_scale in q_scale_works_list\
         for q_shift in q_shift_works_list\
+        for shat_scale in shat_scale_works_list
         for ne_scale in ne_scale_list\
         for ne_shift in ne_shift_list\
         for te_scale in te_scale_list\
@@ -234,11 +259,13 @@ if Run_mode==6:
     from SLiM_NN.Dispersion_NN import Dispersion_NN
     Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
 
-for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
-    Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_ne_scale={ne_scale:.3f}_ne_shift={ne_shift:.3f}_te_scale={te_scale:.3f}_te_shift={te_shift:.3f}'
+print('*******Scaning*********')
+for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
+    Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_shat_scale={shat_scale:.3f}_ne_scale={ne_scale:.3f}_ne_shift={ne_shift:.3f}_te_scale={te_scale:.3f}_te_shift={te_shift:.3f}'
 
     mode_finder_obj.reset_profile()
     mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=q_shift,\
+                                    shat_scale=shat_scale,\
                                     ne_scale=ne_scale,te_scale=te_scale,\
                                     ne_shift=ne_shift,te_shift=te_shift,\
                                     Doppler_scale=1.,\
@@ -270,7 +297,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
     ne_shift_list0=[]
     te_scale_list0=[]
     te_shift_list0=[]
-    
+    shat_scale_list0=[]
     
     if Run_mode==1:#simple rational surface alignment
         ModIndex=-1
@@ -321,6 +348,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
                 omega_n_cs_a_list.append(omega_n_cs_a)
                 q_scale_list0.append(q_scale)
                 q_shift_list0.append(q_shift)
+                shat_scale_list0.append(shat_scale)
                 ne_scale_list0.append(ne_scale)
                 ne_shift_list0.append(ne_shift)
                 te_scale_list0.append(te_scale)
@@ -358,6 +386,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
         with open(Output_Path+filename, 'w', newline='') as csvfile:     #clear all and then write a row
             data = csv.writer(csvfile, delimiter=',')
             data.writerow(['q_scale','q_shift',\
+                'shat_scale',\
                 'ne_scale','ne_shift',\
                 'te_scale','te_shift',\
                 'n','m','rho_tor',\
@@ -436,7 +465,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
             f=Frequency_list[k]
             f_error=abs(f-omega_lab_kHz_list[j])/f
 
-            if f_error<=Frequency_error and gamma_list[j]>=0:
+            if f_error<=Frequency_error and gamma_list[j]>=0.0000001:
                 judge_list[k]=1
                 f_error_list.append(f_error)
                 f_list.append(omega_lab_kHz_list[j])
@@ -457,7 +486,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
         f=omega_lab_kHz_list[j]
         gamma=gamma_list[j]
         if (not mode_finder_obj.inside_freq_band_check(\
-            f,freq_min_list,freq_max_list)) and gamma>=0:
+            f,freq_min_list,freq_max_list)) and gamma>=0.0000001:
             reject=1
 
     best_f_error_reject_avg=np.mean(np.array(best_f_error_reject_list,dtype=float))
@@ -468,6 +497,7 @@ for [q_scale,q_shift,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
     with open(Output_Path+'0Equalibrium_summary.csv', 'a+', newline='') as csvfile:     #clear all and then write a row
         data = csv.writer(csvfile, delimiter=',')
         data.writerow([q_scale,q_shift,\
+                    shat_scale,\
                     ne_scale,ne_shift,\
                     te_scale,te_shift,\
                     np.prod(judge_list),\

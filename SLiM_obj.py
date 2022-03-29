@@ -18,6 +18,7 @@ from max_pedestal_finder import find_pedestal
 from read_profiles import read_profile_file
 from read_profiles import read_geom_file
 from read_EFIT_file import get_geom_pars
+from write_iterdb import output_iterdb
 from max_stat_tool import Poly_fit
 from max_stat_tool import coeff_to_Poly
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
@@ -81,7 +82,8 @@ class mode_finder:
         
         uni_rhot = np.linspace(min(rhot0),max(rhot0),2000)
         
-
+        uni_rhop = interp(rhot0,rhop0,uni_rhot)
+        ti_u = interp(rhot0,ti0,uni_rhot)
         ni_u = interp(rhot0,ni0,uni_rhot)
         te_u = interp(rhot0,te0,uni_rhot)
         ne_u = interp(rhot0,ne0,uni_rhot)
@@ -127,6 +129,7 @@ class mode_finder:
         ni=ni_u/(10.**19.)      # in 10^19 /m^3
         nz=nz_u/(10.**19.)      # in 10^19 /m^3
         te=te_u/1000.           # in keV
+        ti=ti_u/1000.           # in keV
         m_SI = mref *1.6726*10**(-27)
         me_SI = 9.11*10**(-31)
         c  = 1.
@@ -185,7 +188,8 @@ class mode_finder:
         self.ne=ne      # in 10^19 /m^3
         self.ni=ni      # in 10^19 /m^3
         self.nz=nz      # in 10^19 /m^3
-        self.te=te      # in keV      
+        self.te=te      # in keV 
+        self.ti=ti      # in keV     
         self.nref=nref
         self.r_sigma=(1./shat)*( (me_SI/m_SI)**0.5 )
         self.R_ref=R_ref
@@ -195,6 +199,7 @@ class mode_finder:
         self.rho_s=rhoref*np.sqrt(2.)
         self.Lref=Lref
         self.x=uni_rhot
+        self.rhop=uni_rhop
         self.shat=shat
         self.eta=eta
         self.ky=ky
@@ -246,7 +251,7 @@ class mode_finder:
         r_sigma={self.r_sigma[index]},\n\
         xstar={self.xstar}'
 
-    
+
     def set_xstar(self,xstar):
         self.xstar=xstar
         #setter for xstar
@@ -265,6 +270,7 @@ class mode_finder:
             if freq_min<=f and f<=freq_max:
                 return True
                 break
+
 
     def profile_fit(self,show_plot=False):
         x=self.x
@@ -331,6 +337,7 @@ class mode_finder:
             
     def modify_profile(self,\
                     q_scale=1.,q_shift=0.,\
+                    shat_scale=1.,\
                     ne_scale=1.,te_scale=1.,\
                     ne_shift=0.,te_shift=0.,\
                     Doppler_scale=1.,\
@@ -347,7 +354,8 @@ class mode_finder:
             ne_top_ped,ne_mid_ped=self.find_pedestal(self.x,self.ne)
             self.ne_mid_ped=ne_mid_ped
             ne_width=ne_mid_ped-ne_top_ped
-            self.ne_weight = ((np.exp((self.x-ne_top_ped)*2/ne_width)-1)/(np.exp((self.x-ne_top_ped)*2/ne_width)+1)+1)/2 
+
+            self.ne_weight = 0.5+np.tanh((self.x-ne_top_ped)/ne_width)/2
 
         index=np.argmin(abs(self.x-self.ne_mid_ped))
         ne_mod=self.ne*(1.+(ne_scale-1.)*self.ne_weight)+(ne_shift)*self.ne[index]
@@ -362,15 +370,28 @@ class mode_finder:
             te_top_ped,te_mid_ped=self.find_pedestal(self.x,self.te)
             self.te_mid_ped=te_mid_ped
             te_width=te_mid_ped-te_top_ped
-            self.te_weight = ((np.exp((self.x-te_top_ped)*2/te_width)-1)/(np.exp((self.x-te_top_ped)*2/te_width)+1)+1)/2 
-        
+            self.te_weight = 0.5+np.tanh((self.x-te_top_ped)/te_width)/2
+
         index=np.argmin(abs(self.x-self.te_mid_ped))
+
         te_mod=self.te*(1.+(te_scale-1.)*self.te_weight)+(te_shift)*self.te[index]
         #*************modify Te************
         #**********************************
 
-        q_mod=self.q*q_scale+q_shift
+        mid_ped,top_ped=self.find_pedestal(self.x,self.ome)
+
+
+        width=(mid_ped-top_ped)*10.
+        try:
+            self.shat_weight
+        except:
+            self.shat_weight = -1.*np.tanh((self.x-mid_ped)/width)/2
+        
+        q_mod=self.q*q_scale*(1.+(shat_scale-1.)*self.shat_weight)+q_shift
+
         Doppler_mod=self.Doppler*Doppler_scale
+
+        #show_plot=True
 
         if show_plot==True:
             fig, ax=plt.subplots(nrows=4,ncols=1,sharex=True) 
@@ -398,9 +419,6 @@ class mode_finder:
         tprime_e = -fd_d1_o4(te_mod,self.x)/te_mod
         nprime_e = -fd_d1_o4(ne_mod,self.x)/ne_mod
         qprime = fd_d1_o4(q_mod,self.x)/q_mod
-
-
-        mid_ped,top_ped=self.find_pedestal(self.x,self.ne*self.te)
 
         center_index=np.argmin(abs(self.x-mid_ped))
 
@@ -555,8 +573,16 @@ class mode_finder:
         self.nref=self.nref_nominal
 
 
-    def q_modify(self,q_scale,q_shift):
-        q_mod=self.q*q_scale+q_shift
+    def q_modify(self,q_scale,q_shift,shat_scale=1.):
+        mid_ped,top_ped=self.find_pedestal(self.x,self.te)
+
+        width=(mid_ped-top_ped)*10.
+        try:
+            self.shat_weight
+        except:
+            self.shat_weight = -1.*np.tanh((self.x-mid_ped)/width)/2
+
+        q_mod=self.q*q_scale*(1.+(shat_scale-1.)*self.shat_weight)+q_shift
 
         self.ome= self.ome*q_mod/self.q
         self.omn= self.omn*q_mod/self.q
