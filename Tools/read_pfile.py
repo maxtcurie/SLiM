@@ -7,7 +7,7 @@ from finite_differences_x import *
 from read_EFIT import read_EFIT
 
 #Created by Max T. Curie  11/02/2020
-#Last edited by Max Curie 11/02/2020
+#Last edited by Max Curie 03/29/2020
 #Supported by scripts in IFS
 
 def read_pfile(p_file_name):
@@ -200,6 +200,76 @@ def read_pfile(p_file_name):
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     return psi0, ne_out, te_out, ni_out, ti_out, nz_out, er_out, vtor_out
 
+
+def read_pfile_to_dict(p_file_name):
+    f=open(p_file_name,'r')
+    data = f.read()
+    f.close()
+
+    sdata = data.split('\n')
+    nr = int(sdata[0].split()[0]) 
+
+    print("p-file resolution: nr = "+str(nr) )
+    
+    p_quant_dict={}
+
+    
+    i=0
+
+    while i<len(sdata):
+        if i==0:
+            psi=[]
+            f=[]
+            df=[]
+            header_index=0
+        elif i==(len(sdata)-1):
+            name=sdata[header_index].split()[2]
+            p_quant_dict[name]={
+                            'header_index':header_index,
+                            'header':sdata[header_index],
+                            'psi':psi,
+                            'f':f,
+                            'df':df
+                            }
+            psi=[]
+            f=[]
+            df=[]
+            header_index=i
+        elif len(sdata[i].split())>3:
+            #write the last data set into the dict
+            name=sdata[header_index].split()[2]
+            p_quant_dict[name]={
+                            'header_index':header_index,
+                            'header':sdata[header_index],
+                            'psi':psi,
+                            'f':f,
+                            'df':df
+                            }
+            psi=[]
+            f=[]
+            df=[]
+            header_index=i    
+        else:
+            temp = sdata[i].split()
+            psi.append(float(temp[0]))
+            f.append(float(temp[1]))
+            df.append(float(temp[2]))
+            
+        i=i+1
+
+    return p_quant_dict
+
+def psi_rhot(geomfile_name):
+    EFITdict = read_EFIT(geomfile_name)
+    psip=EFITdict['psipn']
+    rhot=EFITdict['rhotn']
+
+    return psip,rhot
+
+def interp_f_psi(psi,rhot,psi_p,x_rhot,f_rhot):
+    x_psi=np.interp(x_rhot,rhot,psi)
+    f_psi=np.interp(f_rhot,rhot,psi)
+    return x_psi,f_psi
 
 def p_to_iterdb_format(p_file_name,geomfile_name):
     psi0, ne0, te0, ni0, ti0, nz0, er0, vtor_out = read_pfile(p_file_name)

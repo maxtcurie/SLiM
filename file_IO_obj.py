@@ -6,8 +6,12 @@ sys.path.insert(1, './Tools')
 from read_profiles import read_profile_file
 from read_profiles import read_geom_file
 from read_EFIT_file import get_geom_pars
+from read_pfile import read_pfile_to_dict
+from read_pfile import psi_rhot
 from write_iterdb import output_iterdb
+from write_pfile import write_pfile
 from interp import interp
+
 
 class file_IO_obj:
     profile_type=('pfile','ITERDB')
@@ -68,10 +72,10 @@ class file_IO_obj:
         self.  nz = np.interp(uni_rhot,rhot0,nz0)
         self.vrot = np.interp(uni_rhot,rhot0,vrot0)
         
+
         self.xgrid=uni_rhot
         self.q=    np.interp(uni_rhot,xgrid,q)
         self.R_ref=R_ref
-
 
 
     def output_profile(self,profile_type,profile_name,shot_num=999999,time_str='1000'):
@@ -85,39 +89,58 @@ class file_IO_obj:
             self.output_pfile(profile_name)
 
 
-    def output_pfile(self,profile_name):
-        f=open(self.profile_name,'r')
-        data = f.read()
-        f.close()
+    def output_pfile(self,output_profile_name):
+        pfile_dic=read_pfile_to_dict(self.profile_name)
+        
+        psi,rhot=psi_rhot(self.geomfile_name)
 
-        #print(data)
+        x = self.x
+        ne  =self.ne*1.E-20
+        te  =self.te*1.E-3
+        vrot=self.vrot
 
-        sdata = data.split('\n')
-        nr = int(sdata[0].split()[0]) 
-    
-        print("p-file resolution: nr = "+str(nr) )
-    
-        if (nr+1)*int(len(sdata)/(nr+1))!=sdata:
-            print('data need to be managed manually, please look into the code output carefully. ')
-    
-        name_list=[]
-        title_list=[]
-        for i in range(int(len(sdata)/(nr+1))):   #scan all of the quantitites in the p file
-            name_list.append(sdata[i*nr+i].split()[2])
-            title_list.append(sdata[i*nr+i])
+        needed_quant={'ne':ne,
+                    'te':te,
+                    'vtor':vrot}
+        needed_quant_key=list(needed_quant.keys())
 
-        print('name_list')
-        print(name_list)
+        #obj_* is the profile generated inside of the obj, i.e. output profile
+        #dic_* is the profile in the dictionary readed from p file, i.e. nominal profile
 
+        keys_name_in_dic={}
+        for i in range(len(needed_quant)):
+            for key in pfile_dic.keys():
+                if needed_quant_key[i] in key:
+                    f_tmp=needed_quant[needed_quant_key[i]]
+                    df_tmp=np.gradient(f_tmp,self.x)
+                    keys_name_in_dic[needed_quant_key[i]]={'name':key,\
+                                                        'dic_psi':pfile_dic[key]['psi'],\
+                                                        'obj_x':self.x,\
+                                                        'dic_f':pfile_dic[key]['f'],\
+                                                        'obj_f':f_tmp,\
+                                                        'dic_df':pfile_dic[key]['df'],\
+                                                        'obj_df':df_tmp
+                                                        }
+        for key in needed_quant_key:
+            p_x_psi=keys_name_in_dic[key]['dic_psi']
+            output_x_rho= keys_name_in_dic[key]['obj_x']
+            output_f_rho= keys_name_in_dic[key]['obj_f']
+            output_df_rho=keys_name_in_dic[key]['obj_df']
+            
+            p_x_rhot=np.interp(p_x_psi,psi,rhot)
 
-        need_name='ne'
-        for name_tmp,i in zip(name_list,range(len(name_list))):
-            if need_name in name_tmp:
-                name=name_tmp
-                index=i
-        print(name)
-        print(index)
+            new_dic_f =np.interp(p_x_rhot,output_x_rho,output_f_rho)
+            new_dic_df =np.interp(p_x_rhot,output_x_rho,output_df_rho)
 
+            dic_key=keys_name_in_dic[key]['name']
+            print(key)
+            print(dic_key)
+            
+            pfile_dic[dic_key]['f']=new_dic_f
+            pfile_dic[dic_key]['df']=new_dic_df
+
+        write_pfile(output_profile_name,pfile_dic)
+        
     
     def output_ITERDB(self,out_iterdb_name,shot_num=999999,time_str='1000'):
         output_iterdb(self.rhot,self.rhop,self.ne*1.E-19,\
