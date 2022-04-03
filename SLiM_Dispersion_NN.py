@@ -4,7 +4,7 @@ path='./SLiM_NN/Trained_model/'
 NN_omega_file	   =path+'SLiM_NN_omega.h5'
 NN_gamma_file	   =path+'SLiM_NN_stabel_unstable.h5'
 norm_omega_csv_file=path+'NN_omega_norm_factor.csv'
-norm_gamma_csv_file=path+'NN_gamma_norm_factor.csv'
+norm_gamma_csv_file=path+'NN_stabel_unstable_norm_factor.csv'
 [nu, zeff, eta, shat,  beta,  ky,   mu, xstar]=\
 [1., 1.5,  1.5, 0.001, 0.001, 0.03, 0., 10.  ]
 

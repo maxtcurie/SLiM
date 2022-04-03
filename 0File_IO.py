@@ -24,6 +24,7 @@ a=file_IO_obj(profile_type,profile_name,\
 
 ne0=a.ne.copy()
 te0=a.te.copy()
+q0=a.q.copy()
 x0=a.x.copy()
 
 
@@ -35,8 +36,10 @@ a.modify_profile(q_scale=1.,q_shift=0.,\
                 show_plot=False)
 a.output_profile("pfile",profile_name+'_mod',shot_num=174819,time_str='3560')
 
+a.output_profile("gfile",geomfile_name+'_mod',shot_num=174819,time_str='3560')
+
 b=file_IO_obj("pfile",profile_name+'_mod',\
-                geomfile_type,geomfile_name,\
+                "gfile",geomfile_name+'_mod',\
                 outputpath,inputpath)
 
 if plot_profile==True:
@@ -60,8 +63,8 @@ if plot_profile==True:
 
 if plot_geofile==True:
     plt.clf()
-    plt.plot(x0,ne0,alpha=0.7,label='original')
+    plt.plot(x0,q0,alpha=0.7,label='original')
     #plt.plot(a.rhot,a.ne,alpha=0.7,label='modfied')
-    plt.plot(b.rhot,b.ne,alpha=0.7,label='modfied')
+    plt.plot(b.rhot,b.q,alpha=0.7,label='modfied')
     plt.legend()
     plt.show()

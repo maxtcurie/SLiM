@@ -123,7 +123,7 @@ def load_data(filename_list):
     df_norm_factor=[1./np.max(df_x_merge[i]) for i in keys]
     d = {'name':df_norm_name,'factor':df_norm_factor}
     df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
-    df_norm.to_csv('./Trained_model/NN_omega_norm_factor.csv',index=False)
+    df_norm.to_csv('./Trained_model/NN_stabel_unstable_norm_factor.csv',index=False)
     for i in range(len(keys)):
         df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
 

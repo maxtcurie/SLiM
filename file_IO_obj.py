@@ -10,6 +10,7 @@ from read_pfile import read_pfile_to_dict
 from read_pfile import psi_rhot
 from write_iterdb import output_iterdb
 from write_pfile import write_pfile
+from write_gfile import mod_q_file
 from interp import interp
 
 
@@ -88,6 +89,15 @@ class file_IO_obj:
         elif profile_type=="pfile":
             self.output_pfile(profile_name)
 
+    def output_geofile(self,geofile_type,geofile_name):
+        if geomfile_type not in file_IO_obj.profile_type:
+            raise ValueError(f'{geomfile_type} is not a valid profile type, need to be pfile or ITERDB')
+        else: 
+            pass
+        if geomfile_type=="gfile":
+            self.output_gfile(geofile_name)
+        elif geomfile_type=="GENE_tracor":
+            print('Stay tunned for the GENE_tracor output capability. ')
 
     def output_pfile(self,output_profile_name):
         pfile_dic=read_pfile_to_dict(self.profile_name)
@@ -142,6 +152,11 @@ class file_IO_obj:
         write_pfile(output_profile_name,pfile_dic)
         
     
+    def output_pfile(self,output_profile_name):
+        write_gfile
+        
+    
+
     def output_ITERDB(self,out_iterdb_name,shot_num=999999,time_str='1000'):
         output_iterdb(self.rhot,self.rhop,self.ne*1.E-19,\
                         self.te*1.E-3,self.ni*1.E-19,\
