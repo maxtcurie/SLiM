@@ -160,7 +160,7 @@ def calc_B_fields(Rgrid, rmag, Zgrid, zmag, psirz, psiax, psisep, F, nw, psip_n)
     for i in range(len(psi_pol_obmp)):
         psip_n_temp[i] = (psi_pol_obmp[i]-psiax)/(psisep-psiax)
     unif_R = np.linspace(Rgrid[Rmag_ind],Rgrid[-1],nw*10)
-#    unif_R = np.linspace(Rgrid[Rmag_ind],Rgrid[-1],nw)
+    #unif_R = np.linspace(Rgrid[Rmag_ind],Rgrid[-1],nw)
     psip_n_unifR = interp(Rgrid[Rmag_ind:],psip_n_temp,unif_R)
     psisep_ind = np.argmin(abs(psip_n_unifR-1.02))
     ###print "psisep_ind", psisep_ind

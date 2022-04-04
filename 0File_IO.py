@@ -13,14 +13,13 @@ outputpath='./Test_files/'
 inputpath='./Test_files/'
 profile_name=inputpath+'p174819.03560'
 geomfile_name=inputpath+'g174819.03560'
-plot_profile=True
+plot_profile=False
 plot_geofile=True
 #************End of User Block*****************
 #**********************************************
 
 a=file_IO_obj(profile_type,profile_name,\
-                geomfile_type,geomfile_name,\
-                outputpath,inputpath)
+                geomfile_type,geomfile_name)
 
 ne0=a.ne.copy()
 te0=a.te.copy()
@@ -28,19 +27,23 @@ q0=a.q.copy()
 x0=a.x.copy()
 
 
-a.modify_profile(q_scale=1.,q_shift=0.,\
-                shat_scale=1.,\
+a.modify_profile(q_scale=2.,q_shift=0.,\
+                shat_scale=1.4,\
                 ne_scale=1.2,te_scale=1.2,\
                 ne_shift=0.,te_shift=0.,\
                 Doppler_scale=1.,\
-                show_plot=False)
+                show_plot=True)
+
 a.output_profile("pfile",profile_name+'_mod',shot_num=174819,time_str='3560')
 
-a.output_profile("gfile",geomfile_name+'_mod',shot_num=174819,time_str='3560')
+a.output_geofile("gfile",geomfile_name+'_mod')
+
 
 b=file_IO_obj("pfile",profile_name+'_mod',\
-                "gfile",geomfile_name+'_mod',\
-                outputpath,inputpath)
+                "gfile",geomfile_name+'_mod')
+
+b0=file_IO_obj("pfile",profile_name+'_mod',\
+                "gfile",geomfile_name+'_mod')
 
 if plot_profile==True:
     plt.clf()
@@ -64,7 +67,8 @@ if plot_profile==True:
 if plot_geofile==True:
     plt.clf()
     plt.plot(x0,q0,alpha=0.7,label='original')
-    #plt.plot(a.rhot,a.ne,alpha=0.7,label='modfied')
-    plt.plot(b.rhot,b.q,alpha=0.7,label='modfied')
+    plt.plot(b0.rhot,b0.q,alpha=0.7,label='modfied')
+    print(b0.q)
     plt.legend()
     plt.show()
+

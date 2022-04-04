@@ -10,7 +10,7 @@ from read_pfile import read_pfile_to_dict
 from read_pfile import psi_rhot
 from write_iterdb import output_iterdb
 from write_pfile import write_pfile
-from write_gfile import mod_q_file
+from write_gfile import mod_q_gfile
 from interp import interp
 
 
@@ -19,11 +19,9 @@ class file_IO_obj:
     geomfile_type=('gfile','GENE_tracor')
     def __init__(self,profile_type,profile_name,\
                     geomfile_type,geomfile_name,\
-                    outputpath,inputpath,xmin=0.9,suffix='.dat'):
+                    suffix='.dat'):
         self.profile_name=profile_name
         self.geomfile_name=geomfile_name
-        self.outputpath=outputpath
-        self.inputpath=inputpath
         self.suffix=suffix
 
         if profile_type not in file_IO_obj.profile_type:
@@ -89,15 +87,16 @@ class file_IO_obj:
         elif profile_type=="pfile":
             self.output_pfile(profile_name)
 
-    def output_geofile(self,geofile_type,geofile_name):
-        if geomfile_type not in file_IO_obj.profile_type:
+    def output_geofile(self,geomfile_type,geomfile_name):
+        if geomfile_type not in file_IO_obj.geomfile_type:
             raise ValueError(f'{geomfile_type} is not a valid profile type, need to be pfile or ITERDB')
         else: 
             pass
         if geomfile_type=="gfile":
-            self.output_gfile(geofile_name)
+            self.output_gfile(geomfile_name)
         elif geomfile_type=="GENE_tracor":
             print('Stay tunned for the GENE_tracor output capability. ')
+
 
     def output_pfile(self,output_profile_name):
         pfile_dic=read_pfile_to_dict(self.profile_name)
@@ -152,8 +151,8 @@ class file_IO_obj:
         write_pfile(output_profile_name,pfile_dic)
         
     
-    def output_pfile(self,output_profile_name):
-        write_gfile
+    def output_gfile(self,output_geofile_name):
+        mod_q_gfile(self.geomfile_name,output_geofile_name,self.x,self.q)
         
     
 
