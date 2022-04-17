@@ -42,8 +42,6 @@ a.output_geofile("gfile",geomfile_name+'_mod')
 b=file_IO_obj("pfile",profile_name+'_mod',\
                 "gfile",geomfile_name+'_mod')
 
-b0=file_IO_obj("pfile",profile_name+'_mod',\
-                "gfile",geomfile_name+'_mod')
 
 if plot_profile==True:
     plt.clf()
@@ -67,8 +65,7 @@ if plot_profile==True:
 if plot_geofile==True:
     plt.clf()
     plt.plot(x0,q0,alpha=0.7,label='original')
-    plt.plot(b0.rhot,b0.q,alpha=0.7,label='modfied')
-    print(b0.q)
+    plt.plot(b.rhot,b.q,alpha=0.7,label='modfied')
     plt.legend()
     plt.show()
 
