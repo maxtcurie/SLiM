@@ -22,7 +22,7 @@ n_min=1         #minmum mode number (include) that finder will cover
 n_max=5         #maximum mode number (include) that finder will cover
 surface_num=2   #total amount of rational surfaces one want to look at
 
-Run_mode=5      # mode1: fast mode
+Run_mode=2      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
                 # mode4: slow mode manual(global)
