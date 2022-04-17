@@ -33,7 +33,10 @@ def gaussian_fit_GUI(root,x,data):
     #root.geometry("500x500")
     
     #load the icon for the GUI 
-    top.iconbitmap('./SLiM.ico')
+    try:
+        top.iconbitmap('./SLiM.ico')
+    except:
+        pass
 
     #warnings.simplefilter("error", OptimizeWarning)
 
