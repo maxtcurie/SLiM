@@ -32,7 +32,7 @@ https://doi.org/10.1103/PhysRevLett.126.225001
 
 
 GitHub repo:
-https://github.com/maxcurie1996/SLiM
+https://github.com/maxtcurie/SLiM
 
 APS 2021 invited talk about SLiM model:
 https://youtu.be/j2MYfGwlBYY
