@@ -39,16 +39,8 @@ fig, ax=plt.subplots(nrows=2,ncols=1,sharex=True)
 			#ncols is the total columns
 			#sharex true means the xaxies will be shared
 
-data_NN_stable=data_NN.query('gamma_10<=0.5')
-data_NN_unstable=data_NN.query('gamma_10>0.5')
-
-
 ax[0].plot(data['nu'],data['gamma'],label='SLiM')
-ax[0].scatter(data_NN_unstable['nu'],data_NN_unstable['gamma_10']*max(data['gamma']),color='red',label='SLiM_NN unstable')
-ax[0].scatter(data_NN_stable['nu'],data_NN_stable['gamma_10']*max(data['gamma']),color='black',label='SLiM_NN stable')
-ax[0].legend()
-
-#ax[0].plot(data_NN['nu'],data_NN['gamma_10']*max(data['gamma']),label='SLiM_NN')
+ax[0].plot(data_NN['nu'],data_NN['gamma_10']*max(data['gamma']),label='SLiM_NN')
 ax[0].axhline(0,color='black',alpha=0.5)
 ax[0].set_ylabel(r'$\gamma/\omega_{*n}$',fontsize=15)
 ax[0].legend()

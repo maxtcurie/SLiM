@@ -14,15 +14,18 @@ sys.path.insert(1, './Tools')
 
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
+from SLiM_NN.Dispersion_NN import Dispersion_NN
 
 #**********Start of user block***************
-Input_csv='./Test_files/parameter_list_2.csv'   
+Input_csv='./Test_files/parameter_list.csv'   
 Output_csv='./Output/0MTM_scan.csv'
 
-Run_mode=2      #Run_mode=1 quick calculation(30sec/mode)
+Run_mode=3      #Run_mode=1 quick calculation(30sec/mode)
                 #Run_mode=2 extensive(30min/mode)
+                #Run_mode=3  NN mode (global) (0.05sec/mode)
+
 #**********end of user block****************
-        
+    
 df=pd.read_csv(Input_csv)
 with open(Output_csv, 'w', newline='') as csvfile:     #clear all and then write a row
     csv_data = csv.writer(csvfile, delimiter=',')
@@ -36,6 +39,18 @@ with open(Output_csv, 'w', newline='') as csvfile:     #clear all and then write
 csvfile.close()
 
 start=time.time()
+
+if Run_mode==3:
+    from SLiM_NN.Dispersion_NN import Dispersion_NN
+    
+    path='./SLiM_NN/Trained_model/'
+    NN_omega_file      =path+'SLiM_NN_omega.h5'
+    NN_gamma_file      =path+'SLiM_NN_stabel_unstable.h5'
+    norm_omega_csv_file=path+'NN_omega_norm_factor.csv'
+    norm_gamma_csv_file=path+'NN_stabel_unstable_norm_factor.csv'
+
+    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+
 
 for i in range(len(df['n'])):
     nu=df['nu'][i]
@@ -52,7 +67,9 @@ for i in range(len(df['n'])):
         w0=VectorFinder_auto(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
     elif Run_mode==2:
         w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar) 
-    
+    elif Run_mode==3:
+        w0=Dispersion_NN_obj.Dispersion_omega(nu,zeff,eta,shat,beta,ky,mu,xstar) 
+
     omega=np.real(w0)
     omega_kHz=omega*df['omega_n_kHz'][i]
     gamma=np.imag(w0)
