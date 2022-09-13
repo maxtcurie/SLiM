@@ -108,6 +108,7 @@ class mode_finder:
         index_begin=np.argmin(abs(uni_rhot-x0_min))
         index_end  =np.argmin(abs(uni_rhot-x0_max))
 
+        ti_u = ti_u[index_begin:index_end]
         te_u = te_u[index_begin:index_end]
         ne_u = ne_u[index_begin:index_end]
         ni_u = ni_u[index_begin:index_end]
@@ -154,7 +155,7 @@ class mode_finder:
         omMTM = kyGENE*(tprime_e+nprime_e)
         gyroFreq = 9.79E3/np.sqrt(mref)*np.sqrt(te_u)/Lref
         mtmFreq = omMTM*gyroFreq/(2.*np.pi*1000.)
-        omegaDoppler = abs(vrot_u*n0/(2.*np.pi*1000.))
+        omegaDoppler = vrot_u*n0/(2.*np.pi*1000.)
         omega=mtmFreq + omegaDoppler
         
 
@@ -165,7 +166,15 @@ class mode_finder:
         print('********zeff*********')
         print('zeff='+str(zeff))
         print('********zeff*********')
-    
+        
+        if 1==0:
+            plt.clf()
+            plt.plot(uni_rhot,omegaDoppler)
+            plt.plot(uni_rhot,mtmFreq)
+            plt.plot(uni_rhot,omega)
+            plt.grid()
+            plt.show()
+
         omega_n_GENE=kyGENE*(nprime_e)       #in cs/a
         omega_n=omega_n_GENE*gyroFreq/(2.*np.pi*1000.)  #in kHz
     
