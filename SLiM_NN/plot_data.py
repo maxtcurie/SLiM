@@ -9,7 +9,7 @@ filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC.csv',
                 './NN_data/0MTM_scan_CORI_1.csv',
                 './NN_data/0MTM_scan_CORI_3_large_nu.csv']
-plot=4 #plot 0 for plotting all
+plot=5 #plot 0 for plotting all
 #**********end of user block*************
 #****************************************
 
@@ -89,4 +89,33 @@ if plot==4 or plot==0:
             ax[i].set_ylabel('Density')
     fig.tight_layout()
     plt.subplots_adjust(wspace=0.2, hspace=0)
+    plt.show()
+
+
+if plot==5 or plot==0:
+    name_list=['nu','zeff','eta','shat','beta','ky','mu']
+    fig, ax=plt.subplots(nrows=1,ncols=len(name_list))
+
+    for i in range(len(name_list)):
+        ax[i].scatter(df_unstable[name_list[i]],df_unstable['gamma_omega_n'],alpha=0.2)  # density=False would make counts
+        #ax[i].plot(df_unstable[name_list[i]],df_unstable['gamma_omega_n'],alpha=0.2)  # density=False would make counts
+        ax[i].set_xlabel(name_list[i])
+        ax[i].set_ylabel('gamma/omega_n')
+        if i!=0:
+            ax[i].set_yticklabels([])
+        else:
+            ax[i].set_ylabel('Density')
+    fig.tight_layout()
+    plt.subplots_adjust(wspace=0.2, hspace=0)
+    plt.show()
+
+
+
+if plot==6 or plot==0:
+    plt.clf()
+    plt.scatter(df_unstable['nu'],df_unstable['gamma_omega_n'],alpha=0.2)  # density=False would make counts
+    #ax[i].plot(df_unstable['nu'],df_unstable['gamma_omega_n'],alpha=0.2)  # density=False would make counts
+    plt.xlim(0,5)
+    plt.xlabel('nu')
+    plt.ylabel('gamma/omega_n')  
     plt.show()
