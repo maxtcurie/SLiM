@@ -282,7 +282,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     b=np.ones(2*num-2)
 
     #new guessing model(02/15/2022)
-    guess_f=np.arange(0.5,eta+2.1,0.5,dtype=float)
+    guess_f=np.arange(0.5,eta+2.1,0.1,dtype=float)
     print(guess_f)
     guess_f_list=[]
     for f in guess_f:
@@ -297,6 +297,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     #guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
     #Larakers Dissertation 3.16
     guess_mod=guess_f+1j*(0.8*(1+eta)/nu)
+    guess_mod=guess_f+1j*0.3
     #print(guess_mod)
 
     guess_num=len(guess_mod)
@@ -566,6 +567,97 @@ def VectorFinder_initial_guess(nu,Zeff,eta,\
         
         w0=w_list[index]
         return w0
+
+
+def w_finder(x_max,del_x,wguess,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar,initi_guess_w):
+    mu=abs(mu)
+    neg_streak=0
+    x_grid=np.arange(-x_max,x_max,del_x,dtype=complex)
+    num=len(x_grid)
+    b=np.ones(2*num-2)
+
+
+    guess_mod=initi_guess_w
+
+
+    w_list=[]
+    odd_list=[]
+
+    for i in range(1):
+        w0=guess_mod
+
+        del_w = 0.0
+        neg_streak=0
+
+        A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+        det_A_minus = np.linalg.slogdet(A)
+    
+        while np.abs(del_w) > 10**(-3.):
+            w0 = w0 + del_w
+            # call A_maker to create and populate matrix A
+            A = A_maker(x_max,del_x,w0,nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar)
+            det_A0 = np.linalg.slogdet(A)
+
+            #parameter for the next run
+            del_w = -del_w/(1-(det_A_minus[0]/det_A0[0])*np.exp(det_A_minus[1]-det_A0[1]))
+            
+            print('w0='+str(w0))
+            det_A_minus = det_A0
+    
+            if w0.imag<0:
+                neg_streak=neg_streak+1
+            else:
+                neg_streak=0
+    
+            if neg_streak==4:
+                break
+
+        if neg_streak==4:
+            continue
+        else:
+            AInverse=np.linalg.inv(A)
+            change=1.
+            lold=2.
+            while change > 10.**(-8):
+                b=np.matmul(AInverse,b)
+                b=b/np.linalg.norm(b)
+                lnew=np.matmul(np.conj(b),np.matmul(A,b))
+                change=np.abs(lnew-lold)
+                lold=lnew
+            Aparallel=b[0:num]
+            
+            len_z_half=int(num/2)
+            Aparallel_inv=np.flip(Aparallel) 
+            #even parity sum(f(x)-f(-x)) = 0 if even -- f(x)= f(-x)
+            evenness=np.sum(abs(Aparallel[len_z_half:]-Aparallel_inv[len_z_half:]))
+            #odd  parity sum(f(x)+f(-x)) = 0 if odd  -- f(x)=-f(-x)
+            oddness=np.sum(abs(Aparallel[len_z_half:]+Aparallel_inv[len_z_half:]))
+
+            total_odd_even=evenness+oddness
+            oddness_norm=1.-oddness/total_odd_even #percentage of oddness
+            eveness_norm=1.-evenness/total_odd_even #percentage of evenness
+            
+            #Apar has even parity, and positive growth
+            if oddness_norm<0.3:
+                w_list.append(w0)
+                odd_list.append(oddness_norm)
+                if np.imag(w0)>0:
+                    return w0
+                    break
+    print('w_list')
+    print(w_list)
+    print('odd_list')
+    print(odd_list)
+    if len(w_list)==0:
+        return 0
+    else:
+        growth_list=np.imag(np.array(w_list,dtype=complex))
+        index=np.argmax(growth_list)
+        
+        w0=w_list[index]
+        return w0
+
+
 
 
 def VectorFinder_manual(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):

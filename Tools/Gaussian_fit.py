@@ -256,9 +256,9 @@ def gaussian_fit_auto(x,data):
     judge=0
     try:
         popt, pcov = optimize.curve_fit(gaussian, x,data)  
-        print(gaussian)
-        print(popt)
-        print(pcov)
+        #print(gaussian)
+        #print(popt)
+        #print(pcov)
 
         max_index=np.argmax(data)
         if 0==1:
@@ -272,7 +272,7 @@ def gaussian_fit_auto(x,data):
             plt.show()
 
         error_temp=np.sum(abs(data-gaussian(x, *popt)))/abs(np.sum(data))
-        print('norm_error='+str(error_temp))
+        #print('norm_error='+str(error_temp))
         if error_temp<0.2:
             amplitude=popt[0]
             mean     =popt[1]

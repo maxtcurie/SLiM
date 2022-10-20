@@ -7,7 +7,7 @@ sys.path.insert(1, './../')
 
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
-from Dispersion_NN import Dispersion_NN
+from Dispersion_NN import Dispersion_NN_beta
 
 #************Start of user block******************
 
@@ -29,22 +29,30 @@ ky=0.040731854
 mu=0.
 xstar=10.72829394
 
-eta_list=np.arange(0,4,0.1)
+eta_list=np.arange(0.5,4,0.1)
 
 para_list=[[nu, zeff, eta, shat,  beta,  ky,   mu, xstar]\
             for eta in eta_list]
 
-path='./../Trained_model/'
-NN_omega_file      =path+'SLiM_NN_omega.h5'
-NN_gamma_file      =path+'SLiM_NN_stabel_unstable.h5'
-norm_omega_csv_file=path+'NN_omega_norm_factor.csv'
-norm_gamma_csv_file=path+'NN_stabel_unstable_norm_factor.csv'
+path_tmp='./../Trained_model/'
+NN_stability_file  =path_tmp+'SLiM_NN_stability.h5'
+NN_omega_file      =path_tmp+'SLiM_NN_omega.h5'
+NN_gamma_file      =path_tmp+'SLiM_NN_gamma.h5'
+
+norm_stability_csv_file=path_tmp+'NN_stability_norm_factor.csv'
+norm_omega_csv_file    =path_tmp+'NN_omega_norm_factor.csv'
+norm_gamma_csv_file    =path_tmp+'NN_gamma_norm_factor.csv'
 
 #************End of user block******************
 
 
 if run_mode==3:
-    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+    Dispersion_NN_obj=Dispersion_NN_beta(NN_stability_file,\
+                                         NN_omega_file,\
+                                         NN_gamma_file,\
+                                        norm_stability_csv_file,\
+                                        norm_omega_csv_file,\
+                                        norm_gamma_csv_file)
 
 f_list=[]
 gamma_list=[]

@@ -14,11 +14,13 @@ import time
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC.csv',
                 './NN_data/0MTM_scan_CORI_1.csv',
-                './NN_data/0MTM_scan_CORI_3_large_nu.csv']
+                './NN_data/0MTM_scan_CORI_3_large_nu.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv']
 epochs = 10
 batch_size = 100
 checkpoint_path='./tmp/checkpoint'
-Read_from_checkpoint=False
+Read_from_checkpoint=True
 #**********end of user block*************
 #****************************************
 
@@ -28,20 +30,20 @@ def create_model(checkpoint_path):
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
                     tf.keras.layers.Dense(units=16, activation='relu'),
-                    #tf.keras.layers.Dense(units=32, activation='relu'),
+                    tf.keras.layers.Dense(units=32, activation='relu'),
                     #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dropout(0.2),
-                    #tf.keras.layers.Dense(units=16, activation='relu'),
+                    tf.keras.layers.Dropout(0.2),
+                    tf.keras.layers.Dense(units=16, activation='relu'),
                     #tf.keras.layers.Dense(units=8, activation='relu'),
                     tf.keras.layers.Dense(units=2, activation='relu')
         ])
 
     model.summary()
 
-    model.compile(loss='MeanAbsoluteError',\
-                optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
+    model.compile(loss='MeanAbsolutePercentageError',\
+                optimizer=tf.keras.optimizers.Adam(learning_rate=10.),
                 #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                metrics=['accuracy'])
+                metrics=['MeanSquaredError'])
 
     #*create callback function (optional)
     class myCallback(tf.keras.callbacks.Callback):
@@ -49,8 +51,8 @@ def create_model(checkpoint_path):
     
             #print(log.get.keys())
             #print(log.get('epoch'))
-            if(log.get('val_accuracy')>1.-0.1**6):
-                print('val_accuracy>0.99, stop training!')
+            if(log.get('mean_squared_error')<0.0001):
+                print('mean_squared_error<0.0001, stop training!')
                 self.model.stop_training=True
     
     callbacks=myCallback()
@@ -88,7 +90,7 @@ def load_data(filename_list):
             pass
         
         
-        #df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0')
+        df=df.query('omega_omega_n!=0 and gamma_omega_n>0')
         #df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
         
         
@@ -106,7 +108,7 @@ def load_data(filename_list):
         df_y=pd.DataFrame(np.transpose([df['omega_omega_n'],df['gamma_omega_n']]),\
                               columns=['omega_omega_n','gamma_omega_n'])
         df_y=df_y.astype('float')
-
+        
         #merge the dataframe
         if i==0:
             df_x_merge=df_x
@@ -124,7 +126,7 @@ def load_data(filename_list):
     df_norm.to_csv('./Trained_model/NN_norm_factor.csv',index=False)
     for i in range(len(keys)):
         df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
-    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.1)
+    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test

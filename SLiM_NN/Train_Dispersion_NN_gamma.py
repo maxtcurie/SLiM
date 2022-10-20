@@ -13,10 +13,14 @@ import time
 #**********start of user block***********
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC.csv',
-                './NN_data/0MTM_scan_CORI_1.csv']
-epochs = 50
+                './NN_data/0MTM_scan_CORI_1.csv',
+                './NN_data/0MTM_scan_CORI_3_large_nu.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv']
+epochs = 100
 batch_size = 100
-checkpoint_path='./tmp/checkpoint_gamma'
+checkpoint_path='./tmp/checkpoint'
+Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
@@ -25,22 +29,21 @@ def create_model(checkpoint_path):
     #creating the model
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
-                    tf.keras.layers.Dense(units=32, activation='relu'),
-                    #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dense(units=1024, activation='relu'),
-                    #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dropout(0.2),
-                    tf.keras.layers.Dense(units=8, activation='relu'),
-                    tf.keras.layers.Dense(units=1, activation='sigmoid')
+                    tf.keras.layers.Dense(units=16, activation='linear'),
+                    tf.keras.layers.Dense(units=32, activation='linear'),
+                    tf.keras.layers.Dense(units=64, activation='linear'),
+                    tf.keras.layers.Dropout(0.2),
+                    tf.keras.layers.Dense(units=16, activation='linear'),
+                    #tf.keras.layers.Dense(units=8, activation='relu'),
+                    tf.keras.layers.Dense(units=1, activation='linear')
         ])
 
     model.summary()
 
-    model.compile(loss='binary_crossentropy',\
-                optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
+    model.compile(loss='MeanAbsolutePercentageError',\
+                optimizer=tf.keras.optimizers.Adam(learning_rate=20.),
                 #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                metrics=['accuracy'])
+                metrics=['MeanSquaredError'])
 
     #*create callback function (optional)
     class myCallback(tf.keras.callbacks.Callback):
@@ -48,8 +51,8 @@ def create_model(checkpoint_path):
     
             #print(log.get.keys())
             #print(log.get('epoch'))
-            if(log.get('val_accuracy')>0.99):
-                print('val_accuracy>0.99, stop training!')
+            if(log.get('mean_squared_error')<0.0001):
+                print('mean_squared_error<0.0001, stop training!')
                 self.model.stop_training=True
     
     callbacks=myCallback()
@@ -66,7 +69,7 @@ def create_model(checkpoint_path):
 
     lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='val_loss', factor=0.1, patience=10, verbose=0,
-        mode='auto', min_delta=0.0001, cooldown=0, min_lr=0.000001
+        mode='auto', min_delta=0.0001, cooldown=0, min_lr=0
     )
     callback_func=[cp_callback,callbacks,lr_callback]
 
@@ -86,17 +89,15 @@ def load_data(filename_list):
         except:
             pass
         
-        #df=df.astype('float')
         
-        df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0')
-        df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
+        df=df.query('omega_omega_n!=0 and gamma_omega_n>0')
+        #df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
         
         
-        df_unstable['unstable']=[1]*len(df_unstable)
+        #df_unstable['unstable']=[1]*len(df_unstable)
+        #df_stable['unstable']=[0]*len(df_stable)
         
-        df_stable['unstable']=[0]*len(df_stable)
-        
-        df=pd.concat([df_unstable, df_stable], axis=0)
+        #df=pd.concat([df_unstable, df_stable], axis=0)
         
         df_x=pd.DataFrame(np.transpose([df['nu'],df['zeff'],\
                             df['eta'],df['shat'],df['beta'],\
@@ -104,34 +105,36 @@ def load_data(filename_list):
                           columns=['nu', 'zeff','eta','shat',\
                                     'beta','ky','mu_norm'])
 
-        df_y=pd.DataFrame(np.transpose([df['unstable']]),\
-                              columns=['unstable'])
-        df_y=df_y.astype('int32')
+        df_y=pd.DataFrame(np.transpose([df['gamma_omega_n']]),\
+                              columns=['gamma_omega_n'])
+        df_y=df_y.astype('float')
 
-        #get normalizing factor
+        
+        
+
+        #merge the dataframe
         if i==0:
-            keys=df_x.keys()
-            df_norm_name=[i for i in keys]
-            df_norm_factor=[1./np.max(df_x[i]) for i in keys]
-            keys=df_x.keys()
-            df_norm_name=[i for i in keys]
-            df_norm_factor=[1./np.max(df_x[i]) for i in keys]
-            d = {'name':df_norm_name,'factor':df_norm_factor}
-            df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
-            df_norm.to_csv('./Trained_model/NN_gamma_norm_factor.csv',index=False)
-
-            for i in range(len(keys)):
-                df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
             df_x_merge=df_x
             df_y_merge=df_y
         elif i!=0:
-            for i in range(len(keys)):
-                df_x[keys[i]]=df_x[keys[i]]*df_norm_factor[i]
-
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
-    
-        x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
+
+    print(df_y_merge[:10])
+
+    #get normalizing factor
+    keys=df_x_merge.keys()
+    df_norm_name=[i for i in keys]
+    df_norm_factor=[1./np.max(df_x_merge[i]) for i in keys]
+    df_norm_offset=[np.mean(df_x_merge[i]) for i in keys]
+    log_scale=[1,0,0,1,1,0,0]
+    d = {'name':df_norm_name,'factor':df_norm_factor,\
+        'offset':df_norm_offset,'log':log_scale}
+    df_norm=pd.DataFrame(d, columns=['name','factor','offset','log'])   #construct the panda dataframe
+    df_norm.to_csv('./Trained_model/NN_gamma_norm_factor.csv',index=False)
+    for i in range(len(keys)):
+        df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
+    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -140,8 +143,10 @@ def load_data(filename_list):
 x_train, x_test, y_train, y_test=load_data(filename_list)
 
 #*********start of trainning***********************
-#print(x_test)
-#print(y_test)
+print('x_test')
+print(x_test)
+print(y_test)
+print(len(x_test)+len(x_train))
 #input()
 model,callback_func=create_model(checkpoint_path)
 if Read_from_checkpoint:
@@ -151,7 +156,7 @@ history=model.fit(x_train, y_train, epochs=epochs,
             validation_data=(x_test,y_test))  
 
 #save the model
-model.save("./Trained_model/SLiM_NN_stabel_unstable.h5")  # we can save the model and reload it at anytime in the future
+model.save("./Trained_model/SLiM_NN_gamma.h5")  # we can save the model and reload it at anytime in the future
 #*********end of trainning***********************
 
 from Post_plot_learning_rate import plot_hist

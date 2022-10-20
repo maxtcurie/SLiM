@@ -48,6 +48,13 @@ peak_percent=20.
 mref=2.             #mess of ion in unit of proton, for deuterium is 2
 Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=False
+
+
+path_tmp='./SLiM_NN/Trained_model/'
+NN_omega_file      =path_tmp+'SLiM_NN_omega.h5'
+NN_gamma_file      =path_tmp+'SLiM_NN_stabel_unstable.h5'
+norm_omega_csv_file=path_tmp+'NN_omega_norm_factor.csv'
+norm_gamma_csv_file=path_tmp+'NN_stabel_unstable_norm_factor.csv'
 #************End of User Block*****************
 #**********************************************
 

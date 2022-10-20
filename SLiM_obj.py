@@ -687,7 +687,7 @@ class mode_finder:
         m_max = math.floor(qmax*n0)
         mnums = np.arange(m_min,m_max+1)
         dq=np.max(abs(q[:-1]-q[1:]))
-
+        
         if np.min(q_prime)<-0.001: #for non-monotonic increasing q profiles
             for m in mnums:
                 #print(m)
@@ -1108,8 +1108,8 @@ class mode_finder:
         #par1 = host.twinx()
         #p1, = par1.plot(self.x, self.q, "b-", label='Safety Factor')
         for f in Frequency_list:
-            f_min=f*(1-Frequency_error)
-            f_max=f*(1+Frequency_error)
+            f_min=f*(1.-Frequency_error)
+            f_max=f*(1.+Frequency_error)
             x_fill=[x_min,x_min,x_max,x_max]
             y_fill=[f_min,f_max,f_max,f_min]
             #matplotlib.patches.Rectangle((0,total_trans-trans_error),10,2.*trans_error,alpha=0.4)
