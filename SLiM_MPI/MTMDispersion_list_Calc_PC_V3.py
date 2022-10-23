@@ -15,9 +15,9 @@ from Dispersion import VectorFinder_auto_Extensive
 #omega_omega_n,gamma_omega_n,nu,zeff,eta,shat,beta,ky,ModIndex,mu,xstar
 
 #************Start of user block******************
-#para=       [nu,    shat,  beta,  mu ]
-para_min_log=[0.01, 0.001, 0.0005, 0.001 ]
-para_max_log=[10,   1.,    0.1,    10.]  
+#para=       [nu,    shat,  beta,   ]
+para_min_log=[0.01, 0.001, 0.0005 ]
+para_max_log=[10,   1.,    0.1]  
 
 #para=   [zeff, eta, ky  ]
 para_min=[1.,   0.5, 0.01]
@@ -52,9 +52,9 @@ while 1==1:
     param_log=np.array(param_log)
     param=para_min+width*np.random.rand(len(para_min))
 
-    [nu, shat, beta, mu, zeff, eta, ky]=np.concatenate( (param_log,param) )
+    [nu, shat, beta, zeff, eta, ky]=np.concatenate( (param_log,param) )
 
-
+    mu=0.
     w0=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,1,mu,xstar) 
     #w0=1+1j
     omega=np.real(w0)
