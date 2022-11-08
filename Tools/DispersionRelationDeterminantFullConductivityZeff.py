@@ -1,4 +1,7 @@
 import numpy as np 
+import csv 
+
+log_file='./../W_auto_log.csv'
 
 def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
     alpha,beta,ky,ModIndex,mu,xstar):
@@ -65,6 +68,7 @@ def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
                             [0., 0., 0., 0., 0., 1.62835, -1.23091, 0.], \
                             [0., 0., 0., 0., 0., 0., 1.70412, -1.32954], \
                             [0., 0., 0., 0., 0., 0., 0., 1.77667]]],dtype=complex)
+    
     SPlusArray=np.array([[[0.707107, 0., 0., 0., 0., 0., 0., 0.], \
                         [-0.57735, 0.912871, 0., 0., 0., 0., 0., 0.], \
                         [0., -0.816497, 1.08012, 0., 0., 0., 0., 0.], \
@@ -362,18 +366,28 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
             if oddness_norm<0.3:
                 w_list.append(w0)
                 odd_list.append(oddness_norm)
-                if np.imag(w0)>0:
-                    return w0
-                    break
+                #if np.imag(w0)>0:
+                #    return w0
+                #    break
 
-                    
+     
     print('w_list')
     print(w_list)
     print('odd_list')
     print(odd_list)
+
+    
     if len(w_list)==0:
         return 0
     else:
+        for i in range(len(w_list)):
+            with open(log_file, 'a', newline='') as csvfile:    #adding a row
+                data = csv.writer(csvfile, delimiter=',')
+                for i in range(len(w_list)): #loop through x
+                    data.writerow([nu, Zeff, eta, shat, beta, ky, 1, mu, xstar,\
+                                    np.real(w_list[i]),np.imag(w_list[i]),odd_list[i]])
+            csvfile.close()
+
         growth_list=np.imag(np.array(w_list,dtype=complex))
         index=np.argmax(growth_list)
         

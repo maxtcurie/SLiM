@@ -273,6 +273,32 @@ class mode_finder:
         topped = x[np.argmin(ddp)]
         return topped,midped
 
+    def q_scale_for_alignment(self,q_at_peak):
+        x=self.x
+        q=self.q
+        ome=self.ome 
+
+        
+
+        index_tmp_=np.argmax(ome)
+        q_scale_=q_at_peak/q[index_tmp_]
+
+        if 1==0:
+            print(q_at_peak)
+            plt.clf()
+            plt.plot(x,q)
+            plt.plot(x,q*q_scale_)
+            plt.axvline(x[index_tmp_])
+            plt.show()
+
+        #x2=np.linspace(np.min(x),np.max(x),0.01*abs(x[1]-x[0]))
+        #q2=np.interp(x2,x,q)
+        #ome2=np.interp(x2,x,ome)
+
+        #index_tmp_=np.argmax(ome2)
+        #q_scale_=q_at_peak/q2[index_tmp_]
+
+        return q_scale_
 
     def inside_freq_band_check(self,f,freq_min_list,freq_max_list):
         for freq_min, freq_max in zip(freq_min_list,freq_max_list):
@@ -527,6 +553,8 @@ class mode_finder:
         self.Doppler=omegaDoppler[2:-2]
         self.coll_ei=coll_ei[2:-2]
         self.gyroFreq=gyroFreq[2:-2]
+        
+        self.ome_peak_range(0.1)
         #**********end of calculation*******
         if show_plot==True:
             fig, ax=plt.subplots(nrows=7,\
@@ -628,13 +656,13 @@ class mode_finder:
         return mean_rho,xstar
   
 
-    def omega_gaussian_fit(self,manual=False):
+    def omega_gaussian_fit(self,manual=False,fit_type=0):
         x=self.x 
         data=self.ome 
         rhoref=self.rho_s 
         Lref=self.Lref 
 
-        amplitude,mean,stddev=gaussian_fit(x,data,manual)
+        amplitude,mean,stddev=gaussian_fit(x,data,manual,fit_type)
         #print(f'amplitude,mean,stddev={amplitude},{mean},{stddev}')
         mean_rho=mean*Lref/rhoref         #normalized to rhoi
         xstar=abs(stddev*Lref/rhoref)
@@ -643,7 +671,7 @@ class mode_finder:
         popt[0] = amplitude
         popt[1] = mean     
         popt[2] = stddev   
-    
+
         #print(popt)
         #print(mean_rho,xstar)
     
@@ -754,6 +782,9 @@ class mode_finder:
                     columns = ['x_list','m_list','peak_distance'])
         #print(surface_df)
         surface_df_sort=surface_df.sort_values(by='peak_distance')
+
+        #print(surface_df_sort)
+        #input()
         if len(surface_df_sort['x_list'])<top:
             x_surface_near_peak_list=surface_df_sort['x_list']
             m_surface_near_peak_list=surface_df_sort['m_list']

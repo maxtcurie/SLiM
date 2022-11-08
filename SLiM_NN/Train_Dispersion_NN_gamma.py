@@ -1,6 +1,6 @@
 # TensorFlow and tf.keras
 import tensorflow as tf  #https://adventuresinmachinelearning.com/python-tensorflow-tutorial/
-#import keras
+import keras_tuner as kt
 from sklearn.model_selection import train_test_split
 
 # Helper libraries
@@ -12,51 +12,36 @@ import time
 #****************************************
 #**********start of user block***********
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
-                './NN_data/0MTM_scan_PC.csv',
                 './NN_data/0MTM_scan_CORI_1.csv',
                 './NN_data/0MTM_scan_CORI_3_large_nu.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V2.csv',
-                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv']
-epochs = 100
+                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
+epochs = 50
+hp_epochs=2
 batch_size = 100
-checkpoint_path='./tmp/checkpoint'
+checkpoint_path='./tmp/checkpoint_gamma'
 Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
 #*********start of creating of model***************
-def create_model(checkpoint_path):
-    #creating the model
-    model = tf.keras.Sequential([
-                    tf.keras.Input(shape=(7)),
-                    tf.keras.layers.Dense(units=16, activation='linear'),
-                    tf.keras.layers.Dense(units=32, activation='linear'),
-                    tf.keras.layers.Dense(units=64, activation='linear'),
-                    tf.keras.layers.Dropout(0.2),
-                    tf.keras.layers.Dense(units=16, activation='linear'),
-                    #tf.keras.layers.Dense(units=8, activation='relu'),
-                    tf.keras.layers.Dense(units=1, activation='linear')
-        ])
-
-    model.summary()
-
-    model.compile(loss='MeanAbsolutePercentageError',\
-                optimizer=tf.keras.optimizers.Adam(learning_rate=20.),
-                #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                metrics=['MeanSquaredError'])
-
+def callback_func():
     #*create callback function (optional)
+    '''
     class myCallback(tf.keras.callbacks.Callback):
         def on_epoch_end(self,epoch,log={}):
     
             #print(log.get.keys())
             #print(log.get('epoch'))
-            if(log.get('mean_squared_error')<0.0001):
-                print('mean_squared_error<0.0001, stop training!')
+            if(log.get('mean_absolute_error')<0.0001):
+                print('mean_absolute_error<0.0001, stop training!')
                 self.model.stop_training=True
     
     callbacks=myCallback()
-    
+    '''
     import os 
     if not os.path.exists('./tmp'):
         os.mkdir('./tmp')
@@ -66,16 +51,69 @@ def create_model(checkpoint_path):
         verbose=1, 
         save_weights_only=True,
         save_freq='epoch')
-
+    
     lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='val_loss', factor=0.1, patience=10, verbose=0,
         mode='auto', min_delta=0.0001, cooldown=0, min_lr=0
     )
-    callback_func=[cp_callback,callbacks,lr_callback]
+    
+    callback_funcs=[cp_callback,lr_callback]
+    return callback_funcs
 
+
+def create_model(checkpoint_path,x_train, y_train):
+    def model_builder(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        #hp_activation = hp.Choice('activation', values=['relu', 'selu', 'linear'])
+        hp_activation = hp.Choice('activation', values=['relu', 'selu'])
+        #hp_loss  =  hp.Choice('loss', values=['MeanAbsolutePercentageError', 'Huber', 'MeanAbsolutePercentageError'])
+        #hp_layer_1 = hp.Int('layer_1', min_value=8, max_value=512, step=8)
+        #hp_layer_2 = hp.Int('layer_3', min_value=8, max_value=1024, step=16)
+        hp_dropout_1 = hp.Float('dropout', min_value=0., max_value=0.9, step=0.5)
+        #hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+
+        model.add(tf.keras.Input(shape=(7)))
+        #model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        #model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        #model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        #model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        #model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        #model.add(tf.keras.layers.Dense(units=hp_layer_2, activation=hp_activation))
+        #model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        #model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        #model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        #model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        model.add(tf.keras.layers.Dense(1, activation=hp_activation))  
+
+        model.summary()
+
+        #model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hp_learning_rate),
+        #              loss=hp_loss,metrics=['mean_absolute_error']) 
+        model.compile(optimizer=tf.keras.optimizers.Adam(),
+                      loss='MeanAbsolutePercentageError',metrics=['mean_absolute_error']) 
+        return model   
+    
+    tuner = kt.Hyperband(model_builder,
+                     objective='val_mean_absolute_error',
+                     max_epochs=hp_epochs,
+                     factor=3,
+                     directory='dir',
+                     project_name='x')
+
+    tuner.search(x_train, y_train, epochs=hp_epochs, \
+            validation_data=(x_test,y_test), \
+            callbacks=callback_func())
+
+    best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+
+    model = tuner.hypermodel.build(best_hps)
+
+    model.summary()
     #*********end of creating of model***************
-    return model,callback_func
-
+    return model
 
 
 def load_data(filename_list):
@@ -109,9 +147,6 @@ def load_data(filename_list):
                               columns=['gamma_omega_n'])
         df_y=df_y.astype('float')
 
-        
-        
-
         #merge the dataframe
         if i==0:
             df_x_merge=df_x
@@ -120,21 +155,64 @@ def load_data(filename_list):
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
 
-    print(df_y_merge[:10])
+    #print(df_y_merge[:10])
 
     #get normalizing factor
-    keys=df_x_merge.keys()
-    df_norm_name=[i for i in keys]
-    df_norm_factor=[1./np.max(df_x_merge[i]) for i in keys]
-    df_norm_offset=[np.mean(df_x_merge[i]) for i in keys]
-    log_scale=[1,0,0,1,1,0,0]
+    keys_x=df_x_merge.keys()
+              #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma
+    log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    ]
+    df_x_norm_name=[i for i in keys_x]
+
+    df_x_after_log={}
+    for i in range(len(keys_x)):
+        if log_scale[i]==1:
+            df_x_after_log[keys_x[i]]=np.log(df_x_merge[keys_x[i]])
+        else:
+            df_x_after_log[keys_x[i]]=df_x_merge[keys_x[i]]
+
+    df_x_norm_offset=[np.min(df_x_after_log[i]) for i in keys_x]
+    df_x_norm_factor=[1./(np.max(df_x_after_log[i])-np.min(df_x_after_log[i])) for i in keys_x]
+    
+
+    keys_y=df_y_merge.keys()
+    df_y_norm_offset=[np.min(df_y_merge[i]) for i in keys_y]
+    df_y_norm_factor=[1./(np.max(df_y_merge[i])-np.min(df_y_merge[i])) for i in keys_y]
+
+    df_norm_name=[]
+    df_norm_factor=[]
+    df_norm_offset=[]
+    for i in range(len(keys_x)):
+        df_norm_name.append(keys_x[i])
+        df_norm_factor.append(df_x_norm_factor[i])
+        df_norm_offset.append(df_x_norm_offset[i])
+
+    for i in range(len(keys_y)):
+        df_norm_name.append(keys_y[i])
+        df_norm_factor.append(df_y_norm_factor[i])
+        df_norm_offset.append(df_y_norm_offset[i])
+
     d = {'name':df_norm_name,'factor':df_norm_factor,\
         'offset':df_norm_offset,'log':log_scale}
     df_norm=pd.DataFrame(d, columns=['name','factor','offset','log'])   #construct the panda dataframe
     df_norm.to_csv('./Trained_model/NN_gamma_norm_factor.csv',index=False)
-    for i in range(len(keys)):
-        df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
-    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
+    
+    #print(df_norm)
+
+    df_x_after_norm={}
+    df_y_after_norm={}
+    for i in range(len(keys_x)):
+        df_x_after_norm[keys_x[i]]=(df_x_after_log[keys_x[i]]-df_x_norm_offset[i])*df_x_norm_factor[i]
+
+    for i in range(len(keys_y)):
+        df_y_after_norm[keys_y[i]]=(df_y_merge[keys_y[i]]    -df_y_norm_offset[i])*df_y_norm_factor[i]
+    
+    df_x_after_norm=pd.DataFrame(df_x_after_norm, columns=keys_x)
+    df_y_after_norm=pd.DataFrame(df_y_after_norm, columns=keys_y)
+
+    #print(df_x_after_norm)
+    #print(df_y_after_norm)
+
+    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -143,17 +221,16 @@ def load_data(filename_list):
 x_train, x_test, y_train, y_test=load_data(filename_list)
 
 #*********start of trainning***********************
-print('x_test')
-print(x_test)
-print(y_test)
+print('len_total=')
 print(len(x_test)+len(x_train))
-#input()
-model,callback_func=create_model(checkpoint_path)
+
+model=create_model(checkpoint_path, x_train, y_train)
 if Read_from_checkpoint:
     model.load_weights(checkpoint_path)
-history=model.fit(x_train, y_train, epochs=epochs,
-            callbacks=callback_func,\
-            validation_data=(x_test,y_test))  
+
+history=model.fit(x_train, y_train, epochs=epochs,\
+                    callbacks=callback_func(),\
+                    validation_data=(x_test,y_test))  
 
 #save the model
 model.save("./Trained_model/SLiM_NN_gamma.h5")  # we can save the model and reload it at anytime in the future

@@ -14,9 +14,40 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,NavigationToolb
 def gaussian(x, amplitude, mean, stddev):
         return amplitude * np.exp(-((x - mean) / (1.*stddev))**2.)
 
-def gaussian_fit(x,data,manual=False):
+def gaussian_fit(x,data,manual=False,fit_type=0):
     if manual==False:#auto_fit
-        amplitude,mean,stddev=gaussian_fit_auto(x,data)
+        if fit_type==0:
+            amplitude,mean,stddev=gaussian_fit_auto(x,data)
+        elif fit_type==1:
+            max_indx=np.argmax(data)
+            mean=x[max_indx]
+            amplitude=data[max_indx]
+            amplitude_sigma=amplitude*np.exp(-1.)
+            data_left=data[:max_indx]
+            data_right=data[max_indx:]
+            x_left=x[:max_indx]
+            x_right=x[max_indx:]
+            x_left_sigma=x_left[np.argmin(abs(data_left-amplitude_sigma))]
+            x_right_sigma=x_right[np.argmin(abs(data_right-amplitude_sigma))]
+
+            stddev=0.5*abs(x_left_sigma-x_right_sigma)
+            
+
+            if 1==0:
+                print('amplitude,mean,stddev='+str([amplitude,mean,stddev]))
+                amplitude_,mean_,stddev_=gaussian_fit_auto(x,data)
+                print('amplitude,mean,stddev='+str([amplitude_,mean_,stddev_]))
+                popt=[amplitude,mean,stddev]
+                popt_=[amplitude_,mean_,stddev_]
+                plt.clf()
+                plt.plot(x,data)
+                plt.axvline(x_left_sigma)
+                plt.axvline(x_right_sigma)
+                plt.plot(x,gaussian(x, *popt),color='red',label='fit_type 1')
+                plt.plot(x,gaussian(x, *popt_),color='green',label='fit_type 0')
+                plt.legend()
+                plt.show()
+
     else: #manual_fit using GUI
         amplitude,mean,stddev=gaussian_fit_manual(x,data)
     return amplitude,mean,stddev
