@@ -75,32 +75,46 @@ class Dispersion_NN_beta():
         self.NN_omega_model=NN_omega_model
         self.NN_gamma_model=NN_gamma_model
 
-        self.norm_stability_factor=df_stability['factor']
-        self.norm_omega_factor=df_omega['factor']
-        self.norm_gamma_factor=df_gamma['factor']
+        self.norm_stability_factor=df_stability
+        self.norm_omega_factor=df_omega
+        self.norm_gamma_factor=df_gamma
 
 
 
     def Dispersion_omega(self,nu,zeff,eta,shat,beta,ky,mu,xstar):
-        param=[nu,zeff,eta,shat,beta,ky,mu/xstar]
+        param=np.array([nu,zeff,eta,shat,beta,ky,mu/xstar])
         param_omega_norm=np.zeros(7,dtype=float)
         param_gamma_norm=np.zeros(7,dtype=float)
+        param_stability_norm=np.zeros(7,dtype=float)
+                  #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma
+        log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    ]
 
         for i in range(7):
-            param_omega_norm[i]=param[i]*self.norm_omega_factor[i]
-            param_gamma_norm[i]=param[i]*self.norm_gamma_factor[i]
+            if log_scale[i]==1:
+                param_temp=np.log(param[i])
+            else:
+                param_temp=param[i]
+            param_stability_norm[i]=(param_temp-self.norm_stability_factor['offset'][i])*self.norm_stability_factor['factor'][i]
+            param_omega_norm[i]    =(param_temp-self.norm_omega_factor['offset'][i])    *self.norm_omega_factor['factor'][i]
+            param_gamma_norm[i]    =(param_temp-self.norm_gamma_factor['offset'][i])    *self.norm_gamma_factor['factor'][i]
 
-        [[stability]] = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
-        omega = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
+        [[stability]] = self.NN_stability_model.predict(np.array([param_stability_norm]),verbose = 0)
+        
 
         if stability>0.5:
             gamma = self.NN_gamma_model.predict(np.array([param_gamma_norm]),verbose = 0)
+            omega = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
             print('\ngamma='+str(gamma))
         else:
             gamma=0.
+            omega=0.
 
+        #print(self.norm_omega_factor)
+
+        omega=omega/(self.norm_omega_factor['factor'][7])+(self.norm_omega_factor['offset'][7])
+        gamma=gamma/(self.norm_gamma_factor['factor'][7])+(self.norm_gamma_factor['offset'][7])
         [[w]]=omega+gamma*1j
-
+        
         return w
 
         
@@ -117,20 +131,31 @@ class Dispersion_NN_beta_2():
 
         self.NN_file=NN_file
         self.norm_csv_file=norm_csv_file
-
         self.NN_model=NN_model
+        self.norm_factor=df
 
-        self.norm_factor=df['factor']
 
     def Dispersion_omega(self,nu,zeff,eta,shat,beta,ky,mu,xstar):
         param=[nu,zeff,eta,shat,beta,ky,mu/xstar]
         param_norm=np.zeros(7,dtype=float)
 
+                  #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma omega 
+        log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    , 0   ]
+
         for i in range(7):
-            param_norm[i]=param[i]*self.norm_factor[i]
+            if log_scale[i]==1:
+                param_temp=np.log(param[i])
+            else:
+                param_temp=param[i]
+            param_norm[i]=(param_temp-self.norm_factor['offset'][i])*self.norm_factor['factor'][i]
+            
 
         [[omega,gamma]] = self.NN_model.predict(np.array([param_norm]),verbose = 0)
         
+
+        omega=omega/(self.norm_factor['factor'][7])+(self.norm_factor['offset'][7])
+        gamma=gamma/(self.norm_factor['factor'][8])+(self.norm_factor['offset'][8])
+
         w=omega+gamma*1j
 
         return w

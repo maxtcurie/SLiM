@@ -12,10 +12,14 @@ import time
 #****************************************
 #**********start of user block***********
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
-                './NN_data/0MTM_scan_PC.csv',
                 './NN_data/0MTM_scan_CORI_1.csv',
-                './NN_data/0MTM_scan_CORI_3_large_nu.csv']
-epochs = 100
+                './NN_data/0MTM_scan_CORI_3_large_nu.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
+epochs = 50
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_omega'
 Read_from_checkpoint=False
@@ -59,7 +63,7 @@ def create_model(checkpoint_path):
             #print(log.get('epoch'))
             if(log.get('mean_absolute_error')<0.01):
                 print('mean_absolute_error<0.01, stop training!')
-                self.model.stop_training=True
+                self.model.sstop_training=True
     
     callbacks=myCallback()
     
@@ -95,16 +99,22 @@ def load_data(filename_list):
         except:
             pass
         
-        #df=df.astype('float')
         
         df=df.query('omega_omega_n!=0 and gamma_omega_n>0')
         #df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
         
+        
+        #df_unstable['unstable']=[1]*len(df_unstable)
+        #df_stable['unstable']=[0]*len(df_stable)
+        
+        #df=pd.concat([df_unstable, df_stable], axis=0)
+        
         df_x=pd.DataFrame(np.transpose([df['nu'],df['zeff'],\
                             df['eta'],df['shat'],df['beta'],\
-                            df['ky'],df['mu']/df['xstar']]),\
+                            df['ky'],df['mu']/df['xstar']]),
                           columns=['nu', 'zeff','eta','shat',\
                                     'beta','ky','mu_norm'])
+
         df_y=pd.DataFrame(np.transpose([df['omega_omega_n']]),\
                               columns=['omega_omega_n'])
         df_y=df_y.astype('float')
@@ -117,18 +127,64 @@ def load_data(filename_list):
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
 
-    #get normalizing factor
-    keys=df_x_merge.keys()
-    df_norm_name=[i for i in keys]
-    df_norm_factor=[1./np.max(df_x_merge[i]) for i in keys]
-    d = {'name':df_norm_name,'factor':df_norm_factor}
-    df_norm=pd.DataFrame(d, columns=['name','factor'])   #construct the panda dataframe
-    df_norm.to_csv('./Trained_model/NN_omega_norm_factor.csv',index=False)
-    for i in range(len(keys)):
-        df_x_merge[keys[i]]=df_x_merge[keys[i]]*df_norm_factor[i]
+    #print(df_y_merge[:10])
 
+    #get normalizing factor
+    keys_x=df_x_merge.keys()
+              #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma
+    log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    ]
+    df_x_norm_name=[i for i in keys_x]
+
+    df_x_after_log={}
+    for i in range(len(keys_x)):
+        if log_scale[i]==1:
+            df_x_after_log[keys_x[i]]=np.log(df_x_merge[keys_x[i]])
+        else:
+            df_x_after_log[keys_x[i]]=df_x_merge[keys_x[i]]
+
+    df_x_norm_offset=[np.min(df_x_after_log[i]) for i in keys_x]
+    df_x_norm_factor=[1./(np.max(df_x_after_log[i])-np.min(df_x_after_log[i])) for i in keys_x]
     
-    x_train, x_test, y_train, y_test = train_test_split(df_x_merge, df_y_merge, test_size=0.2)
+
+    keys_y=df_y_merge.keys()
+    df_y_norm_offset=[np.min(df_y_merge[i]) for i in keys_y]
+    df_y_norm_factor=[1./(np.max(df_y_merge[i])-np.min(df_y_merge[i])) for i in keys_y]
+
+    df_norm_name=[]
+    df_norm_factor=[]
+    df_norm_offset=[]
+    for i in range(len(keys_x)):
+        df_norm_name.append(keys_x[i])
+        df_norm_factor.append(df_x_norm_factor[i])
+        df_norm_offset.append(df_x_norm_offset[i])
+
+    for i in range(len(keys_y)):
+        df_norm_name.append(keys_y[i])
+        df_norm_factor.append(df_y_norm_factor[i])
+        df_norm_offset.append(df_y_norm_offset[i])
+
+    d = {'name':df_norm_name,'factor':df_norm_factor,\
+        'offset':df_norm_offset,'log':log_scale}
+    df_norm=pd.DataFrame(d, columns=['name','factor','offset','log'])   #construct the panda dataframe
+    df_norm.to_csv('./Trained_model/NN_omega_norm_factor.csv',index=False)
+    
+    #print(df_norm)
+
+    df_x_after_norm={}
+    df_y_after_norm={}
+    for i in range(len(keys_x)):
+        df_x_after_norm[keys_x[i]]=(df_x_after_log[keys_x[i]]-df_x_norm_offset[i])*df_x_norm_factor[i]
+
+    for i in range(len(keys_y)):
+        df_y_after_norm[keys_y[i]]=(df_y_merge[keys_y[i]]    -df_y_norm_offset[i])*df_y_norm_factor[i]
+    
+    df_x_after_norm=pd.DataFrame(df_x_after_norm, columns=keys_x)
+    df_y_after_norm=pd.DataFrame(df_y_after_norm, columns=keys_y)
+
+    #print(df_x_after_norm)
+    #print(df_y_after_norm)
+
+    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -136,14 +192,15 @@ def load_data(filename_list):
 
 x_train, x_test, y_train, y_test=load_data(filename_list)
 
-#print(x_train)
-#input()
-
 #*********start of trainning***********************
+print('x_test')
+print(x_test)
+print(y_test)
+print(len(x_test)+len(x_train))
+#input()
 model,callback_func=create_model(checkpoint_path)
 if Read_from_checkpoint:
     model.load_weights(checkpoint_path)
-
 history=model.fit(x_train, y_train, epochs=epochs,
             callbacks=callback_func,\
             validation_data=(x_test,y_test))  
@@ -154,3 +211,4 @@ model.save("./Trained_model/SLiM_NN_omega.h5")  # we can save the model and relo
 
 from Post_plot_learning_rate import plot_hist
 plot_hist(history)
+
