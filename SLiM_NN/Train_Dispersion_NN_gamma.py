@@ -19,7 +19,7 @@ filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
-epochs = 1
+epochs = 100
 batch_size = 100
 checkpoint_path='./tmp/checkpoint'
 Read_from_checkpoint=False
@@ -29,23 +29,27 @@ Read_from_checkpoint=False
 #*********start of creating of model***************
 def create_model(checkpoint_path):
     #creating the model
+    
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
-                    tf.keras.layers.Dense(units=32, activation='relu'),
                     tf.keras.layers.Dense(units=64, activation='relu'),
-                    tf.keras.layers.Dropout(0.2),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
-                    #tf.keras.layers.Dense(units=8, activation='relu'),
+                    tf.keras.layers.Dense(units=128, activation='relu'),
+                    tf.keras.layers.Dropout(0.3),
+                    tf.keras.layers.Dense(units=512, activation='relu'),
+                    tf.keras.layers.Dense(units=128, activation='relu'),
+                    tf.keras.layers.Dense(units=64, activation='relu'),
+                    tf.keras.layers.Dense(units=32, activation='relu'),
+                    tf.keras.layers.Dense(units=8, activation='relu'),
                     tf.keras.layers.Dense(units=1, activation='relu')
         ])
 
-    model.summary()
 
-    model.compile(loss='huber_loss',\
-                optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),
+    #model.summary()
+
+    model.compile(loss='MeanSquaredLogarithmicError',\
+                optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                 #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                metrics=['MeanSquaredError'])
+                metrics=['mean_absolute_error'])
 
     #*create callback function (optional)
     class myCallback(tf.keras.callbacks.Callback):
@@ -53,8 +57,8 @@ def create_model(checkpoint_path):
     
             #print(log.get.keys())
             #print(log.get('epoch'))
-            if(log.get('mean_squared_error')<0.0001):
-                print('mean_squared_error<0.0001, stop training!')
+            if(log.get('mean_absolute_error')<0.0001):
+                print('mean_absolute_error<0.0001, stop training!')
                 self.model.stop_training=True
     
     callbacks=myCallback()
@@ -172,9 +176,6 @@ def load_data(filename_list):
     
     df_x_after_norm=pd.DataFrame(df_x_after_norm, columns=keys_x)
     df_y_after_norm=pd.DataFrame(df_y_after_norm, columns=keys_y)
-
-    #print(df_x_after_norm)
-    #print(df_y_after_norm)
 
     x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.1)
         

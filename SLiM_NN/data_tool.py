@@ -20,7 +20,7 @@ def load_data(filename_list):
             df_merge=pd.concat([df_merge, df], axis=0)
             
     return df_merge
-def find_data_range(para_list_min,para_max)
+def find_data_range(para_list_min,para_list_max):
     para_name_list=['nu', 'zeff', 'eta', 'shat',  'beta',  'ky',   'mu', 'xstar']
     query_name_str=''
 

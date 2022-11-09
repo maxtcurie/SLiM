@@ -62,23 +62,59 @@ def callback_func():
 
 
 def create_model(checkpoint_path,x_train, y_train):
-    def model_builder(hp):
+    def model_builder_layers(hp):
         #creating the model
         model = tf.keras.Sequential()
 
         hp_activation = hp.Choice('activation', values=['relu'])
         hp_loss  =  hp.Choice('loss', values=['MeanAbsolutePercentageError'])
+        hp_layer_0 = hp.Int('layer_0', min_value=4, max_value=37, step=8)
         hp_layer_1 = hp.Int('layer_1', min_value=32, max_value=65, step=32)
-        hp_layer_2 = hp.Int('layer_2', min_value=64, max_value=129, step=64)
+        hp_layer_2 = hp.Int('layer_2', min_value=64, max_value=256, step=64)
+        hp_layer_2 = hp.Int('layer_3', min_value=128, max_value=512, step=128)
         hp_dropout_1 = hp.Float('dropout', min_value=0., max_value=0.3, step=0.1)
         hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
 
         model.add(tf.keras.Input(shape=(7)))
         model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
-        model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
-        model.add(tf.keras.layers.Dropout(0.2))
+        model.add(tf.keras.layers.Dense(units=hp_layer_2, activation=hp_activation))
+        model.add(tf.keras.layers.Dropout(hp_dropout_1))
+        model.add(tf.keras.layers.Dense(units=512, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=hp_layer_3, activation=hp_activation))
         model.add(tf.keras.layers.Dense(units=hp_layer_2, activation=hp_activation))
         model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=hp_layer_0, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(1, activation=hp_activation))  
+
+        model.summary()
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hp_learning_rate),
+                      loss=hp_loss,metrics=['accuracy']) 
+        
+        return model   
+
+    def model_builder_loss(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        hp_activation = hp.Choice('activation', values=['relu'])
+        hp_loss  =  hp.Choice('loss', values=['MeanAbsolutePercentageError',\
+                                            'Huber','Hinge','KLDivergence',\
+                                            'MeanAbsoluteError',\
+                                            'MeanAbsolutePercentageError',\
+                                            'MeanSquaredLogarithmicError',
+                                            'MeanSquaredError',\
+                                            'Poisson','SquaredHinge'])
+        hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
+
+        model.add(tf.keras.Input(shape=(7)))
+        model.add(tf.keras.layers.Dense(units=64, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=128, activation=hp_activation))
+        model.add(tf.keras.layers.Dropout(0.3))
+        model.add(tf.keras.layers.Dense(units=512, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=128, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=64, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
         model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
         model.add(tf.keras.layers.Dense(1, activation=hp_activation))  
 
@@ -87,9 +123,9 @@ def create_model(checkpoint_path,x_train, y_train):
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hp_learning_rate),
                       loss=hp_loss,metrics=['mean_absolute_error']) 
         
-        return model   
+        return model 
     
-    tuner = kt.Hyperband(model_builder,
+    tuner = kt.Hyperband(model_builder_loss,
                      objective='val_mean_absolute_error',
                      max_epochs=hp_epochs,
                      factor=3,
@@ -220,7 +256,10 @@ print(len(x_test)+len(x_train))
 
 if not Read_from_checkpoint:
     import shutil
-    shutil.rmtree('./dir/x')
+    try:
+        shutil.rmtree('./dir/x')
+    except:
+        pass
     model=create_model(checkpoint_path, x_train, y_train)
 else:
     model=create_model(checkpoint_path, x_train, y_train)

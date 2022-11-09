@@ -10,7 +10,7 @@ import numpy as np
 import csv
 
 from data_tool import load_data
-
+from data_tool import find_data_range
 #****************************************
 #**********start of user block***********
 filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
@@ -36,6 +36,9 @@ print('len(df_unstable)='+str(len(df_unstable)))
 print('len(df_stable)='+str(len(df_stable)))
 print('total='+str(len(df)))
 
+for key in df.keys():
+    print(key+'='+str(np.min(df[key]))+'~'+str(np.max(df[key])))
+
 
 nu=1.398957621
 zeff=2.788549247
@@ -43,10 +46,15 @@ eta=1.158925479
 shat=0.005906846
 beta=0.000710695
 ky=0.040731854
-mu=0.
-xstar=10.72829394
+mu=0.1
+xstar=10.
 
-para_list=[nu, zeff, eta, shat,  beta,  ky,   mu, xstar]
-para_list_min,para_max
+para_list=np.array([nu, zeff, eta, shat,  beta,  ky,   mu, xstar],dtype='float')
+para_list_min=para_list-para_list*1.
+para_list_max=para_list+para_list*1.
+print(para_list_min)
+print(para_list_max)
 
-df_stable=df.query(find_data_range(para_list_min,para_max))
+df_stable=df.query(find_data_range(para_list_min,para_list_max))
+
+print(df_stable)
