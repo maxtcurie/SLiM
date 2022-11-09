@@ -1,6 +1,6 @@
 # TensorFlow and tf.keras
 import tensorflow as tf  #https://adventuresinmachinelearning.com/python-tensorflow-tutorial/
-#import keras
+import keras_tuner as kt
 from sklearn.model_selection import train_test_split
 
 # Helper libraries
@@ -19,46 +19,29 @@ filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
-epochs = 1
+epochs = 5
+hp_epochs=5
 batch_size = 100
-checkpoint_path='./tmp/checkpoint'
+checkpoint_path='./tmp/checkpoint_gamma'
 Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
 #*********start of creating of model***************
-def create_model(checkpoint_path):
-    #creating the model
-    model = tf.keras.Sequential([
-                    tf.keras.Input(shape=(7)),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
-                    tf.keras.layers.Dense(units=32, activation='relu'),
-                    tf.keras.layers.Dense(units=64, activation='relu'),
-                    tf.keras.layers.Dropout(0.2),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
-                    #tf.keras.layers.Dense(units=8, activation='relu'),
-                    tf.keras.layers.Dense(units=1, activation='relu')
-        ])
-
-    model.summary()
-
-    model.compile(loss='huber_loss',\
-                optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),
-                #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                metrics=['MeanSquaredError'])
-
+def callback_func():
     #*create callback function (optional)
+    '''
     class myCallback(tf.keras.callbacks.Callback):
         def on_epoch_end(self,epoch,log={}):
     
             #print(log.get.keys())
             #print(log.get('epoch'))
-            if(log.get('mean_squared_error')<0.0001):
-                print('mean_squared_error<0.0001, stop training!')
+            if(log.get('mean_absolute_error')<0.0001):
+                print('mean_absolute_error<0.0001, stop training!')
                 self.model.stop_training=True
     
     callbacks=myCallback()
-    
+    '''
     import os 
     if not os.path.exists('./tmp'):
         os.mkdir('./tmp')
@@ -68,16 +51,62 @@ def create_model(checkpoint_path):
         verbose=1, 
         save_weights_only=True,
         save_freq='epoch')
-
+    
     lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='val_loss', factor=0.1, patience=10, verbose=0,
         mode='auto', min_delta=0.0001, cooldown=0, min_lr=0
     )
-    callback_func=[cp_callback,callbacks,lr_callback]
+    
+    callback_funcs=[cp_callback,lr_callback]
+    return callback_funcs
 
+
+def create_model(checkpoint_path,x_train, y_train):
+    def model_builder(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        hp_activation = hp.Choice('activation', values=['relu'])
+        hp_loss  =  hp.Choice('loss', values=['MeanAbsolutePercentageError'])
+        hp_layer_1 = hp.Int('layer_1', min_value=32, max_value=65, step=32)
+        hp_layer_2 = hp.Int('layer_2', min_value=64, max_value=129, step=64)
+        hp_dropout_1 = hp.Float('dropout', min_value=0., max_value=0.3, step=0.1)
+        hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
+
+        model.add(tf.keras.Input(shape=(7)))
+        model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        model.add(tf.keras.layers.Dropout(0.2))
+        model.add(tf.keras.layers.Dense(units=hp_layer_2, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=hp_layer_1, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(1, activation=hp_activation))  
+
+        model.summary()
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hp_learning_rate),
+                      loss=hp_loss,metrics=['mean_absolute_error']) 
+        
+        return model   
+    
+    tuner = kt.Hyperband(model_builder,
+                     objective='val_mean_absolute_error',
+                     max_epochs=hp_epochs,
+                     factor=3,
+                     directory='dir',
+                     project_name='x')
+
+    tuner.search(x_train, y_train, epochs=hp_epochs, \
+            validation_data=(x_test,y_test), \
+            callbacks=callback_func())
+
+    best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+
+    model = tuner.hypermodel.build(best_hps)
+
+    model.summary()
     #*********end of creating of model***************
-    return model,callback_func
-
+    return model
 
 
 def load_data(filename_list):
@@ -119,7 +148,7 @@ def load_data(filename_list):
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
 
-    print(df_y_merge[:10])
+    #print(df_y_merge[:10])
 
     #get normalizing factor
     keys_x=df_x_merge.keys()
@@ -176,7 +205,7 @@ def load_data(filename_list):
     #print(df_x_after_norm)
     #print(df_y_after_norm)
 
-    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.1)
+    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.2)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -185,17 +214,21 @@ def load_data(filename_list):
 x_train, x_test, y_train, y_test=load_data(filename_list)
 
 #*********start of trainning***********************
-print('x_test')
-print(x_test)
-print(y_test)
+print('len_total=')
 print(len(x_test)+len(x_train))
-#input()
-model,callback_func=create_model(checkpoint_path)
-if Read_from_checkpoint:
+
+
+if not Read_from_checkpoint:
+    import shutil
+    shutil.rmtree('./dir/x')
+    model=create_model(checkpoint_path, x_train, y_train)
+else:
+    model=create_model(checkpoint_path, x_train, y_train)
     model.load_weights(checkpoint_path)
-history=model.fit(x_train, y_train, epochs=epochs,
-            callbacks=callback_func,\
-            validation_data=(x_test,y_test))  
+
+history=model.fit(x_train, y_train, epochs=epochs,\
+                    callbacks=callback_func(),\
+                    validation_data=(x_test,y_test))  
 
 #save the model
 model.save("./Trained_model/SLiM_NN_gamma.h5")  # we can save the model and reload it at anytime in the future
@@ -203,3 +236,4 @@ model.save("./Trained_model/SLiM_NN_gamma.h5")  # we can save the model and relo
 
 from Post_plot_learning_rate import plot_hist
 plot_hist(history)
+

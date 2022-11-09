@@ -131,7 +131,7 @@ def load_data(filename_list):
 
     #get normalizing factor
     keys_x=df_x_merge.keys()
-              #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma
+              #nu, zeff, eta, shat, beta, ky, mu/xstar  omega
     log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    ]
     df_x_norm_name=[i for i in keys_x]
 
