@@ -34,6 +34,7 @@ Run_mode=1
 
 
 root=tk.LabelFrame(windows, text='Inputs',padx=5,pady=5)
+
 root.grid(row=0,column=0)
 
 #*************start of Input file*****************

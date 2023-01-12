@@ -18,11 +18,13 @@ filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
-                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
-epochs = 1
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_CORI_2023_01_10.csv',
+                './NN_data/0MTM_scan_CORI_np_rand.csv']
+epochs = 150
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_stability'
-Read_from_checkpoint=True
+Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
@@ -96,7 +98,7 @@ def load_data(filename_list):
         except:
             pass
         
-        
+        df=df.query('nu!=0')
         df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0')
         df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
         
@@ -129,7 +131,6 @@ def load_data(filename_list):
     #print(len(df_x_merge))
     #print(len(df_y_merge))
     #print(df_y_merge[:10])
-
     #get normalizing factor
     keys_x=df_x_merge.keys()
               #nu, zeff, eta, shat, beta, ky, mu/xstar  
@@ -169,7 +170,7 @@ def load_data(filename_list):
     
     df_x_after_norm=pd.DataFrame(df_x_after_norm, columns=keys_x)
 
-    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_merge, test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_merge, test_size=0.01)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
