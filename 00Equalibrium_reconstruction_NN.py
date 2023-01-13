@@ -65,6 +65,44 @@ norm_gamma_csv_file=path_tmp+'NN_stabel_unstable_norm_factor.csv'
 #**********************************************
 
 
+
+def total_score_calc(best_f_error_avg,n_work_list,df_scale):
+
+    q_scale_weight=2.   #weight for the scale score
+    q_shift_weight=2.
+    shat_scale_weight=2.
+    ne_scale_weight=1.
+    ne_shift_weight=1.
+    te_scale_weight=1.
+    te_shift_weight=1.
+    Doppler_shift_scale_weight=0.5
+
+    scale_weight=[  q_scale_weight,
+                    q_shift_weight,
+                    shat_scale_weight,
+                    ne_scale_weight,
+                    ne_shift_weight,
+                    te_scale_weight,
+                    te_shift_weight,
+                    Doppler_shift_scale_weight
+                    ]
+
+
+    scale_weight=np.array(scale_weight)
+    df_scale=np.array(df_scale)
+    scale_score=np.sum(abs(1.-df_scale)*scale_weight)
+    scale_score=scale_score/np.sum(scale_weight)
+
+    total_score=(best_f_error_avg+scale_score) #*(1.-np.prod(n_work_list))
+
+    return scale_score,total_score
+    
+#ignore warning
+if ignore_warning:
+    #https://stackoverflow.com/questions/14463277/how-to-disable-python-warnings
+    import warnings
+    warnings.filterwarnings("ignore")
+
 if not os.path.exists(Output_Path):
     os.makedirs(Output_Path)
 else:
@@ -74,12 +112,7 @@ else:
     for i in onlyfiles:
         os.remove(join(Output_Path, i))
 
-Run_mode=6      # mode1: fast mode
-                # mode2: slow mode(global)
-                # mode3: slow mode(local) 
-                # mode4: slow mode manual(global)
-                # mode5: slow slow mode(global)
-                # mode6: NN mode (global)
+
 
 mode_finder_obj=mode_finder(profile_type,profile_name,\
                             geomfile_type,geomfile_name,\
@@ -90,11 +123,13 @@ index=np.argmax(mode_finder_obj.ome)
                 
 omega_e_lab_kHz=mode_finder_obj.ome[index]+mode_finder_obj.Doppler[index]
 
-n_min=1                              #minmum mode number (include) that finder will cover
-n_max=int((1+Frequency_error)*np.max(Frequency_list)/omega_e_lab_kHz)#maximum mode number (include) that finder will cover
+#n_min=1                              #minmum mode number (include) that finder will cover
+#n_max=int((1+Frequency_error)*np.max(Frequency_list)/omega_e_lab_kHz)#maximum mode number (include) that finder will cover
 
-n0_list=np.arange(n_min,n_max+1,1)
-
+#n0_list=np.arange(n_min,n_max+1,1)
+n0_list=n_list_observe
+n_min=np.min(n_list_observe)                            
+n_max=np.max(n_list_observe)
 x_peak,x_min,x_max=mode_finder_obj.ome_peak_range(peak_percent=0.1)
 
 
@@ -111,12 +146,17 @@ with open(Output_Path+'0Equalibrium_summary.csv', 'w', newline='') as csvfile:  
                 'ne_scale','ne_shift',\
                 'te_scale','te_shift',\
                 'Doppler_shift_scale',\
-                'frequency_match','frequency_list',\
+                'n_list','m_list',\
+                'frequency_match',\
+                'n_num_match',\
+                'frequency_list',\
                 'frequency_error_list',\
                 'best_frequency_list',\
                 'best_frequency_error_list',\
                 'best_f_error_avg',\
                 'more_f_band_than_need',\
+                'scale_score',\
+                'total_score',\
                 'file_name'])
 csvfile.close()
 
@@ -248,25 +288,14 @@ elif scan_mode==2:
 freq_min_list=[f*(1.-Frequency_error) for f in Frequency_list]
 freq_max_list=[f*(1.+Frequency_error) for f in Frequency_list]
 
-scale_list=[
-    [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift]\
-        for q_scale in q_scale_works_list\
-        for q_shift in q_shift_works_list\
-        for shat_scale in shat_scale_works_list
-        for ne_scale in ne_scale_list\
-        for ne_shift in ne_shift_list\
-        for te_scale in te_scale_list\
-        for te_shift in te_shift_list\
-                    ]
+
 
 if Run_mode==6:
     from SLiM_NN.Dispersion_NN import Dispersion_NN
-    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+    Dispersion_NN_obj=Dispersion_NN(NN_path)
 
-print('*******Scaning*********')
-for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
-    Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_shat_scale={shat_scale:.3f}_ne_scale={ne_scale:.3f}_ne_shift={ne_shift:.3f}_te_scale={te_scale:.3f}_te_shift={te_shift:.3f}'
 
+def calc_profile(q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift):
     mode_finder_obj.reset_profile()
     mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=q_shift,\
                                     shat_scale=shat_scale,\
@@ -274,7 +303,8 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
                                     ne_shift=ne_shift,te_shift=te_shift,\
                                     Doppler_scale=1.,\
                                     show_plot=False)
-    mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=False)
+    #mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=False)
+    mean_rho,xstar=mode_finder_obj.omega_gaussian_fit(manual=False,fit_type=1)
     mode_finder_obj.set_xstar(xstar)
     #print(mode_finder_obj)
 
@@ -303,9 +333,11 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
     te_scale_list0=[]
     te_shift_list0=[]
     shat_scale_list0=[]
-    
+
+    Output_suffix=f'_q_scale={q_scale:.3f}_q_shift={q_shift:.3f}_shat_scale={shat_scale:.3f}_ne_scale={ne_scale:.3f}_ne_shift={ne_shift:.3f}_te_scale={te_scale:.3f}_te_shift={te_shift:.3f}'
+
     if Run_mode==1:#simple rational surface alignment
-        ModIndex=-1
+        ModIndex=1
         filename='rational_surface_alignment'+Output_suffix+'.csv'
     if Run_mode==2 or Run_mode==4 or Run_mode==5 or Run_mode==6:#global dispersion
         ModIndex=1
@@ -363,6 +395,7 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
     d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\
         'shat_scale':shat_scale_list0,\
         'ne_scale':ne_scale,'te_scale':te_scale,\
+        'Doppler_shift_scale':[1]*len(n_list),\
         'n':n_list,'m':m_list,'rho_tor':x_list,\
         'omega_plasma_kHz':[0]*len(n_list),\
         'omega_lan_kHz':[0]*len(n_list),\
@@ -396,6 +429,7 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
                 'shat_scale',\
                 'ne_scale','ne_shift',\
                 'te_scale','te_shift',\
+                'Doppler_shift_scale',\
                 'n','m','rho_tor',\
                 'omega_plasma_kHz','omega_lab_kHz',\
                 'gamma_cs_a','omega_n_kHz',\
@@ -409,7 +443,10 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
     gamma_list=[]
     Doppler_list=[]
     for i in range(len(n_list)):
-        if Run_mode==4:
+        #print(df['mu'][i])
+        if Run_mode==1:
+            w0=1+df['eta'][i]+10j
+        elif Run_mode==4:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
                 df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=True)
@@ -419,7 +456,7 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
                 df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=5)
         elif Run_mode==6:
             w0=Dispersion_NN_obj.Dispersion_omega(df['nu'][i],df['zeff'][i],df['eta'][i],\
-                    df['shat'][i],df['beta'][i],df['ky'][i],df['mu'][i],df['xstar'][i])
+                    df['shat'][i],df['beta'][i],df['ky'][i],df['mu'][i],df['xstar'][i])       
         else:
             w0=mode_finder_obj.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
                 df['shat'][i],df['beta'][i],df['ky'][i],\
@@ -444,6 +481,7 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
                 ne_shift_list0[i],\
                 te_scale_list0[i],\
                 te_shift_list0[i],\
+                1.,\
                 df['n'][i],df['m'][i],df['rho_tor'][i],\
                 omega_kHz,\
                 omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i],\
@@ -458,19 +496,23 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
         omega_lab_kHz_list.append(omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i])
         Doppler_list.append(df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i])
         gamma_list.append(gamma_cs_a)
+    
     for Doppler_shift_scale in Doppler_shift_scale_list:
         Frequency_error_list=[]
         omega_lab_kHz_work_list=[]
         best_f_list=[]
         best_f_error_list=[]
         best_f_error_reject_list=[]
+        n_work_list=np.zeros(len(n_list_observe),dtype=int)
+
+        #loop through the frequency observed in experiment
         for k in range(len(Frequency_list)):
             f_list=[]
             f_error_list=[]
             f_error_reject_list=[]
             f_tmp=0.
             f_error_tmp=99999999.
-                
+            #loop through the frequency calculated from the SLiM
             for j in range(len(omega_lab_kHz_list)):
                 f=Frequency_list[k]
                 f_slim=omega_lab_kHz_list[j]+Doppler_list[j]*(Doppler_shift_scale-1.)
@@ -484,6 +526,9 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
                         f_tmp=f_slim
                         f_error_tmp=f_error
 
+                if n_list[j]==n_list_observe[k]:
+                    n_work_list[k]=1
+
 
             Frequency_error_list.append(f_error_list)
             omega_lab_kHz_work_list.append(f_list)
@@ -491,6 +536,18 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
             best_f_error_list.append(f_error_tmp)
 
         best_f_error_avg=np.mean(np.array(best_f_error_list,dtype=float))
+
+        df_scale=[
+                q_scale_list0[i],
+                q_shift_list0[i],
+                shat_scale_list0[i],
+                ne_scale_list0[i],
+                ne_shift_list0[i],
+                te_scale_list0[i],
+                te_shift_list0[i],
+                Doppler_shift_scale
+                ]
+        scale_score,total_score=total_score_calc(best_f_error_avg,n_work_list,df_scale)
 
         reject=0
         for j in range(len(omega_lab_kHz_list)):
@@ -512,16 +569,93 @@ for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(sca
                         ne_scale,ne_shift,\
                         te_scale,te_shift,\
                         Doppler_shift_scale,\
+                        n_list,m_list,\
                         np.prod(judge_list),\
+                        np.prod(n_work_list),\
                         omega_lab_kHz_work_list,\
                         Frequency_error_list,\
                         best_f_list,\
                         best_f_error_list,\
                         best_f_error_avg,\
                         reject,\
+                        scale_score,\
+                        total_score,\
                         file_name])
         csvfile.close()
 
-        if np.prod(judge_list)==1 and scan_mode==-1:
-            break
+        if (np.prod(judge_list)*np.prod(n_work_list)==1 and scan_mode==-1) or\
+           (np.prod(judge_list)*np.prod(n_work_list)==1 and scan_mode==3):
+            print('\n[q_scale,q_shift,\
+                    shat_scale,\
+                    ne_scale,ne_shift,\
+                    te_scale,te_shift,\
+                    Doppler_shift_scale]=\n'
+                    +str([q_scale,q_shift,\
+                        shat_scale,\
+                        ne_scale,ne_shift,\
+                        te_scale,te_shift,\
+                        Doppler_shift_scale])
+                                    )
+            sys.exit()
+            
         
+
+print('*******Scaning*********')
+
+if scan_mode==4:
+    scale_list=[
+    [1.,0.,shat_scale,ne_scale,ne_shift,te_scale,te_shift]\
+        for shat_scale in shat_scale_works_list
+        for ne_scale in ne_scale_list\
+        for ne_shift in ne_shift_list\
+        for te_scale in te_scale_list\
+        for te_shift in te_shift_list
+                    ]
+    random.shuffle(scale_list)
+    for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
+        mode_finder_obj.reset_profile()
+        mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=q_shift,\
+                                    shat_scale=shat_scale,\
+                                    ne_scale=ne_scale,te_scale=te_scale,\
+                                    ne_shift=ne_shift,te_shift=te_shift,\
+                                    Doppler_scale=1.,\
+                                    show_plot=False)
+        q_scale_align=mode_finder_obj.q_scale_for_alignment(q_at_peak)
+        calc_profile(q_scale_align,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift)
+
+elif len(q_scale_works_list)\
+        *len(q_shift_works_list)\
+        *len(shat_scale_works_list)\
+        *len(ne_scale_list)\
+        *len(ne_shift_list)\
+        *len(te_scale_list)\
+        *len(te_shift_list)>10000:
+    if scan_mode==-1 or scan_mode==3:
+        while(1==1):
+            q_scale=random.choice(q_scale_list)
+            q_shift=random.choice(q_shift_list)
+            shat_scale=random.choice(shat_scale_list)
+            ne_scale=random.choice(ne_scale_list)
+            ne_shift=random.choice(ne_shift_list)
+            te_scale=random.choice(te_scale_list)
+            te_shift=random.choice(te_shift_list)
+            print(str([q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift]))
+            calc_profile(q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift)
+    else:
+        print('total run time too long, change the scan_mode')
+        sys.exit()
+else:
+    scale_list=[
+    [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift]\
+        for q_scale in q_scale_works_list\
+        for q_shift in q_shift_works_list\
+        for shat_scale in shat_scale_works_list
+        for ne_scale in ne_scale_list\
+        for ne_shift in ne_shift_list\
+        for te_scale in te_scale_list\
+        for te_shift in te_shift_list
+                    ]
+    random.shuffle(scale_list)
+
+    for [q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift] in tqdm(scale_list):
+        calc_profile(q_scale,q_shift,shat_scale,ne_scale,ne_shift,te_scale,te_shift)
