@@ -50,11 +50,8 @@ Impurity_charge=6.  #charge of impurity, for carbon is 6
 show_plot=False
 
 
-path_tmp='./SLiM_NN/Trained_model/'
-NN_omega_file      =path_tmp+'SLiM_NN_omega.h5'
-NN_gamma_file      =path_tmp+'SLiM_NN_stabel_unstable.h5'
-norm_omega_csv_file=path_tmp+'NN_omega_norm_factor.csv'
-norm_gamma_csv_file=path_tmp+'NN_stabel_unstable_norm_factor.csv'
+NN_path='./SLiM_NN/Trained_model/'
+
 #************End of User Block*****************
 #**********************************************
 
@@ -191,7 +188,7 @@ df.to_csv(Output_Path+'parameter_list'+Output_suffix+'.csv',index=False)
 
 if Run_mode==6:
     from SLiM_NN.Dispersion_NN import Dispersion_NN
-    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+    Dispersion_NN_obj=Dispersion_NN(NN_path)
 
     
 if Run_mode==1:

@@ -2,8 +2,72 @@ import tensorflow as tf
 import pandas as pd 
 import numpy as np 
 
-#gamma, omega 3 net
+
+#stability, omega 2 net
 class Dispersion_NN():
+    def __init__(self,NN_path):
+        if NN_path[-1]!='/':
+            NN_path=NN_path+'/'
+
+        self.NN_stability_file=NN_path+'SLiM_NN_stability.h5'
+        self.NN_omega_file=NN_path+'SLiM_NN_omega.h5'
+
+        self.norm_stability_csv_file=NN_path+'NN_stability_norm_factor.csv'
+        self.norm_omega_csv_file=NN_path+'NN_omega_norm_factor.csv'
+
+        NN_stability_model = tf.keras.models.load_model(self.NN_stability_file)
+        NN_omega_model = tf.keras.models.load_model(self.NN_omega_file)
+        
+        NN_stability_model.summary()
+        NN_omega_model.summary()
+
+        df_stability=pd.read_csv(self.norm_stability_csv_file)
+        df_omega=pd.read_csv(self.norm_omega_csv_file)
+        
+        self.NN_stability_model=NN_stability_model
+        self.NN_omega_model=NN_omega_model
+        
+        self.norm_stability_factor=df_stability
+        self.norm_omega_factor=df_omega
+
+
+
+    def Dispersion_omega(self,nu,zeff,eta,shat,beta,ky,mu,xstar):
+        param=np.array([nu,zeff,eta,shat,beta,ky,mu/xstar])
+        param_omega_norm=np.zeros(7,dtype=float)
+        param_stability_norm=np.zeros(7,dtype=float)
+                  #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma
+        log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    ]
+
+        for i in range(7):
+            if log_scale[i]==1:
+                param_temp=np.log(param[i])
+            else:
+                param_temp=param[i]
+            param_stability_norm[i]=(param_temp-self.norm_stability_factor['offset'][i])*self.norm_stability_factor['factor'][i]
+            param_omega_norm[i]    =(param_temp-self.norm_omega_factor['offset'][i])    *self.norm_omega_factor['factor'][i]
+            
+
+        [[stability]] = self.NN_stability_model.predict(np.array([param_stability_norm]),verbose = 0)
+        
+
+        if stability>0.5:
+            omega = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
+            gamma=1.
+        else:
+            gamma=0.
+            omega=0.
+
+        #print(self.norm_omega_factor)
+
+        omega=omega/(self.norm_omega_factor['factor'][7])+(self.norm_omega_factor['offset'][7])
+        w=omega+gamma*1j
+        
+        return w
+
+
+#gamma, omega 3 net
+class Dispersion_NN_beta3():
     def __init__(self,NN_path):
         if NN_path[-1]!='/':
             NN_path=NN_path+'/'
@@ -75,6 +139,7 @@ class Dispersion_NN():
         w=omega+gamma*1j
         
         return w
+
 
         
 #gamma, omega 2 net

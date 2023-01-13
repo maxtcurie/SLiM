@@ -20,11 +20,7 @@ ky=0.01
 mu=0.
 xstar=10
 
-path='./SLiM_NN/Trained_model_backup_03_31_2022/'
-NN_omega_file      =path+'SLiM_NN_omega.h5'
-NN_gamma_file      =path+'SLiM_NN_stabel_unstable.h5'
-norm_omega_csv_file=path+'NN_omega_norm_factor.csv'
-norm_gamma_csv_file=path+'NN_stabel_unstable_norm_factor.csv'
+NN_path='./SLiM_NN/Trained_model_backup_03_31_2022/'
 
 #************End of user block******************
 
@@ -35,7 +31,7 @@ elif run_mode==1:
 elif run_mode==2:
     w=VectorFinder_auto_Extensive(nu,zeff,eta,shat,beta,ky,1,mu,xstar) 
 elif run_mode==3:
-    Dispersion_NN_obj=Dispersion_NN(NN_omega_file,NN_gamma_file,norm_omega_csv_file,norm_gamma_csv_file)
+    Dispersion_NN_obj=Dispersion_NN(NN_path)
     w=Dispersion_NN_obj.Dispersion_omega(nu,zeff,eta,shat,beta,ky,mu,xstar)
     
 
