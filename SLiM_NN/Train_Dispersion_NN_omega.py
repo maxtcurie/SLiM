@@ -18,11 +18,13 @@ filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
-                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_CORI_2023_01_10.csv',
+                './NN_data/0MTM_scan_CORI_np_rand.csv']
 epochs = 50
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_omega'
-Read_from_checkpoint=False
+Read_from_checkpoint=True
 #**********end of user block*************
 #****************************************
 

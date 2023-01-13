@@ -21,10 +21,10 @@ filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
                 './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv',
                 './NN_data/0MTM_scan_CORI_np_rand_CORI_2023_01_10.csv',
                 './NN_data/0MTM_scan_CORI_np_rand.csv']
-epochs = 150
+epochs = 1
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_stability'
-Read_from_checkpoint=False
+Read_from_checkpoint=True
 #**********end of user block*************
 #****************************************
 
@@ -34,23 +34,23 @@ def create_model(checkpoint_path):
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
                     #tf.keras.layers.Dense(units=7, input_shape=[7],activation='relu'),
-                    tf.keras.layers.Dense(units=10240, activation='relu'),
+                    #tf.keras.layers.Dense(units=10240, activation='relu'),
+                    tf.keras.layers.Dense(units=64, activation='relu'),
                     #tf.keras.layers.Dense(units=32, activation='relu'),
-                    #tf.keras.layers.Dense(units=32, activation='relu'),
-                    #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dense(units=1024, activation='relu'),
-                    #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dense(units=16, activation='relu'),
+                    tf.keras.layers.Dense(units=1025, activation='relu'),
+                    tf.keras.layers.Dense(units=4096, activation='relu'),
                     #tf.keras.layers.Dropout(0.2),
-                    #tf.keras.layers.Dense(units=8, activation='relu'),
+                    tf.keras.layers.Dense(units=256, activation='relu'),
+                    #tf.keras.layers.Dense(units=16, activation='relu'),
+                    tf.keras.layers.Dense(units=8, activation='relu'),
                     tf.keras.layers.Dense(units=1, activation='sigmoid')
         ])
 
     model.summary()
 
     model.compile(loss='binary_crossentropy',\
-                optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
-                #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
+                #optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.003),
+                optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
                 metrics=['accuracy'])
 
     #*create callback function (optional)
