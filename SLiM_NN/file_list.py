@@ -9,14 +9,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
-from file_list import file_list
-
 #****************************************
 #**********start of user block***********
-filename_list=file_list()
-epochs = 50
+filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
+                './NN_data/0MTM_scan_CORI_1.csv',
+                './NN_data/0MTM_scan_CORI_3_large_nu.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
+                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv',
+                './NN_data/0MTM_scan_CORI_np_rand_CORI_2023_01_10.csv',
+                './NN_data/0MTM_scan_CORI_np_rand.csv']
+epochs = 1
 batch_size = 100
-checkpoint_path='./tmp/checkpoint_omega'
+checkpoint_path='./tmp/checkpoint'
 Read_from_checkpoint=True
 #**********end of user block*************
 #****************************************
@@ -24,31 +31,27 @@ Read_from_checkpoint=True
 #*********start of creating of model***************
 def create_model(checkpoint_path):
     #creating the model
+    
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
-                    #tf.keras.layers.Dense(units=7, input_shape=[7],activation='relu'),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
-                    tf.keras.layers.Dense(units=32, activation='relu'),
+                    tf.keras.layers.Dense(units=64, activation='relu'),
+                    tf.keras.layers.Dense(units=128, activation='relu'),
+                    tf.keras.layers.Dropout(0.3),
+                    tf.keras.layers.Dense(units=512, activation='relu'),
+                    tf.keras.layers.Dense(units=128, activation='relu'),
                     tf.keras.layers.Dense(units=64, activation='relu'),
                     tf.keras.layers.Dense(units=32, activation='relu'),
-                    #tf.keras.layers.Dense(units=256, activation='relu'),
-                    #tf.keras.layers.Dense(units=1024, activation='relu'),
-                    #tf.keras.layers.Dropout(0.2),
-                    tf.keras.layers.Dense(units=16, activation='relu'),
                     tf.keras.layers.Dense(units=8, activation='relu'),
-                    tf.keras.layers.Dense(units=1)
+                    tf.keras.layers.Dense(units=1, activation='relu')
         ])
 
-    model.summary()
 
-    model.compile(loss='huber_loss',
-                #loss='mean_absolute_error',\
-                optimizer='adam',
-                #optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
+    #model.summary()
+
+    model.compile(loss='MeanSquaredLogarithmicError',\
+                optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                 #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                #optimizer=tf.keras.optimizers.Adam(learning_rate=0.003),\
-                metrics=[tf.keras.metrics.mae])
+                metrics=['mean_absolute_error'])
 
     #*create callback function (optional)
     class myCallback(tf.keras.callbacks.Callback):
@@ -56,9 +59,9 @@ def create_model(checkpoint_path):
     
             #print(log.get.keys())
             #print(log.get('epoch'))
-            if(log.get('mean_absolute_error')<0.01):
-                print('mean_absolute_error<0.01, stop training!')
-                self.model.sstop_training=True
+            if(log.get('mean_absolute_error')<0.0001):
+                print('mean_absolute_error<0.0001, stop training!')
+                self.model.stop_training=True
     
     callbacks=myCallback()
     
@@ -110,8 +113,8 @@ def load_data(filename_list):
                           columns=['nu', 'zeff','eta','shat',\
                                     'beta','ky','mu_norm'])
 
-        df_y=pd.DataFrame(np.transpose([df['omega_omega_n']]),\
-                              columns=['omega_omega_n'])
+        df_y=pd.DataFrame(np.transpose([df['gamma_omega_n']]),\
+                              columns=['gamma_omega_n'])
         df_y=df_y.astype('float')
 
         #merge the dataframe
@@ -122,11 +125,11 @@ def load_data(filename_list):
             df_x_merge=pd.concat([df_x_merge, df_x], axis=0)
             df_y_merge=pd.concat([df_y_merge, df_y], axis=0)
 
-    #print(df_y_merge[:10])
+    print(df_y_merge[:10])
 
     #get normalizing factor
     keys_x=df_x_merge.keys()
-              #nu, zeff, eta, shat, beta, ky, mu/xstar  omega
+              #nu, zeff, eta, shat, beta, ky, mu/xstar  gamma
     log_scale=[1,  0,    0,   1,    1,    0,  0       , 0    ]
     df_x_norm_name=[i for i in keys_x]
 
@@ -161,7 +164,7 @@ def load_data(filename_list):
     d = {'name':df_norm_name,'factor':df_norm_factor,\
         'offset':df_norm_offset,'log':log_scale}
     df_norm=pd.DataFrame(d, columns=['name','factor','offset','log'])   #construct the panda dataframe
-    df_norm.to_csv('./Trained_model/NN_omega_norm_factor.csv',index=False)
+    df_norm.to_csv('./Trained_model/NN_gamma_norm_factor.csv',index=False)
     
     #print(df_norm)
 
@@ -176,10 +179,7 @@ def load_data(filename_list):
     df_x_after_norm=pd.DataFrame(df_x_after_norm, columns=keys_x)
     df_y_after_norm=pd.DataFrame(df_y_after_norm, columns=keys_y)
 
-    #print(df_x_after_norm)
-    #print(df_y_after_norm)
-
-    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(df_x_after_norm, df_y_after_norm, test_size=0.1)
         
     #*******end of  of loading data*******************
     return x_train, x_test, y_train, y_test
@@ -201,9 +201,8 @@ history=model.fit(x_train, y_train, epochs=epochs,
             validation_data=(x_test,y_test))  
 
 #save the model
-model.save("./Trained_model/SLiM_NN_omega.h5")  # we can save the model and reload it at anytime in the future
+model.save("./Trained_model/SLiM_NN_gamma.h5")  # we can save the model and reload it at anytime in the future
 #*********end of trainning***********************
 
 from Post_plot_learning_rate import plot_hist
 plot_hist(history)
-

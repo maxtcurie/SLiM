@@ -9,16 +9,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
+from file_list import file_list
+
 #****************************************
 #**********start of user block***********
-filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
-                './NN_data/0MTM_scan_CORI_1.csv',
-                './NN_data/0MTM_scan_CORI_3_large_nu.csv',
-                './NN_data/0MTM_scan_CORI_np_rand_V2.csv',
-                './NN_data/0MTM_scan_CORI_np_rand_V3_1.csv',
-                './NN_data/0MTM_scan_CORI_np_rand_V3_2.csv',
-                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23.csv',
-                './NN_data/0MTM_scan_PC_np_rand_V3_2022_10_23_2.csv']
+filename_list=file_list()
 epochs = 100
 batch_size = 100
 checkpoint_path='./tmp/checkpoint'
