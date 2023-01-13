@@ -63,6 +63,7 @@ class Dispersion_NN():
             gamma = self.NN_gamma_model.predict(np.array([param_gamma_norm]),verbose = 0)
             omega = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
             print('\ngamma='+str(gamma))
+            gamma=1.
         else:
             gamma=0.
             omega=0.

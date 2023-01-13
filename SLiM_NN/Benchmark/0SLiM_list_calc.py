@@ -7,8 +7,7 @@ sys.path.insert(1, './../')
 
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto
 from DispersionRelationDeterminantFullConductivityZeff import VectorFinder_auto_Extensive
-from Dispersion_NN import Dispersion_NN_beta
-from Dispersion_NN import Dispersion_NN_beta_2
+from Dispersion_NN import Dispersion_NN
 #************Start of user block******************
 
 output_csv_file='./SLiM_calc_NN.csv'
@@ -16,8 +15,6 @@ output_csv_file='./SLiM_calc_NN.csv'
 run_mode=3      # mode1: slow mode manual(global, 20sec/mode)
                 # mode2: slow slow mode(global, 100sec/mode)
                 # mode3: NN mode (global, 0.05sec/mode)
-
-mode=1
      
 #for n=3, 1.03q0, DIIID 
 nu=1.398957621
@@ -35,37 +32,16 @@ para_list=[[nu, zeff, eta, shat,  beta,  ky,   mu, xstar]\
             for eta in eta_list]
 
 
+NN_path='./../Trained_model/'
 
-if mode ==1:
-    path_tmp='./../Trained_model/'
-    NN_stability_file  =path_tmp+'SLiM_NN_stability.h5'
-    NN_omega_file      =path_tmp+'SLiM_NN_omega.h5'
-    NN_gamma_file      =path_tmp+'SLiM_NN_gamma.h5'
-
-    norm_stability_csv_file=path_tmp+'NN_stability_norm_factor.csv'
-    norm_omega_csv_file    =path_tmp+'NN_omega_norm_factor.csv'
-    norm_gamma_csv_file    =path_tmp+'NN_gamma_norm_factor.csv'
-elif mode==2:
-    path_tmp='./../Trained_model/'
-    NN_file  =path_tmp+'SLiM_NN.h5'
-
-    norm_csv_file=path_tmp+'NN_norm_factor.csv'
 
 
 #************End of user block******************
 
 
 if run_mode==3:
-    if mode ==1:
-        Dispersion_NN_obj=Dispersion_NN_beta(NN_stability_file,\
-                                         NN_omega_file,\
-                                         NN_gamma_file,\
-                                        norm_stability_csv_file,\
-                                        norm_omega_csv_file,\
-                                        norm_gamma_csv_file)
-    elif mode ==2:
-        Dispersion_NN_obj=Dispersion_NN_beta_2(NN_file,norm_csv_file)
-
+    Dispersion_NN_obj=Dispersion_NN(NN_path)
+    
 f_list=[]
 gamma_list=[]
 gamma_10_list=[]
