@@ -2,13 +2,11 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from file_list import file_list
 
 #****************************************
 #**********start of user block***********
-filename_list=['./NN_data/0MTM_scan_CORI_2.csv',
-                './NN_data/0MTM_scan_PC.csv',
-                './NN_data/0MTM_scan_CORI_1.csv',
-                './NN_data/0MTM_scan_CORI_3_large_nu.csv']
+filename_list=file_list()
 plot=5 #plot 0 for plotting all
 #**********end of user block*************
 #****************************************
@@ -81,12 +79,12 @@ if plot==4 or plot==0:
 
     for i in range(len(name_list)):
         #https://stackoverflow.com/questions/33203645/how-to-plot-a-histogram-using-matplotlib-in-python-with-a-list-of-data
-        ax[i].hist(df[name_list[i]], density=True, bins=30)  # density=False would make counts
+        ax[i].hist(df[name_list[i]], density=False, bins=30)  # density=False would make counts
         ax[i].set_xlabel(name_list[i])
         if i!=0:
             ax[i].set_yticklabels([])
         else:
-            ax[i].set_ylabel('Density')
+            ax[i].set_ylabel('Count')
     fig.tight_layout()
     plt.subplots_adjust(wspace=0.2, hspace=0)
     plt.show()

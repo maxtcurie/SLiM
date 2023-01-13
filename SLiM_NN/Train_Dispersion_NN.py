@@ -17,7 +17,7 @@ filename_list=file_list()
 epochs = 100
 batch_size = 100
 checkpoint_path='./tmp/checkpoint'
-Read_from_checkpoint=True
+Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
 
@@ -41,7 +41,7 @@ def create_model(checkpoint_path):
 
     model.summary()
 
-    model.compile(loss='huber_loss',
+    model.compile(loss='mean_absolute_error',
                 #loss='mean_absolute_error',\
                 optimizer='adam',
                 #optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
@@ -94,7 +94,7 @@ def load_data(filename_list):
         except:
             pass
         
-        
+        #print('reading_from'+filename)
         #df=df.query('omega_omega_n!=0 and gamma_omega_n>0')
         #df_stable=df.query('omega_omega_n==0 or gamma_omega_n<=0')
         

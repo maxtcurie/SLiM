@@ -13,10 +13,10 @@ from file_list import file_list
 #****************************************
 #**********start of user block***********
 filename_list=file_list()
-epochs = 150
+epochs = 1
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_stability'
-Read_from_checkpoint=False
+Read_from_checkpoint=True
 #**********end of user block*************
 #****************************************
 
