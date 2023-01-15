@@ -51,8 +51,8 @@ class Dispersion_NN():
         [[stability]] = self.NN_stability_model.predict(np.array([param_stability_norm]),verbose = 0)
         
 
-        if stability>0.5:
-            omega = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
+        if stability>0.2:
+            [[omega]] = self.NN_omega_model.predict(np.array([param_omega_norm]),verbose = 0)
             gamma=1.
         else:
             gamma=0.
