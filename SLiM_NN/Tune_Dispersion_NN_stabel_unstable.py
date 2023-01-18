@@ -16,7 +16,7 @@ filename_list=file_list()
 epochs = 100
 hp_epochs=5
 batch_size = 100
-checkpoint_path='./tmp/checkpoint_stability'
+checkpoint_path='./tmp/tune_checkpoint_stability'
 Read_from_checkpoint=False
 #**********end of user block*************
 #****************************************
@@ -61,11 +61,11 @@ def create_model(checkpoint_path,x_train, y_train):
         model = tf.keras.Sequential()
 
         hp_activation = hp.Choice('activation', values=['relu'])
-        hp_loss  =  hp.Choice('loss', values=['accuracy'])
+        hp_loss  =  hp.Choice('loss', values=['binary_crossentropy'])
         hp_layer_0 = hp.Int('layer_0', min_value=4, max_value=37, step=8)
         hp_layer_1 = hp.Int('layer_1', min_value=32, max_value=65, step=32)
         hp_layer_2 = hp.Int('layer_2', min_value=64, max_value=256, step=64)
-        hp_layer_2 = hp.Int('layer_3', min_value=128, max_value=512, step=128)
+        hp_layer_3 = hp.Int('layer_3', min_value=128, max_value=6000, step=512)
         hp_dropout_1 = hp.Float('dropout', min_value=0., max_value=0.3, step=0.1)
         hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
 
@@ -109,7 +109,7 @@ def create_model(checkpoint_path,x_train, y_train):
         model.add(tf.keras.layers.Dense(units=16, activation=hp_activation))
         model.add(tf.keras.layers.Dense(units=256, activation=hp_activation1))
         model.add(tf.keras.layers.Dense(units=1024, activation=hp_activation2))
-        model.add(tf.keras.layers.Dropout(0.3))
+        model.add(tf.keras.layers.Dropout(0.1))
         model.add(tf.keras.layers.Dense(units=16, activation=hp_activation3))
         #model.add(tf.keras.layers.Dense(units=hp_unit_4, activation=hp_activation))
         #model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
@@ -123,7 +123,7 @@ def create_model(checkpoint_path,x_train, y_train):
         
         return model 
     
-    tuner = kt.Hyperband(model_builder_loss,
+    tuner = kt.Hyperband(model_builder_layers,
                      objective='val_accuracy',
                      max_epochs=hp_epochs,
                      factor=3,

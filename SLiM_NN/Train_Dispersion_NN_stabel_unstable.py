@@ -13,7 +13,7 @@ from file_list import file_list
 #****************************************
 #**********start of user block***********
 filename_list=file_list()
-epochs = 1
+epochs = 400
 batch_size = 100
 checkpoint_path='./tmp/checkpoint_stability'
 Read_from_checkpoint=True
@@ -26,15 +26,15 @@ def create_model(checkpoint_path):
     model = tf.keras.Sequential([
                     tf.keras.Input(shape=(7)),
                     #tf.keras.layers.Dense(units=7, input_shape=[7],activation='relu'),
-                    #tf.keras.layers.Dense(units=10240, activation='relu'),
+                    tf.keras.layers.Dense(units=10240, activation='relu'),
                     #tf.keras.layers.Dense(units=64, activation='relu'),
                     #tf.keras.layers.Dense(units=32, activation='relu'),
                     #tf.keras.layers.Dense(units=1025, activation='relu'),
-                    tf.keras.layers.Dense(units=4096, activation='relu'),
+                    #tf.keras.layers.Dense(units=4096, activation='relu'),
                     #tf.keras.layers.Dropout(0.2),
                     #tf.keras.layers.Dense(units=256, activation='relu'),
                     #tf.keras.layers.Dense(units=16, activation='relu'),
-                    tf.keras.layers.Dense(units=8, activation='relu'),
+                    #tf.keras.layers.Dense(units=8, activation='relu'),
                     tf.keras.layers.Dense(units=1, activation='sigmoid')
         ])
 
