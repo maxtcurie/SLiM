@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-import sys as sys
+import sys
+import os
+from glob import glob
 import numpy as np
 sys.path.insert(1, './Tools')
 
@@ -13,6 +15,28 @@ from write_pfile import write_pfile
 from write_gfile import mod_q_gfile
 from interp import interp
 
+
+def dir_scaner(base_dir,level=1):   
+    base_dir=base_dir+'/'
+    for i in range(level):
+        base_dir=base_dir+"*/"
+    directory=glob(base_dir, recursive = True)
+    
+    dir_list=directory
+    return dir_list
+
+
+def get_g_and_p_file(dir_name):
+    file_list=os.listdir(dir_name)
+    gfile=''
+    pfile=''
+    for file in file_list:
+        if file[:2]=='g1':
+            gfile=dir_name+file
+        elif file[:2]=='p1':
+            pfile=dir_name+file
+
+    return gfile,pfile
 
 class file_IO_obj:
     profile_type=('pfile','ITERDB')

@@ -6,9 +6,11 @@ from scipy import optimize
 import math
 import csv
 import imageio
+from tqdm import tqdm
 import sys as sys
 sys.path.insert(1, './Tools')
 
+from SLiM_NN.Dispersion_NN import Dispersion_NN
 from interp import interp
 from finite_differences import fd_d1_o4
 from Gaussian_fit import gaussian_fit
@@ -38,7 +40,7 @@ class mode_finder:
             mref=2.,Impurity_charge=6.):
         n0=1.
         Z=float(Impurity_charge)
-        print("suffix"+str(suffix))
+        #print("suffix"+str(suffix))
         self.profile_name=profile_name
         self.geomfile_name=geomfile_name
         self.outputpath=outputpath
@@ -242,6 +244,14 @@ class mode_finder:
         self.coll_ei_nominal=self.coll_ei
         self.gyroFreq_nominal=self.gyroFreq
 
+        self.q_scale=1.
+        self.q_shift=0.
+        self.shat_scale=1.
+        self.ne_scale=1.
+        self.ne_shift=0.
+        self.te_scale=1.
+        self.Doppler_scale=1.
+
 
     def __str__(self):
         try:
@@ -380,6 +390,14 @@ class mode_finder:
         
         #************start of modification***********
         #********************************************
+
+        self.q_scale=q_scale
+        self.q_shift=q_shift
+        self.shat_scale=shat_scale
+        self.ne_scale=ne_scale
+        self.ne_shift=ne_shift
+        self.te_scale=te_scale
+        self.Doppler_scale=Doppler_scale
 
         #**********************************
         #*************modify ne************
@@ -609,8 +627,20 @@ class mode_finder:
         self.gyroFreq=self.gyroFreq_nominal
         self.nref=self.nref_nominal
 
+        self.q_scale=1.
+        self.q_shift=0.
+        self.shat_scale=1.
+        self.ne_scale=1.
+        self.ne_shift=0.
+        self.te_scale=1.
+        self.Doppler_scale=1.
+
 
     def q_modify(self,q_scale,q_shift,shat_scale=1.):
+        self.q_scale=q_scale
+        self.q_shift=q_shift
+        self.shat_scale=shat_scale
+
         mid_ped,top_ped=self.find_pedestal(self.x,self.te)
 
         width=(mid_ped-top_ped)*10.
@@ -637,6 +667,10 @@ class mode_finder:
         self.omn= self.omn_nominal
         self.shat= self.shat_nominal
         self.ky=self.ky_nominal
+
+        self.q_scale=1.
+        self.q_shift=0.
+        self.shat_scale=1.
 
 
     def omega_gaussian_fit_GUI(self,root,x,data,rhoref,Lref):
@@ -1281,4 +1315,163 @@ class mode_finder:
         host.legend(lines, [l.get_label() for l in lines])
         plt.savefig('./define_mu.png')
         plt.show()
+
+    def std_SLiM_calc(self,n_min=1,n_max=8,surface_num=2,Run_mode=6,peak_percent=0.2,manual_fit=False,NN_path='./SLiM_NN/Trained_model'):
+        x_list=[]
+        n_list=[]
+        m_list=[]
+        nu_list=[]
+        zeff_list=[]
+        eta_list=[]
+        shat_list=[]
+        beta_list=[]
+        ky_list=[]
+        ModIndex_list=[]
+        mu_list=[]
+        omega_e_plasma_list=[]
+        omega_e_lab_list=[]
+        omega_n_kHz_list=[]
+        omega_n_cs_a_list=[]
+        xstar_list=[]
+        q_scale_list0=[]
+        q_shift_list0=[]
+
+        self.ome_peak_range(peak_percent)
+        mean_rho,xstar=self.omega_gaussian_fit(manual=manual_fit)
+        self.set_xstar(xstar)
+        
+        if Run_mode==1:#simple rational surface alignment
+            ModIndex=-1
+            filename='./rational_surface_alignment.csv'
+        if Run_mode==2 or Run_mode==4 or Run_mode==5 or Run_mode==6:#global dispersion
+            ModIndex=1
+            filename='./global_dispersion.csv'
+        elif Run_mode==3:#local dispersion
+            ModIndex=0
+            filename='./local_dispersion.csv'
+        
+        
+        peak_index=np.argmin(abs(self.x-self.x_peak))
+        omega_e_peak_kHz=self.ome[peak_index]
+        
+        cs_to_kHz=self.cs_to_kHz[peak_index]
+        print('Finding the rational surfaces')
+        n0_list=np.arange(n_min,n_max+1,1)
+
+        for n in tqdm(n0_list):
+            x_surface_near_peak_list, m_surface_near_peak_list=self.Rational_surface_top_surfaces(n,top=surface_num)
+            print(x_surface_near_peak_list)
+            print(m_surface_near_peak_list)
+            for j in range(len(x_surface_near_peak_list)):
+                x_surface_near_peak=x_surface_near_peak_list[j]
+                m_surface_near_peak=m_surface_near_peak_list[j]
+                if self.x_min<=x_surface_near_peak and x_surface_near_peak<=self.x_max:
+                    nu,zeff,eta,shat,beta,ky,mu,xstar=\
+                        self.parameter_for_dispersion(x_surface_near_peak,n)
+                    factor=self.factor
+                    index=np.argmin(abs(self.x-x_surface_near_peak))
+                    omega_n_kHz=float(n)*self.omn[index]
+                    omega_n_cs_a=float(n)*self.omn[index]/cs_to_kHz
+                    omega_e_plasma_kHz=float(n)*self.ome[index]
+                    omega_e_lab_kHz=float(n)*self.ome[index]+float(n)*self.Doppler[index]
+                
+                    n_list.append(n)
+                    m_list.append(m_surface_near_peak)
+                    x_list.append(x_surface_near_peak)
+                    nu_list.append(nu)
+                    zeff_list.append(zeff)
+                    eta_list.append(eta)
+                    shat_list.append(shat)
+                    beta_list.append(beta)
+                    ky_list.append(ky)
+                    ModIndex_list.append(ModIndex)
+                    mu_list.append(mu)
+                    xstar_list.append(xstar)
+                    omega_e_plasma_list.append(omega_e_plasma_kHz)
+                    omega_e_lab_list.append(omega_e_lab_kHz)
+                    omega_n_kHz_list.append(omega_n_kHz)
+                    omega_n_cs_a_list.append(omega_n_cs_a)
+                    q_scale_list0.append(self.q_scale)
+                    q_shift_list0.append(self.q_shift)
+        
+        
+        d = {'q_scale':q_scale_list0,'q_shift':q_shift_list0,\
+            'n':n_list,'m':m_list,'rho_tor':x_list,\
+            'omega_plasma_kHz':[0]*len(n_list),\
+            'omega_lan_kHz':[0]*len(n_list),\
+            'gamma_cs_a':[0]*len(n_list),\
+            'omega_n_kHz':omega_n_kHz_list,\
+            'omega_n_cs_a':omega_n_cs_a_list,\
+            'omega_e_plasma_kHz':omega_e_plasma_list,\
+            'omega_e_lab_kHz':omega_e_lab_list,\
+            'peak_percentage':omega_e_plasma_list/\
+                    (omega_e_peak_kHz*np.array(n_list,dtype=float)),\
+            'nu':nu_list,'zeff':[zeff]*len(n_list),'eta':eta_list,\
+            'shat':shat_list,'beta':beta_list,'ky':ky_list,\
+            'ModIndex':ModIndex_list,'mu':mu_list,'xstar':xstar_list}
+        df=pd.DataFrame(d)   #construct the panda dataframe
+    
+        if Run_mode==6:
+            if hasattr(self, 'Dispersion_NN_obj'):
+                pass
+            else:
+                self.Dispersion_NN_obj=Dispersion_NN(NN_path)
+
+        
+        if Run_mode==1:
+            df_calc=0
+        else:    
+            with open(filename, 'w', newline='') as csvfile:     #clear all and then write a row
+                data = csv.writer(csvfile, delimiter=',')
+                data.writerow(['q_scale','q_shift','n','m','rho_tor',\
+                    'omega_plasma_kHz','omega_lab_kHz',\
+                    'gamma_cs_a','omega_n_kHz',\
+                    'omega_n_cs_a','omega_e_plasma_kHz',\
+                    'omega_e_lab_kHz','peak_percentage',\
+                    'nu','zeff','eta','shat','beta','ky',\
+                    'ModIndex','mu','xstar'])
+            csvfile.close()
+
+            print('Calculate the dispersion relations')
+            
+            for i in tqdm(range(len(df['nu']))):
+                if Run_mode==4:
+                    w0=self.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                        df['shat'][i],df['beta'][i],df['ky'][i],\
+                        df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=True)
+                elif Run_mode==5:
+                    w0=self.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                        df['shat'][i],df['beta'][i],df['ky'][i],\
+                        df['ModIndex'][i],df['mu'][i],df['xstar'][i],manual=5)
+                elif Run_mode==6:
+                    w0=self.Dispersion_NN_obj.Dispersion_omega(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                            df['shat'][i],df['beta'][i],df['ky'][i],df['mu'][i],df['xstar'][i])
+                else:
+                    w0=self.Dispersion(df['nu'][i],df['zeff'][i],df['eta'][i],\
+                        df['shat'][i],df['beta'][i],df['ky'][i],\
+                        df['ModIndex'][i],df['mu'][i],df['xstar'][i])
+                
+                omega=np.real(w0)
+                omega_kHz=omega*omega_n_kHz_list[i]
+                gamma=np.imag(w0)
+                gamma_cs_a=gamma*omega_n_cs_a_list[i]
+
+                with open(filename, 'a+', newline='') as csvfile: #adding a row
+                    data = csv.writer(csvfile, delimiter=',')
+                    data.writerow([ q_scale_list0[i],\
+                        q_shift_list0[i],\
+                        df['n'][i],df['m'][i],df['rho_tor'][i],\
+                        omega_kHz,\
+                        omega_kHz+df['omega_e_lab_kHz'][i]-df['omega_e_plasma_kHz'][i],\
+                        gamma_cs_a,\
+                        df['omega_n_kHz'][i],df['omega_n_cs_a'][i],\
+                        df['omega_e_plasma_kHz'][i],df['omega_e_lab_kHz'][i],
+                        df['peak_percentage'][i],df['nu'][i],\
+                        df['zeff'][i],df['eta'][i],\
+                        df['shat'][i],df['beta'][i],df['ky'][i],\
+                        df['ModIndex'][i],df['mu'][i],df['xstar'][i] ])
+                csvfile.close()
+            df_calc=pd.read_csv(filename)
+            df_para=df
+        return df_calc,df_para
 

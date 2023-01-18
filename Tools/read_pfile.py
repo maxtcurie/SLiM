@@ -17,6 +17,7 @@ def read_pfile(p_file_name):
     f.close()
 
     sdata = data.split('\n')
+    
     nr = int(sdata[0].split()[0]) 
 
     print("p-file resolution: nr = "+str(nr) )
@@ -37,7 +38,7 @@ def read_pfile(p_file_name):
     #print(name_list)
     for i in range(len(need_list)):
         for j in range(len(sdata)):
-            if len(sdata[j].split()) >= 3:
+            if len(sdata[j].split()) > 3:
                 if str(need_list[i]) in str(sdata[j].split()[2]):
                     need_list_number[i]=j
 
@@ -85,11 +86,19 @@ def read_pfile(p_file_name):
     #print(len(need_list_number))
     for i in range(len(need_list_number)):
         n_temp=int(need_list_number[i])   #take the i_th data set
-        for j in range(nr):
-            temp = sdata[n_temp+j+1].split()
-            psi.append(float(temp[0]))
-            f.append(float(temp[1]))
-            df.append(float(temp[2]))
+        if n_temp==-1:
+            psi_tmp=np.linspace(0,1,nr)
+            for j in range(nr):
+                psi.append(psi_tmp[j])
+                f.append(0.)
+                df.append(0.)
+        else:
+            for j in range(nr):
+                temp = sdata[n_temp+j+1].split()
+                #print(temp)
+                psi.append(float(temp[0]))
+                f.append(float(temp[1]))
+                df.append(float(temp[2]))
             
         #plt.clf()
         #plt.plot(psi,f)
