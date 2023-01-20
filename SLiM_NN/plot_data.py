@@ -7,22 +7,25 @@ from file_list import file_list
 #****************************************
 #**********start of user block***********
 filename_list=file_list()
-plot=5 #plot 0 for plotting all
+plot=7 #plot 0 for plotting all
 #**********end of user block*************
 #****************************************
-
+count=0
 for i,filename in zip(range(len(filename_list)),filename_list):
+    if 'rand' not in filename:
+        continue 
     df=pd.read_csv(filename)
     df=df.dropna()
     try:
         df=df.drop(columns=['change'])
     except:
         pass
-
-    if i==0:
+    
+    if count==0:
         df_merge=df
-    elif i!=0:
+    else:
         df_merge=pd.concat([df_merge, df], axis=0)
+    count=count+1
 
 df=df_merge
 df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0 ')
@@ -116,4 +119,21 @@ if plot==6 or plot==0:
     plt.xlim(0,5)
     plt.xlabel('nu')
     plt.ylabel('gamma/omega_n')  
+    plt.show()
+
+
+if plot==7 or plot==0:
+    alpha_=0.1
+    s_=0.1
+    plt.clf()
+    df_=df_unstable
+    plt.scatter(df_['nu']/df_['eta'],df_['beta']/df_['shat']**2,s=s_,color='red',alpha=alpha_)  # density=False would make counts
+    alpha_=0.01
+    df_=df_stable
+    #print(df_)
+    plt.scatter(df_['nu']/df_['eta'],df_['beta']/df_['shat']**2,s=s_,color='blue',alpha=alpha_)  # density=False would make counts
+    plt.xlabel(r'$\nu/\omega_{*e}$')
+    plt.ylabel(r'$\beta/\hat{s}^2$')  
+    plt.xscale('log')
+    plt.yscale('log')
     plt.show()

@@ -31,12 +31,68 @@ def get_g_and_p_file(dir_name):
     gfile=''
     pfile=''
     for file in file_list:
-        if file[:2]=='g1':
+        if file[:2]=='g1' or file[:2]=='g2':
             gfile=dir_name+file
-        elif file[:2]=='p1':
+        elif file[:2]=='p1' or file[:2]=='g2':
             pfile=dir_name+file
 
     return gfile,pfile
+
+def get_g_and_p_file_list(dir_name):
+    file_list=os.listdir(dir_name)
+
+    g_info={}
+    p_info={}
+    g_info['shot_num']=[]
+    g_info['time']=[]
+    g_info['filename']=[]
+    p_info['shot_num']=[]
+    p_info['time']=[]
+    p_info['filename']=[]
+    for file in file_list:
+        if file[:2]=='g1' or file[:2]=='g2':
+            g_info['filename'].append(file)
+            str_tmp=file.split('.')
+            try:
+                g_info['shot_num'].append(int(str_tmp[0][1:]))
+            except:
+                g_info['shot_num'].append(0)
+
+            try:
+                g_info['time'].append(float(str_tmp[1]))
+            except:
+                g_info['time'].append(0.)
+
+        elif file[:2]=='p1' or file[:2]=='p2':
+            p_info['filename'].append(file)
+            str_tmp=file.split('.')
+            try:
+                p_info['shot_num'].append(int(str_tmp[0][1:]))
+            except:
+                p_info['shot_num'].append(0)
+
+            try:
+                p_info['time'].append(float(str_tmp[1]))
+            except:
+                p_info['time'].append(0.)
+
+    #now get the matching shot number and time
+
+    pg_files={}
+    pg_files['shot_num']=[]
+    pg_files['time']=[]
+    pg_files['pfile']=[]
+    pg_files['gfile']=[]
+    for i in range(len(g_info['filename'])):
+        for j in range(len(p_info['filename'])):
+            if g_info['shot_num'][i]==p_info['shot_num'][j] and \
+                g_info['time'][i]==p_info['time'][j]:
+                pg_files['shot_num'].append(g_info['shot_num'][i])
+                pg_files['time'].append(g_info['time'][i])
+                pg_files['pfile'].append(p_info['filename'][j])
+                pg_files['gfile'].append(g_info['filename'][i])
+
+    return pg_files
 
 class file_IO_obj:
     profile_type=('pfile','ITERDB')

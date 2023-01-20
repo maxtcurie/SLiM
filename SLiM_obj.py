@@ -195,6 +195,9 @@ class mode_finder:
         self.Z=Z
         self.Bref=Bref
 
+        self.Lt=Lt
+        self.Ln=Ln
+        self.Lq=Lq
 
         self.ne=ne      # in 10^19 /m^3
         self.ni=ni      # in 10^19 /m^3
@@ -1412,6 +1415,9 @@ class mode_finder:
         df=pd.DataFrame(d)   #construct the panda dataframe
     
         if Run_mode==6:
+            print('**************')
+            print('**************')
+            print(Run_mode)
             if hasattr(self, 'Dispersion_NN_obj'):
                 pass
             else:
@@ -1420,6 +1426,7 @@ class mode_finder:
         
         if Run_mode==1:
             df_calc=0
+            df_para=df
         else:    
             with open(filename, 'w', newline='') as csvfile:     #clear all and then write a row
                 data = csv.writer(csvfile, delimiter=',')
