@@ -96,7 +96,7 @@ def create_model(checkpoint_path,x_train, y_train):
         
         #hp_loss  =  hp.Choice('loss', values=['binary_crossentropy','BinaryFocalCrossentropy','MeanAbsoluteError'])
         #hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
-        hp_unit_1 = hp.Choice('layer_nodes', values=[2,8,32,128,512,2048,8192])
+        hp_unit_1 = hp.Choice('layer_nodes', values=[2,8,32,128,512,1024,8096])
         #hp_unit_2 = hp.Choice('hp_unit_2', values=[16,32,64,128])
         #hp_unit_3 = hp.Choice('hp_unit_3', values=[64,258,1024])
         #hp_dropout = hp.Choice('dropout', values=[0.1,0.3,0.6])
@@ -105,9 +105,9 @@ def create_model(checkpoint_path,x_train, y_train):
         model.add(tf.keras.Input(shape=(7)))
         model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
         model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
-        model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
-        model.add(tf.keras.layers.Dropout(0.1))
-        model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
+        #model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
+        #model.add(tf.keras.layers.Dropout(0.1))
+        #model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
         #model.add(tf.keras.layers.Dense(units=hp_unit_4, activation=hp_activation))
         #model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
         #model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
@@ -126,11 +126,11 @@ def create_model(checkpoint_path,x_train, y_train):
         model = tf.keras.Sequential()
 
         model.add(tf.keras.Input(shape=(7)))
-        for i in range(hp.Int("num_layers", min_value=1, max_value=20, step=1)):
+        for i in range(hp.Int("num_layers", min_value=1, max_value=10, step=1)):
             model.add(
                     tf.keras.layers.Dense(
                         # Tune number of units separately.
-                        units=1024,
+                        units=32,
                         activation="relu",
                     )
                 )
@@ -252,7 +252,7 @@ def create_model(checkpoint_path,x_train, y_train):
         return model 
 
 
-    tuner = kt.Hyperband(model_builder_layer_depth,
+    tuner = kt.Hyperband(model_builder_layer_nodes,
                      objective='val_accuracy',
                      max_epochs=hp_epochs,
                      factor=3,
@@ -265,7 +265,7 @@ def create_model(checkpoint_path,x_train, y_train):
     import sys
 
     orig_stdout = sys.stdout
-    f = open('out_layer_depth.txt', 'w')
+    f = open('out_layer_node.txt', 'w')
     sys.stdout = f
 
     tuner.results_summary(num_trials=10**10)

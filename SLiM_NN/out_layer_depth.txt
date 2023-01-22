@@ -1,0 +1,44 @@
+Results summary
+Results in dir\x
+Showing 10000000000 best trials
+<keras_tuner.engine.objective.Objective object at 0x000002313A54B730>
+Trial summary
+Hyperparameters:
+num_layers: 18
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9415079355239868
+Trial summary
+Hyperparameters:
+num_layers: 12
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.940230667591095
+Trial summary
+Hyperparameters:
+num_layers: 16
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9343326091766357
+Trial summary
+Hyperparameters:
+num_layers: 14
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9333558678627014
+Trial summary
+Hyperparameters:
+num_layers: 20
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9287726879119873
