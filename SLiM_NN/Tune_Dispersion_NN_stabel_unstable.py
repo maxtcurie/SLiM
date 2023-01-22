@@ -14,7 +14,7 @@ from file_list import file_list
 #**********start of user block***********
 filename_list=file_list()
 epochs = 100
-hp_epochs=5
+hp_epochs=10
 batch_size = 100
 checkpoint_path='./tmp/tune_checkpoint_stability'
 Read_from_checkpoint=False
@@ -52,7 +52,9 @@ def callback_func():
         mode='auto', min_delta=0.0001, cooldown=0, min_lr=0
     )
     
-    callback_funcs=[cp_callback,lr_callback]
+    log_callback=tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+
+    callback_funcs=[cp_callback,lr_callback,log_callback]
     return callback_funcs
 
 def create_model(checkpoint_path,x_train, y_train):
@@ -87,7 +89,69 @@ def create_model(checkpoint_path,x_train, y_train):
         
         return model   
 
-    def model_builder_loss(hp):
+    def model_builder_layer_nodes(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        
+        #hp_loss  =  hp.Choice('loss', values=['binary_crossentropy','BinaryFocalCrossentropy','MeanAbsoluteError'])
+        #hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
+        hp_unit_1 = hp.Choice('layer_nodes', values=[2,8,32,128,512,2048,8192])
+        #hp_unit_2 = hp.Choice('hp_unit_2', values=[16,32,64,128])
+        #hp_unit_3 = hp.Choice('hp_unit_3', values=[64,258,1024])
+        #hp_dropout = hp.Choice('dropout', values=[0.1,0.3,0.6])
+        #hp_unit_4 = hp.Choice('hp_unit_4', values=[16,32,64])
+
+        model.add(tf.keras.Input(shape=(7)))
+        model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
+        model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
+        model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
+        model.add(tf.keras.layers.Dropout(0.1))
+        model.add(tf.keras.layers.Dense(units=hp_unit_1, activation='relu'))
+        #model.add(tf.keras.layers.Dense(units=hp_unit_4, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(1, activation='sigmoid'))  
+
+        model.summary()
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+                      loss='binary_crossentropy',metrics=['accuracy']) 
+        
+        return model 
+
+
+    def model_builder_layer_depth(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        
+        for i in range(hp.Int("num_layers", min_value=1, max_value=20, step=1)):
+            model.add(
+                    tf.keras.layers.Dense(
+                        # Tune number of units separately.
+                        units=1024,
+                        activation="relu",
+                    )
+                )
+
+        
+        #model.add(tf.keras.layers.Dropout(0.1))
+        model.add(tf.keras.layers.Dense(units=1024, activation='relu'))
+        #model.add(tf.keras.layers.Dense(units=hp_unit_4, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(1, activation='sigmoid'))  
+
+        model.summary()
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+                      loss='binary_crossentropy',metrics=['accuracy']) 
+        
+        return model 
+
+
+    def model_builder_actication(hp):
         #creating the model
         model = tf.keras.Sequential()
 
@@ -123,7 +187,71 @@ def create_model(checkpoint_path,x_train, y_train):
         
         return model 
     
-    tuner = kt.Hyperband(model_builder_layers,
+
+    def model_builder_loss(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        
+        hp_loss  =  hp.Choice('loss', values=['binary_crossentropy','BinaryFocalCrossentropy','MeanAbsoluteError'])
+        #hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
+        #hp_unit_1 = hp.Choice('hp_unit_1', values=[16,32,64])
+        #hp_unit_2 = hp.Choice('hp_unit_2', values=[16,32,64,128])
+        #hp_unit_3 = hp.Choice('hp_unit_3', values=[64,258,1024])
+        #hp_dropout = hp.Choice('dropout', values=[0.1,0.3,0.6])
+        #hp_unit_4 = hp.Choice('hp_unit_4', values=[16,32,64])
+
+        model.add(tf.keras.Input(shape=(7)))
+        model.add(tf.keras.layers.Dense(units=16, activation='relu'))
+        model.add(tf.keras.layers.Dense(units=256, activation='relu'))
+        model.add(tf.keras.layers.Dense(units=1024, activation='relu'))
+        model.add(tf.keras.layers.Dropout(0.1))
+        model.add(tf.keras.layers.Dense(units=16, activation='relu'))
+        #model.add(tf.keras.layers.Dense(units=hp_unit_4, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(1, activation='sigmoid'))  
+
+        model.summary()
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+                      loss=hp_loss,metrics=['accuracy']) 
+        
+        return model 
+
+    def model_builder_base(hp):
+        #creating the model
+        model = tf.keras.Sequential()
+
+        
+        #hp_loss  =  hp.Choice('loss', values=['binary_crossentropy','BinaryFocalCrossentropy','MeanAbsoluteError'])
+        #hp_learning_rate = hp.Choice('learning_rate', values=[1e-3])
+        #hp_unit_1 = hp.Choice('hp_unit_1', values=[16,32,64])
+        #hp_unit_2 = hp.Choice('hp_unit_2', values=[16,32,64,128])
+        #hp_unit_3 = hp.Choice('hp_unit_3', values=[64,258,1024])
+        #hp_dropout = hp.Choice('dropout', values=[0.1,0.3,0.6])
+        #hp_unit_4 = hp.Choice('hp_unit_4', values=[16,32,64])
+
+        model.add(tf.keras.Input(shape=(7)))
+        model.add(tf.keras.layers.Dense(units=16, activation='relu'))
+        model.add(tf.keras.layers.Dense(units=256, activation='relu'))
+        model.add(tf.keras.layers.Dense(units=1024, activation='relu'))
+        model.add(tf.keras.layers.Dropout(0.1))
+        model.add(tf.keras.layers.Dense(units=16, activation='relu'))
+        #model.add(tf.keras.layers.Dense(units=hp_unit_4, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=32, activation=hp_activation))
+        #model.add(tf.keras.layers.Dense(units=8, activation=hp_activation))
+        model.add(tf.keras.layers.Dense(1, activation='sigmoid'))  
+
+        model.summary()
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+                      loss='binary_crossentropy',metrics=['accuracy']) 
+        
+        return model 
+
+
+    tuner = kt.Hyperband(model_builder_layer_nodes,
                      objective='val_accuracy',
                      max_epochs=hp_epochs,
                      factor=3,
@@ -133,6 +261,16 @@ def create_model(checkpoint_path,x_train, y_train):
     tuner.search(x_train, y_train, epochs=hp_epochs, \
             validation_data=(x_test,y_test), \
             callbacks=callback_func())
+    import sys
+
+    orig_stdout = sys.stdout
+    f = open('out.txt', 'w')
+    sys.stdout = f
+
+    tuner.results_summary(num_trials=10**10)
+
+    sys.stdout = orig_stdout
+    f.close()
 
     best_hps = tuner.get_best_hyperparameters(num_trials=5)[0]
 

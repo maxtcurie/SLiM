@@ -1,0 +1,60 @@
+Results summary
+Results in dir\x
+Showing 10000000000 best trials
+<keras_tuner.engine.objective.Objective object at 0x00000235AF52C940>
+Trial summary
+Hyperparameters:
+dropout_rate: 0.2
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9474435448646545
+Trial summary
+Hyperparameters:
+dropout_rate: 0.01
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9453773498535156
+Trial summary
+Hyperparameters:
+dropout_rate: 0.05
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9451895356178284
+Trial summary
+Hyperparameters:
+dropout_rate: 0.1
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9368120431900024
+Trial summary
+Hyperparameters:
+dropout_rate: 0.0
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9356098771095276
+Trial summary
+Hyperparameters:
+dropout_rate: 0.5
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9339945316314697
+Trial summary
+Hyperparameters:
+dropout_rate: 0.3
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9335812926292419

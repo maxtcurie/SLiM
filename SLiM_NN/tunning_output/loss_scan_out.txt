@@ -1,0 +1,28 @@
+Results summary
+Results in dir\x
+Showing 10000000000 best trials
+<keras_tuner.engine.objective.Objective object at 0x00000123ED6CF970>
+Trial summary
+Hyperparameters:
+loss: binary_crossentropy
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.940230667591095
+Trial summary
+Hyperparameters:
+loss: BinaryFocalCrossentropy
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9365115165710449
+Trial summary
+Hyperparameters:
+loss: MeanAbsoluteError
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.859048068523407

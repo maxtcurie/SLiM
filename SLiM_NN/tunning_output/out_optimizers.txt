@@ -1,0 +1,60 @@
+Results summary
+Results in dir\x
+Showing 10000000000 best trials
+<keras_tuner.engine.objective.Objective object at 0x0000026E61AAC9D0>
+Trial summary
+Hyperparameters:
+optimizers: Adam
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9431984424591064
+Trial summary
+Hyperparameters:
+optimizers: Adamax
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9413952231407166
+Trial summary
+Hyperparameters:
+optimizers: SGD
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9138585329055786
+Trial summary
+Hyperparameters:
+optimizers: RMSprop
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.8996956944465637
+Trial summary
+Hyperparameters:
+optimizers: Adagrad
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.8454111814498901
+Trial summary
+Hyperparameters:
+optimizers: Adadelta
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.756264328956604
+Trial summary
+Hyperparameters:
+optimizers: Ftrl
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.6836094260215759

@@ -1,0 +1,84 @@
+Results summary
+Results in dir\x
+Showing 10000000000 best trials
+<keras_tuner.engine.objective.Objective object at 0x0000028541756DF0>
+Trial summary
+Hyperparameters:
+activation0: relu
+activation1: relu
+activation2: relu
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9385777115821838
+Trial summary
+Hyperparameters:
+activation0: relu
+activation1: relu
+activation2: sigmoid
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.937901496887207
+Trial summary
+Hyperparameters:
+activation0: sigmoid
+activation1: relu
+activation2: sigmoid
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9297118782997131
+Trial summary
+Hyperparameters:
+activation0: sigmoid
+activation1: relu
+activation2: relu
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9253916144371033
+Trial summary
+Hyperparameters:
+activation0: relu
+activation1: sigmoid
+activation2: relu
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9172771573066711
+Trial summary
+Hyperparameters:
+activation0: sigmoid
+activation1: sigmoid
+activation2: sigmoid
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9159247279167175
+Trial summary
+Hyperparameters:
+activation0: relu
+activation1: sigmoid
+activation2: sigmoid
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.9138960838317871
+Trial summary
+Hyperparameters:
+activation0: sigmoid
+activation1: sigmoid
+activation2: relu
+tuner/epochs: 2
+tuner/initial_epoch: 0
+tuner/bracket: 2
+tuner/round: 0
+Score: 0.911980152130127
