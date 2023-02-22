@@ -30,6 +30,7 @@ for i,filename in zip(range(len(filename_list)),filename_list):
 df=df_merge
 df_unstable=df.query('omega_omega_n!=0 and gamma_omega_n>0 ')
 df_stable=df.query('omega_omega_n!=0 or gamma_omega_n<=0 ')
+print('****************')
 print(len(df_unstable))
 print(len(df_stable))
 x=np.arange(0,np.max(df_unstable['omega_omega_n'])*1.5,0.01)

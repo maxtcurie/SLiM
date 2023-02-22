@@ -14,6 +14,7 @@ def read_EFIT(EFIT_file_name):
     f = open(EFIT_file_name,'r')
     eqdsk=f.readlines()
     line1=eqdsk[0].split()
+    print(line1)
     if len(line1) == 2:
         nwnh = eqdsk[0].split()[1]
         nw = int(nwnh[0:3])

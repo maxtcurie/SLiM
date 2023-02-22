@@ -38,12 +38,13 @@ def mod_q_gfile(original_geofile_name,output_geofile_name,x_output,q_output,show
 
 
     #read q
-    q_data=[]
-    for i in sdata[start_index].split()[2:]:
-        q_data.append(float(i))
-    for i in range(start_index+1,end_index):
-        for j in sdata[i].split():
-            q_data.append(float(j))
+    if 1==0:
+        q_data=[]
+        for i in sdata[start_index].split()[2:]:
+            q_data.append(float(i))
+        for i in range(start_index+1,end_index):
+            for j in sdata[i].split():
+                q_data.append(float(j))
 
 
 
