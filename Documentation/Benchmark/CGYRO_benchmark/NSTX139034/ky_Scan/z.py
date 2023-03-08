@@ -3,13 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 df=pd.read_csv('output.csv')
-df_SLiM=pd.read_csv('SLiM.csv')
-df_SLiM=df_SLiM[df_SLiM.gamma_cs_a>0]
 
 fontsize0=12
-
-f_ky=56.6767124406508/0.139321461
-doppler_ky=(77.07228226-70.79222032)/0.139321461
 
 
 fig, ax=plt.subplots(nrows=2,ncols=1,sharex=True) 
@@ -30,19 +25,20 @@ df_kbm=df[df.modetype=='mystery']
 df_stable=df[df['modetype'].str.contains('_stable', case=False, na=False)]
 
 
-
-ax[0].scatter(df_SLiM['ky'],df_SLiM['gamma_cs_a'],label='SLiM')
-ax[0].scatter(df_mtm['ky'],df_mtm['growth_rate'],label='CGYRO')
+ax[0].scatter(df_mtm['ky'],df_mtm['growth_rate'],label='MTM',color='red')
+ax[0].scatter(df_itg['ky'],df_itg['growth_rate'],color='blue')
 #ax[0].scatter(df_tem['ky'],df_tem['growth_rate'],label='TEM',color='blue')
 #ax[0].scatter(df_kbm['ky'],df_kbm['growth_rate'],color='blue')
 
 #ax[0].scatter(df_stable['ky'],[0]*len(df_stable),label='stable',color='black')
 
-ax[1].scatter(df_SLiM['ky'],df_SLiM['omega_lab_kHz'])
-ax[1].scatter(df_mtm['ky'],\
-				abs(df_mtm['realfreq_over_omegastar']*\
-					df_mtm['ky']*f_ky\
-					-df_mtm['ky']*doppler_ky))
+
+ax[1].scatter(df_itg['ky'],df_itg['frequency']*15.14720546-df_itg['ky']/0.034282055*1.714409104,color='blue')
+ax[1].scatter(df_mtm['ky'],df_mtm['frequency']*15.14720546-df_mtm['ky']/0.034282055*1.714409104,color='red')
+ax[1].scatter(df_tem['ky'],df_tem['frequency']*15.14720546-df_tem['ky']/0.034282055*1.714409104,color='blue')
+ax[1].scatter(df_kbm['ky'],df_kbm['frequency']*15.14720546-df_kbm['ky']/0.034282055*1.714409104,color='blue')
+ax[1].scatter(df_stable['ky'],[0]*len(df_stable),label='stable',color='black')
+
 
 ax[0].set_ylabel(r'$\gamma (c_s/a)$',fontsize=fontsize0)
 ax[1].set_ylabel(r'$frequency (kHz)$',fontsize=fontsize0)

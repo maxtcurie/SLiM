@@ -1,0 +1,1 @@
+from SLiM_obj import mode_finder

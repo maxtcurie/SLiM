@@ -3,8 +3,7 @@ import csv
 
 log_file='./../W_auto_log.csv'
 
-def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
-    alpha,beta,ky,ModIndex,mu,xstar):
+def A_maker(x_max, del_x,w1, v1,Zeff,eta,alpha,beta,ky,ModIndex,mu,xstar):
     mref=2.
     tau=+1.0
     w_hat = w1/v1
@@ -275,8 +274,7 @@ def A_maker(x_max, del_x,w1, v1,Zeff,eta,\
     return A
 
 #integrate the w_finder and VectorFinder
-def VectorFinder_auto_Extensive(nu,Zeff,eta,\
-    shat,beta,ky,ModIndex,mu,xstar):
+def VectorFinder_auto_Extensive(nu,Zeff,eta, shat,beta,ky,ModIndex,mu,xstar):
     mu=abs(mu)
     x_max=20.
     del_x=0.02
@@ -301,7 +299,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
     #guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
     #Larakers Dissertation 3.16
     guess_mod=guess_f+1j*(0.8*(1+eta)/nu)
-    guess_mod=guess_f+1j*0.3
+    guess_mod=guess_f+1j*0.1
     #print(guess_mod)
 
     guess_num=len(guess_mod)
@@ -396,8 +394,7 @@ def VectorFinder_auto_Extensive(nu,Zeff,eta,\
 
 
 #integrate the w_finder and VectorFinder
-def VectorFinder_auto(nu,Zeff,eta,\
-    shat,beta,ky,ModIndex,mu,xstar):
+def VectorFinder_auto(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar):
     mu=abs(mu)
     x_max=20.
     del_x=0.02
@@ -410,7 +407,7 @@ def VectorFinder_auto(nu,Zeff,eta,\
     guess_f=1.+eta
     #guess_f=np.arange(0.2,3.+eta,0.5)
     #guess_gamma=0.05+0.012*guess_f**2.
-    guess_mod=guess_f+1j*(0.1+0.012*guess_f**2.)
+    guess_mod=guess_f+1j*(0.0+0.012*guess_f**2.)
     #print(guess_mod)
 
 
@@ -491,8 +488,7 @@ def VectorFinder_auto(nu,Zeff,eta,\
         w0=w_list[index]
         return w0
 
-def VectorFinder_initial_guess(nu,Zeff,eta,\
-    shat,beta,ky,ModIndex,mu,xstar,initi_guess_w):
+def VectorFinder_initial_guess(nu,Zeff,eta,shat,beta,ky,ModIndex,mu,xstar,initi_guess_w):
     mu=abs(mu)
     x_max=20.
     del_x=0.02

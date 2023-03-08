@@ -428,6 +428,11 @@ class mode_finder:
             te_width=te_mid_ped-te_top_ped
             self.te_weight = 0.5+np.tanh((self.x-te_top_ped)/te_width)/2
 
+        if 1==0:
+            print('te_top_ped='+str(te_top_ped))
+            print('te_mid_ped='+str(te_mid_ped))
+            print('te_width='+str(te_width))
+
         index=np.argmin(abs(self.x-self.te_mid_ped))
 
         te_mod=self.te*(1.+(te_scale-1.)*self.te_weight)+(te_shift)*self.te[index]
@@ -1097,7 +1102,7 @@ class mode_finder:
 
 
     #this attribute only plot the nearest rational surface for the given toroidal mode number
-    def Plot_ome_q_surface_demo(self,peak_percent,n_min,n_max,f_min,f_max):
+    def Plot_ome_q_surface_demo(self,peak_percent,n_min,n_max,f_min,f_max,with_doppler=False):
         n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
         x_peak,x_min,x_max=self.ome_peak_range(peak_percent)
         x_peak_plot,x_min_plot,x_max_plot=self.ome_peak_range(peak_percent*10.)
@@ -1123,18 +1128,29 @@ class mode_finder:
             if x_min_plot<x0 and x0<x_max_plot:
                 if x_min<x0 and x0<x_max:
                     host.axvline(x0,color='orange',alpha=1)
-                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    if with_doppler:
+                        host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    else:
+                        host.scatter([x0],[float(n)*(self.ome)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
                     Unstabel_surface_counter=Unstabel_surface_counter+1
                 else:
                     host.axvline(x0,color='orange',alpha=0.3)
-                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    if with_doppler:
+                        host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    else:
+                        host.scatter([x0],[float(n)*(self.ome)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
             
                     
-            if Unstabel_surface_counter>0:
-                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+            if with_doppler:
+                if Unstabel_surface_counter>0:
+                    p1, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+                else:
+                    p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
             else:
-                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
-
+                if Unstabel_surface_counter>0:
+                    p1, = host.plot(self.x,(self.ome)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+                else:
+                    p2, = host.plot(self.x,(self.ome)*float(n), "k-", label=r'Stable $\omega_{*e}$')
         
 
         host.set_xlim(np.min(self.x),np.max(self.x))
@@ -1157,6 +1173,79 @@ class mode_finder:
         host.tick_params(axis='x', **tkw)
         
         lines = [p1,p2]
+        
+        #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
+        host.legend(lines, [l.get_label() for l in lines])
+        plt.show()
+
+
+    def Plot_ome_q_surface_demo_no_box(self,n_min,n_max,n_unstable,with_doppler=False):
+        n_list=np.array(np.arange(n_min,n_max+1),dtype=int)
+        x_min=np.min(self.x)
+        x_max=np.max(self.x)
+        fig, host = plt.subplots()
+        fig.subplots_adjust(right=0.75)
+        
+        for n in n_list:
+            Unstabel_surface_counter=0
+            try:
+                x0,m=self.Rational_surface_peak_surface(n)
+            except:
+                continue
+
+            
+            if n in n_unstable:
+                host.axvline(x0,color='orange',alpha=1)
+                if with_doppler:
+                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                else:
+                    host.scatter([x0],[float(n)*(self.ome)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                Unstabel_surface_counter=Unstabel_surface_counter+1
+            else:
+                host.axvline(x0,color='orange',alpha=0.3)
+                if with_doppler:
+                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                else:
+                    host.scatter([x0],[float(n)*(self.ome)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+            
+            if with_doppler:
+                if n in n_unstable:
+                    p1, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+                else:
+                    p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
+            else:
+                if n in n_unstable:
+                    p1, = host.plot(self.x,(self.ome)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+                else:
+                    p2, = host.plot(self.x,(self.ome)*float(n), "k-", label=r'Stable $\omega_{*e}$')
+
+        
+        host.set_xlim(np.min(self.x),np.max(self.x))
+        #host.set_ylim(0, np.max(f_max)*1.2)
+        #par1.set_ylim(np.min(self.q)*0.8,np.max(self.q)*1.2)
+        
+        host.set_xlabel(r"$\rho_{tor}$")
+        host.set_ylabel(r"$\omega_{*e}$(kHz)")
+        #par1.set_ylabel("Safety factor")
+
+        
+        host.yaxis.label.set_color('black')
+        #par1.yaxis.label.set_color('black')
+        
+        
+        tkw = dict(size=4, width=1.5)
+        host.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors='black', **tkw)
+        #par1.tick_params(axis='y', colors=p3.get_color(), **tkw)
+        host.tick_params(axis='x', **tkw)
+        
+        try:
+            lines = [p1,p2]
+        except:
+            try:
+                lines = [p2]
+            except:
+                lines = [p1]
         
         #host.legend(lines, ['Unstable area',r'Unstable $\omega_{*e}$',r'Stable $\omega_{*e}$'])
         host.legend(lines, [l.get_label() for l in lines])
@@ -1193,17 +1282,17 @@ class mode_finder:
             if x_min_plot<x0 and x0<x_max_plot:
                 if x_min<x0 and x0<x_max:
                     host.axvline(x0,color='orange',alpha=1)
-                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    host.scatter([x0],[float(n)*(self.ome)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
                     Unstabel_surface_counter=Unstabel_surface_counter+1
                 else:
                     host.axvline(x0,color='orange',alpha=0.3)
-                    host.scatter([x0],[float(n)*(self.ome+self.Doppler)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
+                    host.scatter([x0],[float(n)*(self.ome)[np.argmin(abs(self.x-x0))]],s=30,color='blue')
             
                     
             if Unstabel_surface_counter>0:
-                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
+                p2, = host.plot(self.x,(self.ome)*float(n), "r-", label=r'Unstable $\omega_{*e}$')
             else:
-                p2, = host.plot(self.x,(self.ome+self.Doppler)*float(n), "k-", label=r'Stable $\omega_{*e}$')
+                p2, = host.plot(self.x,(self.ome)*float(n), "k-", label=r'Stable $\omega_{*e}$')
 
 
         
