@@ -1,13 +1,6 @@
 # SLiM
 The Slab Like Microtearing mode (SLiM) model
 
-Homepage: 
-https://github.com/maxtcurie/SLiM.wiki.git
-
-https://pypi.org/project/SLiM-phys/0.0.1/
-
-To install: pip install SLiM-phys==0.0.1
-
 Overview
 
 This software provides a rapid assessment of the slab-like microtearing mode using a global linear dispersion model, which takes 50ms to calculate the growth rate and frequency of a given mode on the personal computer. Potentially uses 10^-7 of the computation resources for discharge study. For detail, one can check on the site (under construction): https://www.drmcurie.com/project-page/Research_Projects/SLiM
