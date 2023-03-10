@@ -1,9 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import sys as sys
 
-#import SLiM_phys
 from SLiM_phys.SLiM_obj import mode_finder
 
 #**********************************************
@@ -19,10 +15,11 @@ x0_max=0.99         # ending of the range in rho_tor
 #************End of User Block*****************
 #**********************************************
 
-a=mode_finder(profile_type,profile_name,\
+mode_finder_obj=mode_finder(profile_type,profile_name,\
             geomfile_type,geomfile_name,\
             outputpath,path,x0_min,x0_max)
 
-a.Plot_q_scale_rational_surfaces_colored(peak_percent=0.06,\
+
+mode_finder_obj.Plot_q_scale_rational_surfaces_red_and_green(peak_percent=0.06,\
             q_scale=0.98,q_shift=0.0,q_uncertainty=0.1,\
-            n_list=[3,4,5],unstable_list=[3,5],color_list=['orange','green','red'])
+            n_list=[3,4,5],unstable_list=[1,0,1])
