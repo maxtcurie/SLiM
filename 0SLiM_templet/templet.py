@@ -16,11 +16,24 @@ x0_max=0.99         # ending of the range in rho_tor
 mode_finder_obj=mode_finder(profile_type,profile_name,\
             geomfile_type,geomfile_name,\
             outputpath,path,x0_min,x0_max)
+
 q_scale=0.98
-mode_finder_obj.modify_profile(q_scale=q_scale,q_shift=0.,\
-                                    shat_scale=1.2,\
-                                    ne_scale=1.2,te_scale=0.8,\
-                                    ne_shift=0.,te_shift=0.,\
-                                    Doppler_scale=1.2,\
-                                    show_plot=True)
+q_shift=0.
+shat_scale=1.
+ne_scale=1
+te_scale=1.
+ne_shift=0.
+te_shift=0.
+Doppler_scale=1
+
+mode_finder_obj.modify_profile(\
+    q_scale=q_scale,q_shift=q_shift,\
+    shat_scale=shat_scale,\
+    ne_scale=ne_scale,te_scale=te_scale,\
+    ne_shift=ne_shift,te_shift=te_shift,\
+    Doppler_scale=Doppler_scale,\
+    show_plot=False)
+
 mode_finder_obj.reset_profile() #reset the profile back to nominal
+
+
