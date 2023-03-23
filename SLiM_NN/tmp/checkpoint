@@ -1,2 +1,0 @@
-model_checkpoint_path: "tune_checkpoint_stability"
-all_model_checkpoint_paths: "tune_checkpoint_stability"

@@ -1,0 +1,4 @@
+#step1: python setup.py sdist bdist_wheel
+#step2: twine upload dist/*
+
+Or python upload.py 
