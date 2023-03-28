@@ -12,6 +12,7 @@ SLiM_phys.egg-info/top_level.txt
 SLiM_phys/SLiM_NN/Dispersion_NN.py
 SLiM_phys/SLiM_NN/__init__.py
 SLiM_phys/SLiM_NN/data_tool.py
+SLiM_phys/SLiM_NN/git_download.py
 SLiM_phys/Tools/DispersionRelationDeterminantFullConductivityZeff.py
 SLiM_phys/Tools/Gaussian_fit.py
 SLiM_phys/Tools/ParIO.py

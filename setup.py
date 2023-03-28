@@ -12,7 +12,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '0.1.2'
+VERSION = '1.0.2'
 DESCRIPTION = 'SLiM project and its supporting scripts'
 LONG_DESCRIPTION = 'SLiM project calculate the slab like microtearing mode with global effect consideration'
 

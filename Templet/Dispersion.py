@@ -1,6 +1,6 @@
 from SLiM_phys import Dispersion_func
 
-Run_mode=2      # mode1: fast mode
+Run_mode=6      # mode1: fast mode
                 # mode2: slow mode(global)
                 # mode3: slow mode(local) 
                 # mode4: slow mode manual(global)

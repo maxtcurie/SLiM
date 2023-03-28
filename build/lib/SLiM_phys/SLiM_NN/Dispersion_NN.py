@@ -3,16 +3,23 @@ import pandas as pd
 import numpy as np 
 import os
 
+from .git_download import download
+
 #stability, omega 2 net
 class Dispersion_NN():
-    def __init__(self,download_path='./'):
-        if download_path[-1]!='/':
-            download_path=download_path+'/'
-        
-        if os.path.exists(download_path):
-            pass
-        else:
-            pass
+    def __init__(self,NN_path='./NN_model'):
+        if NN_path[-1]=='/':
+            NN_path=NN_path[:-1]
+        print('download the NN weight files')
+        download(NN_path)
+
+        self.NN_stability_file=NN_path+'/SLiM_NN_stability.h5'
+        self.NN_omega_file=NN_path+'/SLiM_NN_omega.h5'
+        self.NN_gamma_file=NN_path+'/SLiM_NN_gamma.h5'
+
+        self.norm_stability_csv_file=NN_path+'/NN_stability_norm_factor.csv'
+        self.norm_omega_csv_file=NN_path+'/NN_omega_norm_factor.csv'
+        self.norm_gamma_csv_file=NN_path+'/NN_gamma_norm_factor.csv'
 
         NN_stability_model = tf.keras.models.load_model(self.NN_stability_file)
         NN_omega_model = tf.keras.models.load_model(self.NN_omega_file)
@@ -222,3 +229,12 @@ class Dispersion_NN_beta_2():
         w=omega+gamma*1j
 
         return w
+
+
+
+if __name__ == "__main__":
+    [nu,  zeff, eta, shat,  beta,  ky,   mu, xstar]=\
+        [2.5, 2.5,  1.5, 0.001, 0.001, 0.15, 0., 10.  ]
+    a=Dispersion_NN()
+    w=a.Dispersion_omega(nu,zeff,eta,shat,beta,ky,mu,xstar)
+    print(w)
