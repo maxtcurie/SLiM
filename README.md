@@ -56,6 +56,7 @@ https://doi.org/10.1063/5.0084842
 https://doi.org/10.13140/RG.2.2.27713.48482
 
 3. M. Curie (2022) "Simulations and reduced models for Micro-tearing modes in the Tokamak pedestal" Ph.D. Dissertation
+https://doi.org/10.13140/RG.2.2.24468.37769
 
 4. J.L. Larakers,  M. Curie, D. R. Hatch, R. D. Hazeltine, and S. M.Mahajan, 2021) "Global Theory of Microtearing Modes in the Tokamak Pedestal" 
 https://doi.org/10.1103/PhysRevLett.126.225001
