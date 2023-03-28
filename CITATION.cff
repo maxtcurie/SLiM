@@ -1,0 +1,64 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Curie"
+  given-names: "M.T."
+
+- family-names: "Larakers"
+  given-names: "J. L."
+
+
+- family-names: "Hatch"
+  given-names: "D. R."
+
+
+- family-names: "Nelson"
+  given-names: "A. O."
+
+- family-names: "Diallo"
+  given-names: "A."
+
+- family-names: "Hassan"
+  given-names: "E."
+
+- family-names: "Guttenfelder"
+  given-names: "W."
+
+- family-names: "Halfmoon"
+  given-names: "M."
+
+- family-names: "Kotschenreuther"
+  given-names: "M."
+
+- family-names: "Hazeltine"
+  given-names: "R. D."
+
+- family-names: "Mahajan"
+  given-names: "S. M."
+
+- family-names: "Groebner"
+  given-names: "R. J."
+
+- family-names: "Chen"
+  given-names: "J."
+
+- family-names: "Perez von Thun"
+  given-names: "C."
+
+- family-names: "Frassinetti"
+  given-names: "L."
+
+- family-names: "Saarelma"
+  given-names: "S."
+
+- family-names: "Giroud"
+  given-names: "C."
+
+- family-names: "Tennery"
+  given-names: "M. M."
+
+title: "A survey of pedestal magnetic fluctuations using gyrokinetics and a global reduced model for microtearing stability"
+version: 2022.04.12
+doi: 10.1063/5.0084842
+date-released: 2022-04-12
+url: "https://doi.org/10.1063/5.0084842"
