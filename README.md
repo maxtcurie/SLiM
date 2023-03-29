@@ -16,16 +16,16 @@ for more detailed information, please check wikipage:
 
 ## Executable the program: 
 
-1. Plot the modified the safety factor (q) to see if the rational surfaces are intersected with the q profile. 
- *GUI:    `GUI/Plot_q_modification.py`   (under the folder GUI)
- *script: `0Plot_q_modification.py`
+### Plot the modified the safety factor (q) to see if the rational surfaces are intersected with the q profile. 
+ * GUI:    `GUI/Plot_q_modification.py`   (under the folder GUI)
+ * script: `0Plot_q_modification.py`
 
-2. Determine the stabilities of the MTM for different mode numbers 
- *GUI:    `GUI/mode_finder.py`           (under the folder GUI)
- *script: `00SLiM_mode_finder.py`
+### Determine the stabilities of the MTM for different mode numbers 
+ * GUI:    `GUI/mode_finder.py`           (under the folder GUI)
+ * script: `00SLiM_mode_finder.py`
 
-3. Calculate dispersion 
- *script: `Templet/Dispersion.py`        (under the folder Templet)
+### Calculate dispersion 
+ * script: `Templet/Dispersion.py`        (under the folder Templet)
 
 
 
