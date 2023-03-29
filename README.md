@@ -1,22 +1,27 @@
 # SLiM
 The Slab Like Microtearing mode (SLiM) model
 
-Overview
+## Overview
 
 This software provides a rapid assessment of the slab-like microtearing mode using a global linear dispersion model, which takes 50ms to calculate the growth rate and frequency of a given mode on the personal computer. Potentially uses 10^-7 of the computation resources for discharge study. For detail, one can check on the site (under construction): https://www.drmcurie.com/project-page/Research_Projects/SLiM
 
-SLiM EXE can be found from this link: https://drive.google.com/drive/folders/12e1t6liY5JztwOBOLehPoV8GbfORn_j8?usp=sharing
+The package can be download via pip: 
+`pip install slim_phys`
 
+GitHub repo:
+https://github.com/maxtcurie/SLiM
 
+for more detailed information, please check wikipage: 
+[https://github.com/maxtcurie/SLiM/wiki](https://github.com/maxtcurie/SLiM/wiki)
 
-Executable the program: 
+## Executable the program: 
 
 1. Plot the modified the safety factor (q) to see if the rational surfaces are intersected with the q profile. 
- GUI:    000GUI_Plot_q_modification.py
+ GUI:    GUI/Plot_q_modification.py   (under the folder GUI)
  script: 0Plot_q_modification.py
 
 2. Determine the stabilities of the MTM for different mode numbers 
- GUI:    000GUI_SLiM_mode_finder.py
+ GUI:    GUI/mode_finder.py           (under the folder GUI)
  script: 00SLiM_mode_finder.py
 
 3. Calculate a list of dispersion relations provided by a csv file
@@ -24,8 +29,7 @@ Executable the program:
  script(CPU accelerated,beta): 0MTMDispersion_list_Calc_parallel.py
 
 
-GitHub repo:
-https://github.com/maxtcurie/SLiM
+## Tutorial
 
 APS 2021 invited talk about SLiM model:
 https://youtu.be/j2MYfGwlBYY
@@ -38,14 +42,10 @@ How to use GUI:
     plot modified safety factor GUI: https://youtu.be/L01xl_e1bpM
 
 
-CPU accellerated dispersion calculation:
-    With    CPU acceleration: 297.5 sec
-    Without CPU acceleration: 481.1 sec
-
 Trained neural network dispersion calculation: 0.05sec
 
 
-Citation 
+## Citation 
 
 This software is based on the following articles and presentations, please the cite those articles in the publications uses such software package: 
 
@@ -60,29 +60,3 @@ https://doi.org/10.13140/RG.2.2.24468.37769
 
 4. J.L. Larakers,  M. Curie, D. R. Hatch, R. D. Hazeltine, and S. M.Mahajan, 2021) "Global Theory of Microtearing Modes in the Tokamak Pedestal" 
 https://doi.org/10.1103/PhysRevLett.126.225001
-
-
-SLiM_obj.py
-
-self.r_sigma
-self.R_ref
-self.cs_to_kHz
-self.omn
-self.omn_nominal
-self.cs
-self.rho_s
-self.Lref
-self.x
-self.shat
-self.shat_nominal
-self.eta
-self.ky
-self.ky_nominal=
-self.nu
-self.zeff
-self.beta
-self.q
-self.q_nominal
-self.ome
-self.ome_nominal
-self.Doppler
