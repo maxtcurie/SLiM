@@ -17,32 +17,30 @@ for more detailed information, please check wikipage:
 ## Executable the program: 
 
 1. Plot the modified the safety factor (q) to see if the rational surfaces are intersected with the q profile. 
- GUI:    GUI/Plot_q_modification.py   (under the folder GUI)
- script: 0Plot_q_modification.py
+ *GUI:    `GUI/Plot_q_modification.py`   (under the folder GUI)
+ *script: `0Plot_q_modification.py`
 
 2. Determine the stabilities of the MTM for different mode numbers 
- GUI:    GUI/mode_finder.py           (under the folder GUI)
- script: 00SLiM_mode_finder.py
+ *GUI:    `GUI/mode_finder.py`           (under the folder GUI)
+ *script: `00SLiM_mode_finder.py`
 
-3. Calculate a list of dispersion relations provided by a csv file
- script: 0MTMDispersion_list_Calc.py
- script(CPU accelerated,beta): 0MTMDispersion_list_Calc_parallel.py
+3. Calculate dispersion 
+ *script: `Templet/Dispersion.py`        (under the folder Templet)
+
 
 
 ## Tutorial
 
-APS 2021 invited talk about SLiM model:
+### APS 2021 invited talk about SLiM model:
 https://youtu.be/j2MYfGwlBYY
 
-Playlist for tutorial on running the SLiM model:
+### Playlist for tutorial on running the SLiM model:
 https://youtube.com/playlist?list=PLgNi5MiqkBWagsB8yRjRncsz1D4oeedQB
 
-How to use GUI:
-    mode finder GUI: https://youtu.be/R_-ldYNvmhU
-    plot modified safety factor GUI: https://youtu.be/L01xl_e1bpM
-
-
-Trained neural network dispersion calculation: 0.05sec
+### How to use GUI:
+#### mode finder GUI: https://youtu.be/R_-ldYNvmhU
+    
+#### plot modified safety factor GUI: https://youtu.be/L01xl_e1bpM
 
 
 ## Citation 
