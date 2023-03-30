@@ -9,7 +9,7 @@ import pandas as pd
 import csv
 import math
 
-from SLiM_obj import mode_finder
+from SLiM_phys.SLiM_obj import mode_finder
 
 
 
