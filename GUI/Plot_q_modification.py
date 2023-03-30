@@ -28,6 +28,50 @@ geomfile_name=''
 global profile_name
 profile_name=''
 
+global initialdir_pfile
+global initialdir_gfile
+
+def read_p_g_dir():
+    try:
+        f=open("./log.txt","r")
+        lines=f.readlines()
+        for line in lines:
+            if 'dir_pfile=' in line:
+                initialdir_pfile_=line[len('dir_pfile='):]
+            elif 'dir_gfile=' in line:
+                initialdir_gfile_=line[len('dir_gfile='):]
+    except:
+        initialdir_pfile_='./../Test_files/'
+        initialdir_gfile_='./../Test_files/'
+
+    #print('***************')
+    #print('initialdir_pfile='+initialdir_pfile_)
+    #print('initialdir_gfile='+initialdir_gfile_)
+    return initialdir_pfile_,initialdir_gfile_
+
+def write_p_g_dir(profile_name,geomfile_name):
+    initialdir_pfile_,initialdir_gfile_=read_p_g_dir()
+    if profile_name==0:
+        initialdir_pfile_1=initialdir_pfile_
+    else:
+        len_file_name=len(profile_name.split('/')[-1])
+        initialdir_pfile_1=profile_name[:-1*len_file_name]
+
+    if geomfile_name==0:
+        initialdir_gfile_1=initialdir_gfile_
+    else:
+        len_file_name=len(geomfile_name.split('/')[-1])
+        initialdir_gfile_1=geomfile_name[:-1*len_file_name]
+
+    file=open("./log.txt","w")
+    file.write('dir_pfile='+initialdir_pfile_1\
+                +'\n'+\
+               'dir_gfile='+initialdir_gfile_1)
+
+
+initialdir_pfile,initialdir_gfile=read_p_g_dir()
+
+
 q_uncertainty=0.1
 
 root=tk.LabelFrame(windows, text='Inputs',padx=5,pady=5)
@@ -57,7 +101,10 @@ def p_Click():
     #find the file
     global p_frame
     global profile_name
-    profile_name=filedialog.askopenfilename(initialdir='./',\
+    global initialdir_pfile
+    global initialdir_gfile
+    initialdir_pfile,initialdir_gfile=read_p_g_dir()
+    profile_name=filedialog.askopenfilename(initialdir=initialdir_pfile,\
                                         title='select a file', \
                                         filetypes=( 
                                             ('all files', '*'),\
@@ -66,6 +113,9 @@ def p_Click():
                                             ('profile','profile*'),\
                                             ) \
                                         )
+    write_p_g_dir(profile_name,0)
+    initialdir_pfile,initialdir_gfile=read_p_g_dir()
+
     global profile_name_box
     profile_name_box=tk.Entry(p_frame, width=100)
     max_len=100
@@ -106,7 +156,10 @@ def g_Click():
     #find the file
     global g_frame
     global geomfile_name
-    geomfile_name=filedialog.askopenfilename(initialdir='./',\
+    global initialdir_pfile
+    global initialdir_gfile
+    initialdir_pfile,initialdir_gfile=read_p_g_dir()
+    geomfile_name=filedialog.askopenfilename(initialdir=initialdir_gfile,\
                                     title='select a file', \
                                     filetypes=( 
                                         ('all files', '*'),
@@ -115,7 +168,8 @@ def g_Click():
                                     )
     global geomfile_name_box
     geomfile_name_box=tk.Entry(g_frame,width=100)
-
+    write_p_g_dir(0,geomfile_name)
+    
     
     if len(geomfile_name)>30:
         geomfile_name_box.insert(0,'...'+geomfile_name[-100:])
